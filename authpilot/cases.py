@@ -506,8 +506,8 @@ def statuses_for(policy: str, rng: random.Random, target: str) -> dict:
             return statuses_for(policy, rng, "DENY")
         k, v = rng.choice(options)
         st[k] = v
-        if policy == "cpap" and k == "cpap_test" and v != MET:
-            st["cpap_symptoms"] = NA if v == MISSING else st["cpap_symptoms"]
+        if policy == "cpap" and k == "cpap_test" and v == MISSING:
+            st["cpap_symptoms"] = NA
         if policy == "oxygen" and k == "o2_test" and v == MISSING:
             st["o2_timing"] = st["o2_tester"] = NA
             st["o2_group2"] = NA
@@ -555,6 +555,8 @@ def make_case(idx: int, policy: str, target: str, rng: random.Random) -> dict:
         "order_date": order_date.isoformat(), "ordering_provider": requester,
         "clinical_summary": summary,
     }
+    if policy == "cpap" and st["cpap_test"] == NOT_MET and built["facts"].get("ahi", 99) < 5:
+        st["cpap_symptoms"] = NA          # no pathway applies below 5 events/hour
     truth = {"decision": decide(st), "policy": policy, "statuses": st,
              "evidence": {k: v for k, v in built["evidence"].items() if st.get(k) not in (NA,)},
              "traps": sorted(traps)}
