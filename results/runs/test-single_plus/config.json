@@ -1,0 +1,10 @@
+{
+  "system": "single_plus",
+  "split": "test",
+  "limit": 0,
+  "concurrency": 4,
+  "model": "claude-haiku-4-5-20251001",
+  "run_id": "test-single_plus",
+  "history": "standard",
+  "cases": 200
+}
