@@ -33,7 +33,7 @@ def make_model(name: str):
 
 async def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--system", choices=["authpilot", "authpilot_noguard", "baseline"], default="authpilot")
+    ap.add_argument("--system", choices=["authpilot", "authpilot_noguard", "baseline", "single_plus"], default="authpilot")
     ap.add_argument("--split", choices=["dev", "test"], default="dev")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--concurrency", type=int, default=4)
@@ -67,6 +67,8 @@ async def main():
                 try:
                     if args.system == "baseline":
                         res = await G.baseline(model, case)
+                    elif args.system == "single_plus":
+                        res = await G.baseline(model, case, annotated=True, use_guards=True)
                     else:
                         res = await app.ainvoke({"request_text": G.request_form(case["request"]), "retries": 0},
                                                 {"recursion_limit": 40})

@@ -1,32 +1,37 @@
 """AuthPilot: a multi-agent prior-authorization reviewer built with LangGraph.
 
-    intake -> policy -> chart -> assemble -> review -> verify --(gaps, first pass)--> chart
-                                                         |
-                                                         +--> letter -> END
+    intake -> policy -> record -+-> specialist (criterion 1) -+-> verify --(gaps, once)--> investigator -> specialist(gaps)
+                                +-> specialist (criterion 2) -+      |
+                                +-> ...                       +      +--> letter -> END
 
 Agents (language model):
-  intake   reads the provider's request form and extracts the structured fields
-  policy   picks the coverage policy that governs the requested service
-  chart    searches the patient's record through the FHIR MCP server for evidence on each criterion
-  review   judges each criterion against the evidence and quotes what it relied on
-  letter   drafts the determination letter
+  intake        reads the provider's request form and extracts the structured fields
+  policy        picks the coverage policy that governs the requested service
+  specialist    one per coverage criterion, run in parallel; each judges a single criterion against the whole
+                record and quotes what it relied on. They share one cached copy of the record.
+  investigator  for criteria still undocumented after the first pass, searches the record again through the
+                FHIR MCP tools (notes, orders, encounters) before the specialist takes a second look
+  letter        drafts the determination letter
 
 Code steps (deterministic):
-  assemble attaches each cited record with its date and how many days before the order it falls
-  verify   checks every citation exists and says what the reviewer quoted; a criterion with no
-           verified evidence cannot count as met or not met; the decision is computed from the
-           criteria, never taken from the model; one extra search is allowed for gaps
+  record        fetches the record through the MCP server, in date order, each entry marked with how many
+                days before the order it falls, so no agent has to do date arithmetic
+  verify        checks that every citation exists and says what the agent quoted; a criterion with no verified
+                evidence cannot count as met or not met; 'not applicable' is only allowed where the policy says
+                so; the decision is computed from the criteria, never taken from a model
 """
 from __future__ import annotations
 
 import json
+import operator
 import re
 import time
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Annotated, TypedDict
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
+from langgraph.types import Send
 from pydantic import BaseModel, Field
 
 from authpilot import fhir
@@ -64,56 +69,19 @@ def request_form(req: dict) -> str:
             f"Clinical summary from provider: {req['clinical_summary']}\n")
 
 
-# ------------------------------------------------------------------------------------------ state
-
-class State(TypedDict, total=False):
-    request_text: str
-    request: dict
-    policy_id: str
-    evidence_ids: dict
-    focus: list
-    pack: str
-    review: dict
-    verified: dict
-    decision: str
-    letter: str
-    retries: int
-    trace: list
-    usage: dict
-    errors: list
-
-
-def parse_json(text: str) -> Any:
-    m = re.search(r"\{.*\}", text or "", re.S)
-    if not m:
-        raise ValueError("no JSON object in reply")
-    return json.loads(m.group(0))
-
-
-def text_of(msg) -> str:
-    c = msg.content
-    return c if isinstance(c, str) else "".join(b.get("text", "") for b in c if isinstance(b, dict))
-
-
-class Usage:
-    """Adds up tokens per node from the messages a node produced."""
-
-    @staticmethod
-    def add(state: State, node: str, messages: list) -> dict:
-        u = dict(state.get("usage") or {})
-        cur = dict(u.get(node) or {"input": 0, "output": 0, "calls": 0})
-        for m in messages:
-            md = getattr(m, "usage_metadata", None)
-            if isinstance(m, AIMessage) and md:
-                cur["input"] += md.get("input_tokens", 0)
-                cur["output"] += md.get("output_tokens", 0)
-                cur["calls"] += 1
-        u[node] = cur
-        return u
-
-
-def event(state: State, node: str, summary: str, **detail) -> list:
-    return list(state.get("trace") or []) + [{"node": node, "summary": summary, "t": round(time.time(), 2), **detail}]
+# The same judging rules are given to the single-call baseline and to the specialists, so a comparison
+# measures the architecture, not a better prompt.
+RULES = """Statuses:
+- "met": the record shows the criterion is satisfied.
+- "not_met": the record shows something that fails it: a value on the wrong side of a threshold, a dated event
+  outside the allowed window, an excluded condition, a non-covered procedure, or an explicit negative finding.
+- "missing": the record does not document it either way. The provider will be asked to send documentation.
+- "not_applicable": only for a criterion that says "Applies only ..." when that condition does not hold.
+Rules:
+- When a measurement was repeated, the most recent one before the order applies.
+- The provider's clinical summary is a claim, not evidence. Never decide a criterion from it.
+- Every "met" or "not_met" must cite at least one record id with a short quote copied from that record,
+  including the number, date or words that decide it."""
 
 
 # ------------------------------------------------------------------------------------------ output schemas
@@ -146,8 +114,9 @@ class CriterionOut(BaseModel):
     citations: list[Citation] = Field(default_factory=list)
 
 
-class ReviewOut(BaseModel):
-    criteria: list[CriterionOut]
+class InvestigatorOut(BaseModel):
+    record_ids: list[str] = Field(default_factory=list)
+    note: str = ""
 
 
 async def structured(model, schema, messages):
@@ -158,56 +127,101 @@ async def structured(model, schema, messages):
     return out["parsed"], out["raw"]
 
 
+def text_of(msg) -> str:
+    c = msg.content
+    return c if isinstance(c, str) else "".join(b.get("text", "") for b in c if isinstance(b, dict))
+
+
+def tokens(node: str, messages: list) -> dict:
+    cur = {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0, "calls": 0}
+    for m in messages:
+        md = getattr(m, "usage_metadata", None)
+        if md and getattr(m, "type", "") == "ai":
+            det = md.get("input_token_details") or {}
+            cur["cache_read"] += det.get("cache_read", 0)
+            cur["cache_write"] += det.get("cache_creation", 0)
+            cur["input"] += md.get("input_tokens", 0) - det.get("cache_read", 0) - det.get("cache_creation", 0)
+            cur["output"] += md.get("output_tokens", 0)
+            cur["calls"] += 1
+    return {node: cur}
+
+
+def add_usage(a: dict, b: dict) -> dict:
+    out = {k: dict(v) for k, v in (a or {}).items()}
+    for k, v in (b or {}).items():
+        cur = out.setdefault(k, {})
+        for kk, vv in v.items():
+            cur[kk] = cur.get(kk, 0) + vv
+    return out
+
+
+def merge(a: dict, b: dict) -> dict:
+    return {**(a or {}), **(b or {})}
+
+
+def ev(node: str, summary: str, **detail) -> list:
+    return [{"node": node, "summary": summary, "t": round(time.time(), 2), **detail}]
+
+
+# ------------------------------------------------------------------------------------------ state
+
+class State(TypedDict, total=False):
+    request_text: str
+    request: dict
+    policy_id: str
+    record: str
+    review: Annotated[dict, merge]
+    extra: dict                  # criterion -> extra record ids found by the investigator
+    verified: dict
+    decision: str
+    letter: str
+    retries: int
+    focus: list
+    trace: Annotated[list, operator.add]
+    usage: Annotated[dict, add_usage]
+
+
+class SpecialistInput(TypedDict):
+    criterion: dict
+    policy_id: str
+    request: dict
+    record: str
+    extra: list
+
+
 # ------------------------------------------------------------------------------------------ prompts
 
-INTAKE = """You read prior authorization request forms and extract the fields exactly as written.
-Return the fields with the IntakeOut tool."""
+INTAKE = "You read prior authorization request forms and extract the fields exactly as written."
 
 POLICY = """You route prior authorization requests to the coverage policy that governs them.
 Policies available:
 {catalog}
 Return the policy id (one of the ids above, or "none") and a one-sentence reason."""
 
-CHART = """You are a clinical evidence researcher for prior authorization review. You search a patient's medical
-record through tools and collect the records that bear on each coverage criterion.
-
-Patient ID: {patient_id}. The service was ordered on {order_date}.
-
-Criteria to research:
-{criteria}
-
-How to work:
-- Use the tools to look through conditions, observations, medications, procedures, encounters and notes. Search
-  notes too: evidence is often written only in a note.
-- For each criterion collect every record that supports it OR shows it is not met, including the most recent
-  measurement and any older measurement of the same thing, and dates that matter for time windows.
-- Do not decide whether criteria are met. Only gather evidence.
-- Do not rely on what the provider's request claims; find it in the record.
-
-When finished, reply with JSON only, mapping each criterion id to a list of record ids, e.g.
-{{"cpap_test": ["obs-004", "doc-007"], "cpap_eval": []}}. Use [] when nothing relevant exists."""
-
-REVIEW = """You are a utilization review nurse deciding whether each coverage criterion is met, using only the
-evidence records provided. Today's review concerns an order dated {order_date}.
+SPECIALIST = """You are a utilization review specialist. You judge ONE coverage criterion for a prior authorization
+request, using the patient's medical record below.
 
 Policy:
 {policy}
 
-For each criterion choose one status:
-- "met": the records show the criterion is satisfied.
-- "not_met": the records show it is NOT satisfied (a value on the wrong side of a threshold, a date outside the
-  allowed window, an excluded condition, a non-covered procedure, or an explicit negative finding).
-- "missing": the records contain nothing that settles it either way.
-- "not_applicable": only for criteria that say "Applies only ..." when that condition does not hold.
+{rules}
 
-Rules:
-- When a measurement was repeated, the most recent one before the order applies.
-- Use the "days before order" given with each record for time windows.
-- The provider's clinical summary is a claim, not evidence. Never mark a criterion met or not met from it.
-- Every "met" or "not_met" must cite at least one record id with a short quote copied from that record
-  (include the number or words that decide it).
+The record lists every entry in date order with how many days before the order date it falls. Use those day
+counts for any time window; do not compute dates yourself.
 
-Return one entry per criterion id in the policy."""
+Order date: {order_date}
+
+Medical record:
+{record}"""
+
+INVESTIGATOR = """You are a clinical evidence investigator. A reviewer could not find documentation for some coverage
+criteria in a patient's record. Search the record with the tools, especially the notes, orders and encounters,
+for anything that bears on them. Patient ID: {patient_id}. Order date: {order_date}.
+
+Criteria:
+{criteria}
+
+When done, return the ids of the records that bear on these criteria (empty if there are none) and one sentence."""
 
 LETTER = """You write prior authorization determination letters to the ordering provider. Plain, professional,
 short. State the decision, then each criterion with the evidence relied on (record dates and values), and for a
@@ -218,11 +232,11 @@ invent any clinical fact that is not in the material given. No more than 220 wor
 # ------------------------------------------------------------------------------------------ code checks
 
 def check_review(policy_id: str, patient_id: str, review: dict, use_guards: bool = True, order_date: str | None = None):
-    """Verify the reviewer's citations against the record and compute the decision.
+    """Verify each judgement's citations against the record and compute the decision.
 
-    Returns (criteria, notes, decision). With guards on, a criterion judged met or not met without a
-    single citation that exists and says what was quoted is treated as missing, and 'not applicable'
-    is only accepted for criteria the policy marks as conditional."""
+    Returns (criteria, notes, decision). With guards on, a criterion judged met or not met without a single
+    citation that exists and says what was quoted is treated as missing, and 'not applicable' is only
+    accepted for criteria the policy marks as conditional."""
     p = POLICIES[policy_id]
     records = fhir.chart(patient_id)
     out, notes = {}, []
@@ -247,121 +261,118 @@ def check_review(policy_id: str, patient_id: str, review: dict, use_guards: bool
 # ------------------------------------------------------------------------------------------ graph
 
 def build(model, tools, max_retries: int = 1, use_guards: bool = True):
-    """model: a LangChain chat model. tools: the MCP tools for the chart agent."""
+    """model: a LangChain chat model. tools: the FHIR MCP tools (LangChain-wrapped)."""
     from langgraph.prebuilt import create_react_agent
 
+    tool_by_name = {t.name: t for t in tools}
+    search_tools = [t for t in tools if t.name != "get_record"]
     catalog = "\n".join(f"- {p['id']}: {p['title']}" for p in POLICIES.values())
 
     async def intake(state: State) -> State:
-        msgs = [SystemMessage(INTAKE), HumanMessage(state["request_text"])]
-        parsed, out = await structured(model, IntakeOut, msgs)
+        parsed, raw = await structured(model, IntakeOut, [SystemMessage(INTAKE), HumanMessage(state["request_text"])])
         req = parsed.model_dump()
         errors = []
-        if req.get("patient_id") not in fhir.store():
-            errors.append(f"unknown member id {req.get('patient_id')}")
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(req.get("order_date", ""))):
+        if req["patient_id"] not in fhir.store():
+            errors.append(f"unknown member id {req['patient_id']}")
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", req["order_date"]):
             errors.append("order date not readable")
-        return {"request": req, "errors": errors, "usage": Usage.add(state, "intake", [out]),
-                "trace": event(state, "intake", f"Read request for {req.get('service')} ordered {req.get('order_date')}",
-                               fields=req)}
+        if errors:
+            raise ValueError("; ".join(errors))
+        return {"request": req, "usage": tokens("intake", [raw]),
+                "trace": ev("intake", f"Read the request: {req['service']}, ordered {req['order_date']}", fields=req)}
 
     async def policy(state: State) -> State:
         r = state["request"]
-        msgs = [SystemMessage(POLICY.format(catalog=catalog)),
-                HumanMessage(f"Service: {r.get('service')}\nCode: {r.get('code')}\nDiagnosis: {r.get('diagnosis')}")]
-        parsed, out = await structured(model, PolicyOut, msgs)
-        pid = parsed.policy_id
-        if pid not in POLICIES:
-            raise ValueError(f"no policy matched ({pid})")
-        p = POLICIES[pid]
-        return {"policy_id": pid, "usage": Usage.add(state, "policy", [out]),
-                "trace": event(state, "policy", f"Applied {p['title']}", criteria=[c["id"] for c in p["criteria"]])}
+        parsed, raw = await structured(model, PolicyOut, [SystemMessage(POLICY.format(catalog=catalog)),
+                                                          HumanMessage(f"Service: {r['service']}\nCode: {r['code']}\nDiagnosis: {r['diagnosis']}")])
+        if parsed.policy_id not in POLICIES:
+            raise ValueError(f"no policy matched ({parsed.policy_id})")
+        p = POLICIES[parsed.policy_id]
+        return {"policy_id": parsed.policy_id, "usage": tokens("policy", [raw]),
+                "trace": ev("policy", f"Applied {p['title']}", criteria=[c["id"] for c in p["criteria"]], reason=parsed.reason)}
 
-    async def chart(state: State) -> State:
-        p, r = POLICIES[state["policy_id"]], state["request"]
-        focus = state.get("focus") or [c["id"] for c in p["criteria"]]
-        crit = "\n".join(f"- {c['id']}: {c['text']}" for c in p["criteria"] if c["id"] in focus)
-        agent = create_react_agent(model, tools, prompt=CHART.format(patient_id=r["patient_id"], order_date=r["order_date"], criteria=crit))
-        res = await agent.ainvoke({"messages": [HumanMessage("Collect the evidence now.")]}, {"recursion_limit": 30})
-        final = text_of(res["messages"][-1])
-        try:
-            found = parse_json(final)
-        except (ValueError, json.JSONDecodeError):
-            seen_ids = sorted(set(re.findall(r"\[([a-z]+-\d+)\]", " ".join(text_of(m) for m in res["messages"] if getattr(m, "type", "") == "tool"))))
-            found = {c: seen_ids for c in focus}          # could not read the reply: pass on everything it looked at
-        ids = dict(state.get("evidence_ids") or {})
-        for k, v in found.items():
-            if isinstance(v, list):
-                ids[k] = sorted(set(ids.get(k, [])) | {str(x) for x in v})
-        n_tools = sum(1 for m in res["messages"] if getattr(m, "type", "") == "tool")
-        return {"evidence_ids": ids, "usage": Usage.add(state, "chart", res["messages"]),
-                "trace": event(state, "chart", f"Searched the record ({n_tools} lookups) for {len(focus)} criteria",
-                               found={k: len(v) for k, v in ids.items()}, tool_calls=n_tools)}
-
-    def assemble(state: State) -> State:
+    async def record(state: State) -> State:
         r = state["request"]
-        records = fhir.chart(r["patient_id"])
-        lines = []
-        for cid, ids in (state.get("evidence_ids") or {}).items():
-            for rid in ids:
-                if rid in records:
-                    res = records[rid]
-                    db = fhir.days_before(fhir.when(res), r["order_date"])
-                    lines.append((rid, f"{fhir.line(res)}  [days before order: {db}]"))
-        seen, pack = set(), []
-        for rid, l in sorted(lines, key=lambda x: fhir.when(records[x[0]])):
-            if rid not in seen:
-                seen.add(rid)
-                pack.append(l)
-        header = f"Order date: {r['order_date']}. Records in date order, oldest first:\n"
-        return {"pack": header + ("\n".join(pack) or "(no records found)"),
-                "trace": event(state, "assemble", f"Attached {len(pack)} records with dates relative to the order")}
+        res = await tool_by_name["get_record"].ainvoke({"patient_id": r["patient_id"], "as_of": r["order_date"]})
+        text = res if isinstance(res, str) else "".join(b.get("text", "") if isinstance(b, dict) else str(b) for b in res)
+        n = text.count("\n") + 1
+        return {"record": text, "retries": state.get("retries") or 0,
+                "trace": ev("record", f"Fetched the record over MCP: {n} entries, each dated relative to the order")}
 
-    async def review(state: State) -> State:
-        p, r = POLICIES[state["policy_id"]], state["request"]
-        msgs = [SystemMessage(REVIEW.format(order_date=r["order_date"], policy=p["text"])),
-                HumanMessage(f"Provider's clinical summary (a claim, not evidence): {r.get('provider_claims')}\n\n"
-                             f"Evidence records:\n{state['pack']}")]
-        parsed, out = await structured(model, ReviewOut, msgs)
-        rev = {c.criterion_id: c.model_dump() for c in parsed.criteria}
-        return {"review": rev, "usage": Usage.add(state, "review", [out]),
-                "trace": event(state, "review", "Judged each criterion",
-                               statuses={k: v.get("status") for k, v in rev.items()})}
+    def fan_out(state: State):
+        p = POLICIES[state["policy_id"]]
+        focus = state.get("focus") or [c["id"] for c in p["criteria"]]
+        return [Send("specialist", {"criterion": c, "policy_id": state["policy_id"], "request": state["request"],
+                                    "record": state["record"], "extra": (state.get("extra") or {}).get(c["id"], [])})
+                for c in p["criteria"] if c["id"] in focus]
+
+    async def specialist(inp: SpecialistInput) -> State:
+        c, r = inp["criterion"], inp["request"]
+        p = POLICIES[inp["policy_id"]]
+        system = SPECIALIST.format(policy=p["text"], rules=RULES, order_date=r["order_date"], record=inp["record"])
+        # The record is the same for every specialist on a case, so it is cached once and re-read cheaply.
+        sys_msg = SystemMessage(content=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}])
+        ask = (f"Judge criterion {c['id']} only: {c['text']}\n"
+               f"Provider's clinical summary (a claim, not evidence): {r.get('provider_claims')}")
+        if inp["extra"]:
+            ask += f"\nAn investigator points to these records as relevant: {', '.join(inp['extra'])}. Look at them closely."
+        parsed, raw = await structured(model, CriterionOut, [sys_msg, HumanMessage(ask)])
+        out = parsed.model_dump()
+        out["criterion_id"] = c["id"]
+        return {"review": {c["id"]: out}, "usage": tokens("specialist", [raw]),
+                "trace": ev("specialist", f"{c['id']}: {out['status']}", criterion=c["id"], status=out["status"],
+                            reason=out["reason"], citations=out["citations"])}
 
     def verify(state: State) -> State:
-        out, notes, decision = check_review(state["policy_id"], state["request"]["patient_id"], state.get("review") or {},
-                                            use_guards, state["request"].get("order_date"))
+        r = state["request"]
+        out, notes, decision = check_review(state["policy_id"], r["patient_id"], state.get("review") or {}, use_guards, r["order_date"])
         gaps = [k for k, v in out.items() if v["status"] == "missing"]
-        retry = use_guards and gaps and (state.get("retries") or 0) < max_retries
+        retry = bool(use_guards and gaps and (state.get("retries") or 0) < max_retries)
         bad = sum(1 for v in out.values() for x in v["citations"] if not x["verified"])
         return {"verified": out, "decision": decision, "focus": gaps if retry else [],
                 "retries": (state.get("retries") or 0) + (1 if retry else 0),
-                "trace": event(state, "verify",
-                               (f"{len(gaps)} criteria lack evidence; searching the record again" if retry else
-                                f"Decision computed from the criteria: {decision}"),
-                               unverified_citations=bad, overrides=notes, decision=decision)}
+                "trace": ev("verify", (f"{len(gaps)} criteria undocumented; sending the investigator back into the record"
+                                       if retry else f"Decision computed from the criteria: {decision}"),
+                            unverified_citations=bad, overrides=notes, decision=decision,
+                            statuses={k: v["status"] for k, v in out.items()})}
+
+    async def investigator(state: State) -> State:
+        p, r = POLICIES[state["policy_id"]], state["request"]
+        crit = "\n".join(f"- {c['id']}: {c['text']}" for c in p["criteria"] if c["id"] in state["focus"])
+        agent = create_react_agent(model, search_tools, prompt=INVESTIGATOR.format(patient_id=r["patient_id"],
+                                   order_date=r["order_date"], criteria=crit), response_format=InvestigatorOut)
+        res = await agent.ainvoke({"messages": [HumanMessage("Search now.")]}, {"recursion_limit": 24})
+        found = res.get("structured_response") or InvestigatorOut()
+        if isinstance(found, dict):
+            found = InvestigatorOut.model_validate(found)
+        valid = [i for i in found.record_ids if i in fhir.chart(r["patient_id"])]
+        n_tools = sum(1 for m in res["messages"] if getattr(m, "type", "") == "tool")
+        calls = [f"{tc['name']}({', '.join(f'{k}={v}' for k, v in tc['args'].items() if k != 'patient_id')})"
+                 for m in res["messages"] for tc in (getattr(m, "tool_calls", None) or [])]
+        return {"extra": {k: valid for k in state["focus"]}, "usage": tokens("investigator", res["messages"]),
+                "trace": ev("investigator", f"Searched the record again ({n_tools} lookups); found {len(valid)} relevant records",
+                            tool_calls=calls, found=valid)}
 
     async def letter(state: State) -> State:
         r = state["request"]
-        body = json.dumps({"decision": state["decision"], "service": r.get("service"), "order_date": r.get("order_date"),
+        body = json.dumps({"decision": state["decision"], "service": r["service"], "order_date": r["order_date"],
                            "criteria": {k: {"status": v["status"], "reason": v["reason"],
                                             "evidence": [x["quote"] + f" ({x['id']})" for x in v["citations"] if x["verified"]]}
                                         for k, v in state["verified"].items()}}, indent=1)
         out = await model.ainvoke([SystemMessage(LETTER), HumanMessage(body)])
-        return {"letter": text_of(out), "usage": Usage.add(state, "letter", [out]),
-                "trace": event(state, "letter", "Drafted the determination letter")}
+        return {"letter": text_of(out), "usage": tokens("letter", [out]), "trace": ev("letter", "Drafted the determination letter")}
 
     g = StateGraph(State)
-    for name, fn in [("intake", intake), ("policy", policy), ("chart", chart), ("assemble", assemble),
-                     ("review", review), ("verify", verify), ("letter", letter)]:
+    for name, fn in [("intake", intake), ("policy", policy), ("record", record), ("specialist", specialist),
+                     ("verify", verify), ("investigator", investigator), ("letter", letter)]:
         g.add_node(name, fn)
     g.set_entry_point("intake")
     g.add_edge("intake", "policy")
-    g.add_edge("policy", "chart")
-    g.add_edge("chart", "assemble")
-    g.add_edge("assemble", "review")
-    g.add_edge("review", "verify")
-    g.add_conditional_edges("verify", lambda s: "chart" if s.get("focus") else "letter", {"chart": "chart", "letter": "letter"})
+    g.add_edge("policy", "record")
+    g.add_conditional_edges("record", fan_out, ["specialist"])
+    g.add_edge("specialist", "verify")
+    g.add_conditional_edges("verify", lambda s: "investigator" if s.get("focus") else "letter", ["investigator", "letter"])
+    g.add_conditional_edges("investigator", fan_out, ["specialist"])
     g.add_edge("letter", END)
     return g.compile()
 
@@ -374,33 +385,31 @@ patient's full medical record below.
 Policy:
 {policy}
 
-Statuses per criterion: met, not_met, missing (nothing documented either way), not_applicable (only for criteria
-that say "Applies only ..."). The most recent measurement applies. Cite record ids with quotes.
+{rules}
 
-Reply with JSON only:
-{{"criteria": {{"<criterion id>": {{"status": "...", "reason": "...", "citations": [{{"id": "...", "quote": "..."}}]}}}},
- "decision": "APPROVE" | "DENY" | "NEED_INFO"}}"""
+Judge every criterion in the policy, then give the overall decision: APPROVE if all apply and are met, DENY if any
+is not met, NEED_INFO if none is failed but some are undocumented."""
 
 
-async def baseline(model, case: dict) -> dict:
-    """One model call with the request, the right policy and the whole chart. The common first attempt."""
+class BaselineOut(BaseModel):
+    criteria: list[CriterionOut]
+    decision: str = Field(description="APPROVE | DENY | NEED_INFO")
+
+
+async def baseline(model, case: dict, annotated: bool = False, use_guards: bool = False) -> dict:
+    """One model call with the request, the right policy and the whole record. The common first attempt.
+    annotated=True gives it the same day-counted record the specialists get; use_guards=True applies the same
+    code checks and computes the decision in code (an ablation, not the baseline)."""
     req = case["request"]
-    policy = POLICIES[case["truth"]["policy"]]
+    pol = POLICIES[case["truth"]["policy"]]
     records = fhir.chart(req["patient_id"])
-    chart_text = "\n".join(f"{fhir.line(r)}" for r in sorted(records.values(), key=fhir.when, reverse=True))
-    out = await model.ainvoke([SystemMessage(BASELINE.format(policy=policy["text"])),
-                               HumanMessage(f"{request_form(req)}\nMedical record:\n{chart_text}")])
-    try:
-        parsed = parse_json(text_of(out))
-    except (ValueError, json.JSONDecodeError):
-        parsed = {"criteria": {}, "decision": "NEED_INFO", "parse_error": True}
-    md = out.usage_metadata or {}
-    crit = {}
-    for c in policy["criteria"]:
-        v = (parsed.get("criteria") or {}).get(c["id"]) or {}
-        cites = [{"id": str(x.get("id")), "quote": str(x.get("quote", "")),
-                  "verified": str(x.get("id")) in records and fhir.quote_found(records[str(x.get("id"))], str(x.get("quote", "")), req["order_date"])}
-                 for x in v.get("citations") or []]
-        crit[c["id"]] = {"status": v.get("status", "missing"), "citations": cites, "reason": v.get("reason", "")}
-    return {"decision": parsed.get("decision", "NEED_INFO"), "verified": crit,
-            "usage": {"single": {"input": md.get("input_tokens", 0), "output": md.get("output_tokens", 0), "calls": 1}}}
+    if annotated:
+        chart_text = fhir.timeline(req["patient_id"], req["order_date"])
+    else:
+        chart_text = "\n".join(fhir.line(r) for r in sorted(records.values(), key=fhir.when, reverse=True))
+    parsed, raw = await structured(model, BaselineOut, [SystemMessage(BASELINE.format(policy=pol["text"], rules=RULES)),
+                                                        HumanMessage(f"{request_form(req)}\nMedical record:\n{chart_text}")])
+    review = {c.criterion_id: c.model_dump() for c in parsed.criteria}
+    crit, notes, code_decision = check_review(case["truth"]["policy"], req["patient_id"], review, use_guards, req["order_date"])
+    return {"decision": code_decision if use_guards else parsed.decision, "verified": crit, "model_decision": parsed.decision,
+            "usage": tokens("single", [raw])}

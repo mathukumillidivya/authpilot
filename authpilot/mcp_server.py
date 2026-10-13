@@ -16,6 +16,13 @@ def _lines(rs: list[dict]) -> str:
 
 
 @mcp.tool()
+def get_record(patient_id: str, as_of: str) -> str:
+    """The patient's whole record, one line per entry in date order (oldest first), each marked with how many
+    days before the as_of date (YYYY-MM-DD) it falls. Use this to read everything at once."""
+    return fhir.timeline(patient_id, as_of)
+
+
+@mcp.tool()
 def get_patient(patient_id: str) -> str:
     """Demographics for a patient."""
     return _lines(fhir.by_type(patient_id, "Patient"))

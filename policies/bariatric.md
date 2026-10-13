@@ -14,5 +14,6 @@ Covered when all of the following are met.
   gastric bypass, open or laparoscopic biliopancreatic diversion with duodenal switch,
   laparoscopic adjustable gastric banding, or laparoscopic sleeve gastrectomy.
 
-Not covered: treatment of obesity alone; open adjustable gastric banding; open sleeve
-gastrectomy; vertical banded gastroplasty; intestinal bypass; gastric balloon.
+Not covered: treatment of obesity alone; open adjustable gastric banding; open (not laparoscopic)
+sleeve gastrectomy; vertical banded gastroplasty; intestinal bypass; gastric balloon. Laparoscopic
+sleeve gastrectomy is a covered type under this policy.

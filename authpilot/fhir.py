@@ -153,3 +153,9 @@ def quote_found(resource: dict, quote: str, order_date: str | None = None) -> bo
         return True
     words = re.findall(r"[a-z]{4,}", q_rest)
     return bool(words) and sum(w in full for w in words) / len(words) >= 0.7
+
+
+def timeline(patient_id: str, as_of: str) -> str:
+    """Whole record in date order, each line marked with days before `as_of` (negative means after it)."""
+    rs = sorted(chart(patient_id).values(), key=when)
+    return "\n".join(f"{line(r)}  [days before order: {days_before(when(r), as_of)}]" for r in rs)

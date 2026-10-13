@@ -14,7 +14,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PRICE = {"input": 1.0 / 1e6, "output": 5.0 / 1e6}       # Claude Haiku 4.5, USD per token
+PRICE = {"input": 1.0 / 1e6, "output": 5.0 / 1e6, "cache_read": 0.1 / 1e6, "cache_write": 1.25 / 1e6}   # Claude Haiku 4.5
 TRUTH = {json.loads(l)["case_id"]: json.loads(l)["truth"] for l in open(ROOT / "data/cases.jsonl")}
 
 
@@ -23,7 +23,7 @@ def load(run: str) -> list[dict]:
 
 
 def cost(usage: dict | None) -> float:
-    return sum(v.get("input", 0) * PRICE["input"] + v.get("output", 0) * PRICE["output"] for v in (usage or {}).values())
+    return sum(v.get(k, 0) * PRICE[k] for v in (usage or {}).values() for k in PRICE)
 
 
 def summarise(rows: list[dict]) -> dict:
