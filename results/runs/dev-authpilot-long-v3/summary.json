@@ -1,0 +1,40 @@
+{
+  "dev-authpilot-long-v3": {
+    "cases": 40,
+    "errors": 0,
+    "accuracy": 0.725,
+    "correct": 29,
+    "wrongful_denials": 0,
+    "wrongful_approvals": 6,
+    "denials": 10,
+    "denials_without_verified_evidence": 0,
+    "criterion_accuracy": 0.875,
+    "citations": 230,
+    "citations_verified": 1.0,
+    "confusion": {
+      "APPROVE->APPROVE": 8,
+      "APPROVE->NEED_INFO": 5,
+      "DENY->APPROVE": 5,
+      "DENY->DENY": 10,
+      "NEED_INFO->APPROVE": 1,
+      "NEED_INFO->NEED_INFO": 11
+    },
+    "by_policy": {
+      "cpap": "19/20",
+      "oxygen": "10/20"
+    },
+    "by_truth": {
+      "APPROVE": "8/13",
+      "DENY": "10/15",
+      "NEED_INFO": "11/12"
+    },
+    "by_trap": {
+      "note_only": "13/16",
+      "boundary": "10/15",
+      "claim": "2/4"
+    },
+    "cost_per_case": 0.1372,
+    "model_calls_per_case": 9.8,
+    "median_seconds": 11.95
+  }
+}

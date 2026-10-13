@@ -1,0 +1,10 @@
+{
+  "system": "authpilot",
+  "split": "dev",
+  "limit": 40,
+  "concurrency": 4,
+  "model": "claude-haiku-4-5-20251001",
+  "run_id": "dev-authpilot-long-v3",
+  "history": "long",
+  "cases": 40
+}
