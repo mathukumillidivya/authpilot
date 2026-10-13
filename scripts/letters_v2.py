@@ -81,7 +81,7 @@ def main():
             reasons = {k: v.get("reason", "")[:200] for k, v in crit.items()}
         spent += sum(usage.get(k, 0) * PRICE[k] for k in PRICE)
         letter = assemble(case["request"], r["decision"], crit, policy, LABELS, reasons, LETTER_DATE)
-        row = {"case_id": r["case_id"], "letter": letter, "letter_date": LETTER_DATE,
+        row = {"case_id": r["case_id"], "letter": letter, "letter_date": LETTER_DATE, "reasons": reasons,
                "gate": validate(letter, r["decision"], crit, case, LETTER_DATE), "usage": usage}
         rows.append(row)
         with open(out_path, "a") as f:
