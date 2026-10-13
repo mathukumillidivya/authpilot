@@ -353,8 +353,8 @@ tr.ours td { font-weight: 700 }
 .part { fill: #8FE6FF } .part.amber { fill: #FFD27A } .part.red { fill: #FF8E86 }
 .nd .core { fill: #0B1A33; stroke: #2B4470; stroke-width: 1.5; transition: fill .3s, stroke .3s }
 .nd .ico { fill: none; stroke: #6E84A6; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; transition: stroke .3s }
-.nd .lab { fill: #C3D1E6; font-size: 13px; font-weight: 600; font-family: var(--sans) }
-.nd .role { fill: #5F7395; font-size: 10.5px; font-family: var(--sans) }
+.nd .lab { fill: #D3DEEE; font-size: 15px; font-weight: 600; font-family: var(--sans) }
+.nd .role { fill: #6E84A6; font-size: 12px; font-family: var(--sans) }
 .nd .halo { fill: none; stroke: var(--cyan); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center }
 .nd.active .core { stroke: var(--cyan); fill: #0F2850 } .nd.active .ico { stroke: #BFF0FF }
 .nd.active .halo { animation: halo 1.3s ease-out infinite }
@@ -401,41 +401,64 @@ tr.ours td { font-weight: 700 }
 body.home .side, body.home .top { display: none }
 body.home .app { grid-template-columns: minmax(0, 1fr) }
 body.home .view { max-width: none; padding: 0; gap: 0 }
-.lp { color: var(--film) }
+.lp { color: var(--film); overflow-x: clip }
 .lp-nav { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 12px 26px; padding: 14px clamp(16px, 4vw, 48px); background: color-mix(in srgb, #050C19 80%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid #10203B; flex-wrap: wrap }
 .lp-nav .links { display: flex; gap: 4px 18px; margin-right: auto; flex-wrap: wrap }
 body.home .brand span { display: inline !important }
 @media (max-width: 700px) { .lp-nav .links { display: none } .lp-nav { justify-content: space-between } }
 .lp-nav .links a { color: var(--film-2); text-decoration: none; font-size: 14.5px } .lp-nav .links a:hover { color: var(--film) }
-.lp-wrap { max-width: 1260px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) }
-.hero { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); gap: 36px; align-items: center; padding: clamp(40px, 7vw, 90px) 0 50px }
-@media (max-width: 1000px) { .hero { grid-template-columns: minmax(0, 1fr) } }
-.hero h1 { font-size: clamp(38px, 4.9vw, 72px); line-height: .96; font-stretch: 125%; font-weight: 900; letter-spacing: -.03em }
-.hero h1 .l2 { display: block; background: linear-gradient(90deg, #4FD1FF, #9DBBFF 45%, #F2E35B); -webkit-background-clip: text; background-clip: text; color: transparent }
-.hero p { font-size: 18px; color: var(--film-2); max-width: 54ch; margin: 22px 0 28px }
-.hero .ctas { display: flex; gap: 12px; flex-wrap: wrap }
-.hero .ctas .btn { font-size: 15.5px; padding: 13px 20px }
-.hero-vis { border: 1px solid #1E3560; border-radius: 18px; background: radial-gradient(600px 300px at 40% 0%, #12336A99, transparent 70%), #061126; padding: 12px; box-shadow: 0 40px 120px -40px #4FD1FF66; position: relative }
-.hero-vis .bar { display: flex; gap: 8px; align-items: center; padding: 4px 6px 10px; font-size: 12.5px; color: var(--film-3) }
-.hero-vis .bar .mode { margin-right: auto }
-.hero-vis .stampover { position: absolute; right: 7%; bottom: 14%; opacity: 0; transform: rotate(-8deg) scale(2) }
-.hero-vis .stampover.on { animation: slam2 .5s cubic-bezier(.2, 1.5, .4, 1) forwards }
-@keyframes slam2 { 60% { opacity: 1 } to { opacity: 1; transform: rotate(-8deg) scale(1) } }
+.lp-wrap { max-width: 1320px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) }
+.hero { display: grid; justify-items: center; text-align: center; gap: 0; padding: clamp(48px, 7vw, 96px) 0 0 }
+.kick { display: inline-flex; gap: 10px; align-items: center; font-size: 13.5px; color: var(--film-2); border: 1px solid #1E3560; background: #0B1A3399; border-radius: 99px; padding: 6px 14px 6px 8px }
+.kick b { background: var(--cyan); color: #04121F; border-radius: 99px; padding: 2px 9px; font-size: 12px }
+.hero h1 { font-size: clamp(36px, 5.1vw, 80px); line-height: 1; font-stretch: 116%; font-weight: 900; letter-spacing: -.03em; margin-top: 26px; text-wrap: balance; max-width: 15.5em }
+.hero h1 .l2 { display: block; background: linear-gradient(90deg, #4FD1FF, #9DBBFF 50%, #F2E35B); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: .08em }
+.hero > p { font-size: clamp(16px, 1.4vw, 19px); color: var(--film-2); max-width: 60ch; margin: 22px 0 30px; text-wrap: pretty }
+.hero .ctas { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center }
+.hero .ctas .btn { font-size: 15.5px; padding: 13px 22px }
+.frame { width: 100%; margin-top: clamp(40px, 6vw, 70px); border: 1px solid #22406E; border-radius: 18px; background: radial-gradient(900px 360px at 35% -10%, #12336A99, transparent 70%), #050F21; box-shadow: 0 60px 140px -50px #4FD1FF77, 0 0 0 1px #0A1A33; overflow: hidden; text-align: left; position: relative }
+.frame-bar { display: flex; gap: 14px; align-items: center; padding: 11px 16px; border-bottom: 1px solid #16294A; font-size: 13px; color: var(--film-3) }
+.frame-bar .dots { display: flex; gap: 6px } .frame-bar .dots i { width: 10px; height: 10px; border-radius: 50%; background: #1E3560 }
+.frame-bar .crumb { font-family: var(--mono); font-size: 12px; margin-right: auto } .frame-bar .crumb b { color: var(--film) }
+.frame-body { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr); min-height: 430px }
+@media (max-width: 960px) { .frame-body { grid-template-columns: minmax(0, 1fr) } .frame .chat { display: none } }
+.frame .netbox { padding: 18px 10px 8px; display: grid; align-items: center }
+.frame .chat { max-height: 470px }
+.frame .stampover .stamp { font-size: clamp(22px, 2.4vw, 32px) }
+.frame .stampover { position: absolute; left: 16%; top: 82%; transform: translate(-50%, -50%) rotate(-8deg) scale(2); opacity: 0; pointer-events: none }
+.frame .stampover.on { animation: slam2 .5s cubic-bezier(.2, 1.5, .4, 1) forwards }
+@media (max-width: 960px) { .frame .stampover { left: 50% } }
+@keyframes slam2 { 60% { opacity: 1 } to { opacity: 1; transform: translate(-50%, -50%) rotate(-8deg) scale(1) } }
+.stats { margin-top: 56px }
+.sec-head { text-align: center; display: grid; justify-items: center; gap: 12px; padding: 110px 0 40px }
+.sec-head .k { font-family: var(--mono); font-size: 13px; color: var(--cyan) }
+.sec-head h2 { font-size: clamp(30px, 4vw, 56px); line-height: 1; font-stretch: 116%; font-weight: 900; letter-spacing: -.025em; text-wrap: balance; max-width: 18em }
+.sec-head p { color: var(--film-2); max-width: 60ch; font-size: 17px }
+.rail { position: relative; display: grid; gap: 0 }
+.rail::before { content: ""; position: absolute; left: 58px; top: 24px; bottom: 24px; width: 2px; background: linear-gradient(#4FD1FF, #9DBBFF 60%, #FF6F66) ; opacity: .35 }
+@media (max-width: 900px) { .rail::before { left: 11px } }
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid #16294A; border-bottom: 1px solid #16294A }
 @media (max-width: 800px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
 .stats div { padding: 22px 18px; border-right: 1px solid #16294A; display: grid; gap: 4px } .stats div:last-child { border-right: 0 }
 .stats b { font-stretch: 125%; font-weight: 900; font-size: clamp(28px, 3.4vw, 44px); line-height: 1; color: var(--film) }
 .stats span { font-size: 13.5px; color: var(--film-3) }
-.story { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(24px, 5vw, 70px); align-items: center; min-height: 78vh; padding: 60px 0 }
-.story.flip { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) } .story.flip .txt { order: 2 }
-@media (max-width: 900px) { .story, .story.flip { grid-template-columns: minmax(0, 1fr); min-height: 0 } .story.flip .txt { order: 0 } }
+.story { display: grid; grid-template-columns: 118px minmax(0, 1fr) minmax(0, 1.12fr); gap: 0 clamp(24px, 4vw, 56px); align-items: center; padding: 44px 0 }
+@media (max-width: 900px) { .story { grid-template-columns: 24px minmax(0, 1fr); gap: 14px 16px } .story .vis { grid-column: 2 } }
+.story .when { position: relative; display: grid; justify-items: center; gap: 8px; align-self: center }
+.story .when i { width: 18px; height: 18px; border-radius: 50%; background: #050C19; border: 2px solid var(--cyan); box-shadow: 0 0 0 6px #050C19, 0 0 18px #4FD1FF88; position: relative; z-index: 1; transition: background .4s, transform .4s }
+.story.in .when i { background: var(--cyan); transform: scale(1.1) }
+.story.last .when i { border-color: #FF6F66; box-shadow: 0 0 0 6px #050C19, 0 0 18px #FF6F6688 } .story.last.in .when i { background: #FF6F66 }
+.story .when span { font-family: var(--mono); font-size: 12.5px; color: var(--cyan); background: #050C19; padding: 2px 0 }
+@media (max-width: 900px) { .story .when { align-self: start; padding-top: 6px } .story .when span { display: none } }
 .story .k { font-family: var(--mono); font-size: 12.5px; color: var(--cyan) }
-.story h2 { font-size: clamp(30px, 4.2vw, 56px); line-height: 1; font-stretch: 125%; font-weight: 900; letter-spacing: -.025em; margin: 10px 0 16px }
-.story p { font-size: 17px; color: var(--film-2); max-width: 46ch }
+.story h2 { font-size: clamp(28px, 3.3vw, 46px); line-height: 1.02; font-stretch: 112%; font-weight: 900; letter-spacing: -.02em; margin: 8px 0 14px; text-wrap: balance }
+.story p { font-size: 16.5px; color: var(--film-2); max-width: 44ch }
+.story .vis { min-height: 300px; display: grid; align-items: center }
 .reveal { opacity: 0; transform: translateY(30px); transition: opacity .8s, transform .8s cubic-bezier(.2, .8, .2, 1) }
 .in .reveal, .reveal.in { opacity: 1; transform: none }
 .vcard { border: 1px solid #1E3560; border-radius: 16px; background: linear-gradient(180deg, #0C1D3B, #071226); padding: 22px; box-shadow: 0 30px 80px -40px #4FD1FF44 }
-.faxv { background: #F4F7FB; color: #0F2747; border-radius: 6px; padding: 22px; font-family: var(--mono); font-size: 13px; line-height: 1.75; transform: rotate(-1.5deg); box-shadow: 0 30px 60px -20px #000 }
+.faxv { background: #F4F7FB; color: #0F2747; border-radius: 10px; padding: 24px 26px; font-family: var(--mono); font-size: 13px; line-height: 1.8; box-shadow: 0 30px 70px -24px #000, 0 0 0 1px #22406E; position: relative }
+.faxv::before { content: "Fax received 08:00:00"; position: absolute; top: -12px; left: 18px; font-family: var(--sans); font-size: 12px; font-weight: 700; background: var(--cyan); color: #04121F; border-radius: 99px; padding: 2px 10px }
 .faxv .ln { overflow: hidden; white-space: nowrap; width: 0; display: block }
 .in .faxv .ln { animation: type 1s steps(40) forwards }
 @keyframes type { to { width: 100% } }
@@ -1102,7 +1125,7 @@ const ICON = { fax: "M7 3h7l4 4v14H7z M14 3v4h4 M10 12h6 M10 16h6", intake: "M2 
   policy: "M4 12h6l4-6h6 M10 12l4 6h6 M17 3l3 3-3 3 M17 15l3 3-3 3", record: "M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3-3.1 3-7 3-7-1.3-7-3z M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6 M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3",
   verify: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M8.5 12l2.5 2.5 4.5-5", investigator: "M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14 M16 16l5 5", letter: "M4 20l4-1 11-11-3-3L5 16z M14 6l3 3",
   verdict: "M8 4h8v5l3 4H5l3-4z M4 17h16v3H4z", spec: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8" };
-const AGENTS = { fax: ["Request", "Fax from the provider", "code"], intake: ["Intake", "AI agent", "ai"], policy: ["Router", "Code", "code"], record: ["FHIR record", "MCP server", "code"],
+const AGENTS = { fax: ["Request", "From the provider", "code"], intake: ["Intake", "AI agent", "ai"], policy: ["Router", "Code", "code"], record: ["FHIR record", "MCP server", "code"],
   verify: ["Verifier", "Code", "code"], investigator: ["Investigator", "AI agent with tools", "ai"], letter: ["Scribe", "AI agent", "ai"], verdict: ["Verdict", "Decision", "vd"] };
 const NETS = new Set();
 function createNet(svg, keys, short) {
@@ -1120,9 +1143,9 @@ function createNet(svg, keys, short) {
   const node = (key) => { const [x, y] = P[key], spec = key.startsWith("s_"), k = spec ? key.slice(2) : key, ag = spec ? [short(k), "Specialist", "ai"] : AGENTS[key];
     const code = ag[2] === "code", core = code ? `<rect class="core" x="-24" y="-24" width="48" height="48" rx="12"/>` : `<circle class="core" r="25"/>`;
     const lab = spec ? `<text class="lab" x="0" y="-35" text-anchor="middle">${esc(ag[0])}</text>`
-      : `<text class="lab" x="0" y="${key === "record" ? -38 : 44}" text-anchor="middle">${ag[0]}</text><text class="role" x="0" y="${key === "record" ? -25 : 58}" text-anchor="middle">${ag[1]}</text>`;
+      : `<text class="lab" x="0" y="${key === "record" ? -40 : 47}" text-anchor="middle">${ag[0]}</text><text class="role" x="0" y="${key === "record" ? -26 : 63}" text-anchor="middle">${ag[1]}</text>`;
     return `<g class="nd${key === "verdict" ? " vd" : ""}" id="${id}-n-${key}" transform="translate(${x},${y})"><circle class="halo" r="27"/>${core}<path class="ico" d="${ICON[spec ? "spec" : key]}" transform="translate(-12,-12)"/>${lab}</g>`; };
-  svg.setAttribute("viewBox", "0 -10 980 450");
+  svg.setAttribute("viewBox", "-6 0 990 445");
   svg.innerHTML = `<g>${E.map(([a, b, l]) => `<path class="edge${l ? " loop" : ""}" id="${id}-e-${a}-${b}" d="${path(a, b, l)}"/>`).join("")}</g><g class="parts"></g><g>${Object.keys(P).map(node).join("")}</g>`;
   const parts = svg.querySelector(".parts"), flows = new Map(), dots = [];
   const net = {
@@ -1155,7 +1178,7 @@ const shortName = k => SHORT[k] || LABEL[k] || k;
 const svgIcon = k => `<svg viewBox="0 0 24 24"><path d="${ICON[k]}"/></svg>`;
 let chatT0 = 0;
 function say(who, html, opts = {}) {
-  const th = $("#thread"); if (!th) return;
+  const th = opts.th || $("#thread"); if (!th) return;
   const spec = who.startsWith("s_"), k = spec ? who.slice(2) : who, ag = spec ? [LABEL[k] || k, "Specialist", "ai"] : AGENTS[who];
   const li = document.createElement("li");
   li.className = "msg" + (opts.anim === false ? "" : " new") + (who === "verdict" ? " vdm" : "");
@@ -1222,49 +1245,57 @@ function netStep(e) {
 
 /* =========================================================== LANDING (scroll story) */
 function viewHome(v) {
-  const R = DATA.results.test, S = R && R.systems, a = S.authpilot;
-  const secs = median(Q.map(r => r.secs));
+  const R = DATA.results.test, S = R.systems, a = S.authpilot, secs = median(Q.map(r => r.secs));
+  const step = (when, k, h, p, vis, last) => `<section class="story${last ? " last" : ""}"><div class="when"><i></i><span>${when}</span></div><div class="txt reveal"><span class="k">${k}</span><h2>${h}</h2><p>${p}</p></div><div class="vis reveal">${vis}</div></section>`;
   v.innerHTML = `<div class="lp">
   <nav class="lp-nav"><a class="brand" href="#/"><svg viewBox="0 0 32 32" aria-hidden="true" style="width:28px;height:28px"><rect x="2" y="2" width="28" height="28" rx="6" fill="none" stroke="#F2E35B" stroke-width="2.2"/><path d="M9 16.5l4.5 4.5L23 11" stroke="#F2E35B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>AuthPilot</span></a>
     <div class="links"><a href="#story">How a review works</a><a href="#proof">Results</a><a href="#/case/0181">Mission control</a><a href="#/queue">Workspace</a></div><a class="btn hl" href="#/queue" style="text-decoration:none">Open the workspace</a></nav>
   <div class="lp-wrap">
     <section class="hero">
-      <div class="reveal in"><h1>Prior authorization takes days. <span class="l2">AI agents do it in seconds.</span></h1>
-        <p>Specialist agents check every coverage rule against the patient's record and quote their evidence. Code checks every quote and every date, then makes the call. A clinician signs every denial.</p>
-        <div class="ctas"><a class="btn hl" href="#/case/0181" style="text-decoration:none"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>Watch a live review</a><a class="btn line" href="#/queue" style="text-decoration:none">Open the workspace</a></div></div>
-      <div class="hero-vis reveal in"><div class="bar"><span class="mode replay" id="hmode"><i></i>Reviewing PA-20250181</span><span class="mono" id="hclock">0.0s</span></div><svg id="hnet" aria-label="Animated network of AuthPilot's agents reviewing a defibrillator request"></svg>
-        <div class="stampover" id="hstamp"><div class="stamp DENY">Denied<small>Held for clinician sign-off</small></div></div></div>
+      <span class="kick reveal in"><b>Multi-agent</b>Built with LangGraph, MCP and FHIR</span>
+      <h1 class="reveal in">Prior authorization takes days. <span class="l2">AI agents do it in seconds.</span></h1>
+      <p class="reveal in">Specialist agents check every coverage rule against the patient's record and quote their evidence. Code checks every quote and every date, then makes the call. A clinician signs every denial.</p>
+      <div class="ctas reveal in"><a class="btn hl" href="#/case/0181" style="text-decoration:none"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>Watch a live review</a><a class="btn line" href="#/queue" style="text-decoration:none">Open the workspace</a></div>
+      <div class="frame reveal in">
+        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="crumb">authpilot / mission control / <b>PA-20250181</b></span><span class="mode replay" id="hmode"><i></i>Reviewing</span><span class="mono" id="hclock" style="min-width:44px;text-align:right">0.0s</span></div>
+        <div class="frame-body"><div class="netbox"><svg id="hnet" aria-label="Animated network of AuthPilot's agents reviewing a defibrillator request"></svg></div>
+          <div class="chat"><div class="chat-h"><b>#pa-20250181</b><span>9 agents</span></div><ol class="thread" id="hthread" aria-live="off"></ol><div class="typing" id="htyping"></div></div></div>
+        <div class="stampover" id="hstamp"><div class="stamp DENY">Denied<small>Held for clinician sign-off</small></div></div>
+      </div>
     </section>
     <div class="stats reveal">${[[pct(a.accuracy), "correct on 200 requests it had never seen"], [`${a.denials_without_verified_evidence}`, "denials without verified evidence"], [`${secs.toFixed(1)}s`, "median review, specialists in parallel"], [`$${a.cost_per_case.toFixed(2)}`, "per request with Claude Haiku 4.5"]].map(([x, y]) => `<div><b>${x}</b><span>${y}</span></div>`).join("")}</div>
-    <div id="story">
-    <section class="story"><div class="txt reveal"><span class="k">8:00:00</span><h2>A request arrives.</h2><p>A cardiologist wants an implantable defibrillator for Luis Okafor, and writes that he meets every coverage rule. Today a nurse would spend days checking that claim against a 57-entry chart.</p></div>
-      <div class="vis reveal"><div class="faxv"><span class="ln">PRIOR AUTHORIZATION REQUEST  PA-20250181</span><span class="ln" style="animation-delay:.4s">Member: Luis Okafor   DOB 1939-02-06</span><span class="ln" style="animation-delay:.8s">Service: Implantable defibrillator (33249)</span><span class="ln" style="animation-delay:1.2s">Diagnosis: Ischemic cardiomyopathy (I25.5)</span><span class="ln" style="animation-delay:1.6s">Ordered 2025-05-27 by Dr. L. Zhang</span><div class="claim">“Patient meets all coverage criteria.”</div></div></div></section>
-    <section class="story flip"><div class="txt reveal"><span class="k">+1.9s</span><h2>Four specialists read the whole record at once.</h2><p>The router finds Medicare's policy by procedure code and gives each of its four rules to its own AI specialist. Each one judges a single rule and must quote the record.</p></div>
-      <div class="vis reveal"><div class="agents4">${[["Heart function and class", "met", "LVEF 33%, NYHA class II"], ["Three months of therapy", "not_applicable", "Applies only to non-ischemic"], ["Shared decision visit", "met", "CardioSmart decision aid, 3 days earlier"], ["No recent heart attack or stent", "not_met", "Stent placed 84 days ago"]]
-        .map(([t, s, w]) => `<div class="ag"><b>${t}</b><span class="work">Reading 57 entries…</span><div class="res"><span class="st ${s}"><i>${STATUS[s][1]}</i>${STATUS[s][0]}</span><p style="font-size:13px;color:var(--film-2);margin-top:6px">${w}</p></div></div>`).join("")}</div></div></section>
-    <section class="story"><div class="txt reveal"><span class="k">+4.2s</span><h2>One finds a stent, 84 days before the order.</h2><p>Medicare excludes a defibrillator within 90 days of a stent. The provider's summary never mentioned it. The specialist found it in the procedure history.</p></div>
-      <div class="vis reveal vcard tl"><svg viewBox="0 0 560 210" role="img" aria-label="Timeline: a stent on 2025-03-04, 84 days before the order, inside the 90-day exclusion window">
+    <div class="sec-head reveal" id="story"><span class="k">One request, start to finish</span><h2>Watch 8.5 seconds of a prior authorization review.</h2><p>A real run from the test set: Luis Okafor's defibrillator request, step by step.</p></div>
+    <div class="rail">
+    ${step("0.0s", "The request", "A request arrives.", "A cardiologist asks for an implantable defibrillator for Luis Okafor and writes that he meets every coverage rule. Today a nurse would spend days checking that claim against his 57-entry chart.",
+      `<div class="faxv"><span class="ln">PRIOR AUTHORIZATION REQUEST  PA-20250181</span><span class="ln" style="animation-delay:.4s">Member    Luis Okafor, born 1939-02-06</span><span class="ln" style="animation-delay:.8s">Service   Implantable defibrillator (33249)</span><span class="ln" style="animation-delay:1.2s">Diagnosis Ischemic cardiomyopathy (I25.5)</span><span class="ln" style="animation-delay:1.6s">Ordered   2025-05-27 by Dr. L. Zhang</span><div class="claim">“Patient meets all coverage criteria.”</div></div>`)}
+    ${step("1.9s", "The team", "Four specialists read the whole record at once.", "The router finds Medicare's policy by procedure code and hands each of its four rules to its own AI specialist. Each judges one rule and must quote the record.",
+      `<div class="agents4">${[["Heart function and class", "met", "LVEF 33%, NYHA class II"], ["Three months of therapy", "not_applicable", "Applies only to non-ischemic"], ["Shared decision visit", "met", "Decision aid used 3 days earlier"], ["No recent heart attack or stent", "not_met", "Stent placed 84 days ago"]]
+        .map(([t, s, w]) => `<div class="ag"><b>${t}</b><span class="work">Reading 57 entries…</span><div class="res"><span class="st ${s}"><i>${STATUS[s][1]}</i>${STATUS[s][0]}</span><p style="font-size:13px;color:var(--film-2);margin-top:6px">${w}</p></div></div>`).join("")}</div>`)}
+    ${step("4.2s", "The finding", "One finds a stent, 84 days before the order.", "Medicare excludes a defibrillator within 90 days of a stent. The provider's summary never mentioned it. The specialist found it in the procedure history.",
+      `<div class="vcard tl"><svg viewBox="0 0 560 210" role="img" aria-label="Timeline: a stent on 2025-03-04, 84 days before the order, inside the 90-day exclusion window">
         <rect class="band" x="330" y="40" width="210" height="110" rx="6" fill="#FF6F6618" stroke="#FF6F6666" stroke-dasharray="4 4"/><text class="lbl" x="338" y="60" font-size="12" fill="#FF8E86">90-day exclusion window</text>
         <line class="draw" x1="20" y1="120" x2="540" y2="120" stroke="#4FD1FF" stroke-width="2.5"/>
         <g fill="#7E93B3" font-size="11" font-family="Martian Mono, monospace"><text x="20" y="150">2 yr</text><text x="190" y="150">1 yr</text><text x="330" y="150">90 d</text><text x="500" y="150">Order</text></g>
         <circle cx="90" cy="120" r="5" fill="#7E93B3"/><circle cx="210" cy="120" r="5" fill="#7E93B3"/><circle cx="268" cy="120" r="5" fill="#7E93B3"/><circle cx="460" cy="120" r="5" fill="#7E93B3"/><circle cx="540" cy="120" r="7" fill="#F2E35B"/>
         <g class="pin"><circle cx="350" cy="120" r="11" fill="#FF6F66"/><circle cx="350" cy="120" r="20" fill="none" stroke="#FF6F66" stroke-width="2" opacity=".5"/></g>
-        <g class="lbl"><line x1="350" y1="100" x2="350" y2="84" stroke="#FF8E86"/><text x="350" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#FF8E86">Stent placed 2025-03-04</text><text x="350" y="200" text-anchor="middle" font-size="12" fill="#B9C9DE">84 days before the order</text></g></svg></div></section>
-    <section class="story flip"><div class="txt reveal"><span class="k">+4.9s</span><h2>Code checks every quote and every date.</h2><p>A finding only counts if its quote really is in the record, word for word, with the same numbers and dates. Date windows are computed by code, never by the model. When a specialist miscounts, code sends it back.</p></div>
-      <div class="vis reveal vcard"><ul class="checks">${[["doc-004", "LVEF 33% by biplane Simpson"], ["doc-003", "Heart failure, NYHA class II"], ["cond-001", "Ischemic cardiomyopathy (I25.5)"], ["doc-006", "Shared decision-making encounter"], ["enc-005", "Shared decision-making visit"], ["proc-007", "2025-03-04 PCI with drug-eluting stent"]]
-        .map(([id, q], i) => `<li style="animation-delay:${.15 * i}s"><i>✓</i><span><b style="color:var(--hi)">${id}</b> ${q}</span><em>found</em></li>`).join("")}<li style="animation-delay:1s"><i>✓</i><span>Stent: <b>84 days</b> before the order, computed in code</span><em>inside 90</em></li></ul></div></section>
-    <section class="story"><div class="txt reveal"><span class="k">+8.5s</span><h2>Denied, in 8.5 seconds, for 3 cents.</h2><p>The scribe drafts the letter from verified findings only, and the denial waits for a clinician's signature. Every step is traced and auditable.</p><p style="margin-top:18px"><a class="btn hl" href="#/case/0181" style="text-decoration:none">Watch this review in mission control</a></p></div>
-      <div class="vis reveal"><div class="bigstamp"><span class="shock"></span><div class="stamp DENY">Denied<small>Held for clinician sign-off</small></div></div></div></section>
+        <g class="lbl"><text x="350" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#FF8E86">Stent placed 2025-03-04</text><text x="350" y="200" text-anchor="middle" font-size="12" fill="#B9C9DE">84 days before the order</text></g></svg></div>`)}
+    ${step("4.9s", "The check", "Code checks every quote and every date.", "A finding only counts if its quote really is in the record, with the same numbers and dates. Date windows are computed by code, never by the model. When a specialist miscounts, code sends it back.",
+      `<div class="vcard"><ul class="checks">${[["doc-004", "LVEF 33% by biplane Simpson"], ["doc-003", "Heart failure, NYHA class II"], ["cond-001", "Ischemic cardiomyopathy (I25.5)"], ["doc-006", "Shared decision-making encounter"], ["enc-005", "Shared decision-making visit"], ["proc-007", "2025-03-04 PCI with drug-eluting stent"]]
+        .map(([id, q], i) => `<li style="animation-delay:${.15 * i}s"><i>✓</i><span><b style="color:var(--hi)">${id}</b> ${q}</span><em>found</em></li>`).join("")}<li style="animation-delay:1s"><i>✓</i><span>Stent: <b>84 days</b> before the order, counted in code</span><em>inside 90</em></li></ul></div>`)}
+    ${step("8.5s", "The verdict", "Denied in 8.5 seconds, for 3 cents.", "The scribe drafts the letter from verified findings only, and the denial waits for a clinician's signature. Every step is traced and auditable.",
+      `<div class="bigstamp"><span class="shock"></span><div class="stamp DENY">Denied<small>Held for clinician sign-off</small></div></div>`, true)}
     </div>
-    <section id="proof" style="padding:60px 0;display:grid;gap:28px"><div class="reveal"><span class="k mono" style="font-size:12.5px;color:var(--cyan)">Held-out test, run once</span><h2 style="font-size:clamp(30px,4.2vw,56px);line-height:1;font-stretch:125%;font-weight:900;letter-spacing:-.025em;margin-top:10px;max-width:18ch">Same model. Organised as a team, it got 18.5 points better.</h2></div>
+    <div style="display:flex;justify-content:center;padding-top:16px"><a class="btn hl" href="#/case/0181" style="text-decoration:none">Watch this review in mission control</a></div>
+    <div class="sec-head reveal" id="proof"><span class="k">Held-out test, run once</span><h2>Same model. Organised as a team, it scored 18.5 points higher.</h2><p>200 requests the system had never seen, across five Medicare policies.</p></div>
+    <section style="display:grid;gap:26px;max-width:980px;margin:0 auto">
       <div class="cmp reveal" id="cmp">${["baseline", "single_plus", "authpilot"].map(s => `<div class="row${s === "authpilot" ? " ours" : ""}"><span>${NAME[s]}</span><div class="barw"><i data-w="${S[s].accuracy * 100}"></i></div><b class="v" data-v="${S[s].accuracy * 100}">0%</b></div>`).join("")}</div>
-      <p class="reveal" style="color:var(--film-2);max-width:70ch">200 requests the system had never seen, across five Medicare policies. AuthPilot wrongly denied ${a.wrongful_denials} and wrongly approved ${a.wrongful_approvals}; a single AI call wrongly approved ${S.baseline.wrongful_approvals}. 95% interval on the gain: ${(R.paired.authpilot_vs_baseline.ci95[0] * 100).toFixed(1)} to ${(R.paired.authpilot_vs_baseline.ci95[1] * 100).toFixed(1)} points. <a href="#/evaluation">See every case</a>.</p>
-      <div class="techs reveal">${["LangGraph", "Model Context Protocol", "FHIR", "Claude Haiku 4.5", "FastAPI streaming", "Paired bootstrap evaluation"].map(t => `<span>${t}</span>`).join("")}</div></section>
+      <p class="reveal" style="color:var(--film-2);text-align:center">AuthPilot wrongly denied ${a.wrongful_denials} and wrongly approved ${a.wrongful_approvals}; a single AI call wrongly approved ${S.baseline.wrongful_approvals}. 95% interval on the gain: ${(R.paired.authpilot_vs_baseline.ci95[0] * 100).toFixed(1)} to ${(R.paired.authpilot_vs_baseline.ci95[1] * 100).toFixed(1)} points. <a href="#/evaluation">See every case</a>.</p>
+      <div class="techs reveal" style="justify-content:center">${["LangGraph", "Model Context Protocol", "FHIR", "Claude Haiku 4.5", "FastAPI streaming", "Paired bootstrap evaluation"].map(t => `<span>${t}</span>`).join("")}</div></section>
     <section class="final reveal"><h2>Open the workspace and review a case yourself.</h2><p style="color:var(--film-2);max-width:56ch">300 requests reviewed by the agents, a mission control for every case, and live runs on demand.</p><div class="ctas" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center"><a class="btn hl" href="#/queue" style="text-decoration:none">Open the workspace</a><a class="btn line" href="#/simulator" style="text-decoration:none">Build a patient</a></div></section>
   </div>
   <footer class="lp-foot"><span><b style="color:var(--film)">AuthPilot</b>, built by Divya Sri.</span><span>Synthetic patients. Medicare NCD 240.2, 100.1, 20.4 and LCD L33718, L33797, L33822.</span></footer></div>`;
   $$(".lp a[href^='#story'], .lp a[href^='#proof']", v).forEach(x => x.onclick = ev => { ev.preventDefault(); $(x.getAttribute("href")).scrollIntoView({ behavior: reduced ? "auto" : "smooth" }); });
-  const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add("in"); if (en.target.id === "cmp") countUp(); io.unobserve(en.target); } }), { threshold: .25 });
+  const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add("in"); if (en.target.id === "cmp") countUp(); io.unobserve(en.target); } }), { threshold: .3 });
   $$(".lp .reveal, .lp .story", v).forEach(x => io.observe(x));
   heroLoop();
 }
@@ -1276,25 +1307,37 @@ function countUp() {
 }
 function heroLoop() {
   const svg = $("#hnet"); if (!svg) return;
-  const keys = ["icd_indication", "icd_gdmt", "icd_sdm", "icd_exclusions"], N = createNet(svg, keys, shortName);
+  const keys = ["icd_indication", "icd_gdmt", "icd_sdm", "icd_exclusions"], N = createNet(svg, keys, shortName), th = $("#hthread");
   const st = { icd_indication: "met", icd_gdmt: "not_applicable", icd_sdm: "met", icd_exclusions: "not_met" };
-  if (reduced) { ["fax", "intake", "policy", "record", "verify", "letter"].forEach(k => N.node(k, "done")); N.node("investigator", "skipped"); keys.forEach(k => N.spec(k, st[k])); N.node("verdict", "DENY"); $("#hstamp").classList.add("on"); return; }
+  const hs = (who, html, status, t) => say(who, html, { th, status, t });
+  const ht = txt => { const el = $("#htyping"); if (el) el.innerHTML = txt ? `<i><b></b><b></b><b></b></i>${esc(txt)}` : ""; };
+  const msgs = {
+    intake: "Request read: <b>implantable defibrillator</b>, ordered 2025-05-27. The provider says “meets all coverage criteria”. Passing that on as a claim, not evidence.",
+    policy: "Matched Medicare NCD 20.4 by code 33249. Assigning 4 specialists.",
+    record: "Fetched 57 FHIR entries over MCP, each dated against the order.",
+    icd_gdmt: "<b>Not needed.</b> Three months of therapy applies only to non-ischemic cardiomyopathy.",
+    icd_exclusions: "<b>Not met.</b> Stent placed 2025-03-04, 84 days before the order. Inside the 90-day exclusion.",
+    icd_indication: "<b>Met.</b> LVEF 33% and NYHA class II.", icd_sdm: "<b>Met.</b> Shared decision visit with a decision aid, 3 days earlier.",
+    verify: "Checked 7 quotes against the record: <b>every one is there</b>. Stent window counted in code: 84 of 90 days.",
+    letter: "Letter drafted from verified findings only.", verdict: "<b>Denied.</b> Held for clinician sign-off. 8.5 seconds, $0.026." };
+  if (reduced) { ["fax", "intake", "policy", "record", "verify", "letter"].forEach(k => N.node(k, "done")); N.node("investigator", "skipped"); keys.forEach(k => N.spec(k, st[k])); N.node("verdict", "DENY"); $("#hstamp").classList.add("on");
+    ["intake", "policy", "record"].forEach(k => hs(k, msgs[k])); keys.forEach(k => hs("s_" + k, msgs[k], st[k])); hs("verify", msgs.verify); hs("verdict", msgs.verdict); return; }
   let start = 0; const T = [];
   const at = (ms, f) => T.push([ms, f]);
-  at(0, () => { N.reset(); $("#hstamp").classList.remove("on"); N.node("fax", "done"); N.node("intake", "active"); N.flow("fax", "intake", true); N.node("investigator", "skipped"); });
-  at(1300, () => { N.flow("fax", "intake", false); N.node("intake", "done"); N.node("policy", "active"); N.pulse("intake", "policy", 800); });
-  at(2100, () => { N.node("policy", "done"); N.node("record", "active"); N.pulse("policy", "record", 700); });
-  at(2800, () => { N.node("record", "done"); keys.forEach(k => { N.node("s_" + k, "active"); N.flow("record", "s_" + k, true); N.pulse("policy", "s_" + k, 1000); }); });
-  [["icd_gdmt", 4300], ["icd_exclusions", 4900], ["icd_indication", 5300], ["icd_sdm", 5600]].forEach(([k, ms]) => at(ms, () => { N.spec(k, st[k]); N.flow("record", "s_" + k, false); N.pulse("s_" + k, "verify", 1100, st[k] === "not_met" ? "red" : ""); }));
-  at(5900, () => N.node("verify", "active"));
-  at(6800, () => { N.node("verify", "done"); N.node("letter", "active"); N.flow("verify", "letter", true); });
-  at(8300, () => { N.flow("verify", "letter", false); N.node("letter", "done"); N.pulse("letter", "verdict", 900); });
-  at(9000, () => { N.node("verdict", "DENY"); $("#hstamp").classList.add("on"); $("#hmode").innerHTML = "<i></i>Denied in 8.5s"; });
-  at(13500, () => { $("#hmode").innerHTML = "<i></i>Reviewing PA-20250181"; });
+  at(0, () => { N.reset(); th.innerHTML = ""; $("#hstamp").classList.remove("on"); $("#hmode").className = "mode replay"; $("#hmode").innerHTML = "<i></i>Reviewing"; N.node("fax", "done"); N.node("intake", "active"); N.flow("fax", "intake", true); N.node("investigator", "skipped"); ht("Intake is reading the request"); });
+  at(1300, () => { N.flow("fax", "intake", false); N.node("intake", "done"); N.node("policy", "active"); N.pulse("intake", "policy", 800); hs("intake", msgs.intake, null, 1.3); ht("Router is matching the policy"); });
+  at(2100, () => { N.node("policy", "done"); N.node("record", "active"); N.pulse("policy", "record", 700); hs("policy", msgs.policy, null, 2.1); ht("Fetching the record over MCP"); });
+  at(2800, () => { N.node("record", "done"); keys.forEach(k => { N.node("s_" + k, "active"); N.flow("record", "s_" + k, true); N.pulse("policy", "s_" + k, 1000); }); hs("record", msgs.record, null, 2.8); ht("4 specialists are reading the record"); });
+  [["icd_gdmt", 4300], ["icd_exclusions", 4900], ["icd_indication", 5300], ["icd_sdm", 5600]].forEach(([k, ms]) => at(ms, () => { N.spec(k, st[k]); N.flow("record", "s_" + k, false); N.pulse("s_" + k, "verify", 1100, st[k] === "not_met" ? "red" : ""); hs("s_" + k, msgs[k], st[k], ms / 1000); }));
+  at(5900, () => { N.node("verify", "active"); ht("Verifier is checking every quote"); });
+  at(6800, () => { N.node("verify", "done"); N.node("letter", "active"); N.flow("verify", "letter", true); hs("verify", msgs.verify, null, 6.8); ht("Scribe is drafting the letter"); });
+  at(8300, () => { N.flow("verify", "letter", false); N.node("letter", "done"); N.pulse("letter", "verdict", 900); hs("letter", msgs.letter, null, 8.3); ht(""); });
+  at(8800, () => { N.node("verdict", "DENY"); $("#hstamp").classList.add("on"); $("#hmode").className = "mode"; $("#hmode").innerHTML = "<i></i>Denied in 8.5s"; hs("verdict", msgs.verdict); });
+  at(14500, () => {});
   let idx = 0;
   const run = now => { if (!svg.isConnected) return; if (!start) start = now; const el = now - start;
     while (idx < T.length && T[idx][0] <= el) T[idx++][1]();
-    if ($("#hclock")) $("#hclock").textContent = (Math.min(el, 8500) / 1000).toFixed(1) + "s";
+    const c = $("#hclock"); if (c) c.textContent = (Math.min(el, 8500) / 1000).toFixed(1) + "s";
     if (idx >= T.length) { start = now; idx = 0; }
     requestAnimationFrame(run); };
   requestAnimationFrame(run);
