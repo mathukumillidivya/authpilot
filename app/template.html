@@ -3,395 +3,374 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AuthPilot: prior authorization with the evidence attached</title>
-<meta name="description" content="AI agents review prior authorization requests against real Medicare policy, quote the patient record for every finding, and let code make the call.">
+<title>AuthPilot: prior authorization review workspace</title>
+<meta name="description" content="A utilization review workspace where AI agents review prior authorization requests against Medicare policy, quote the record for every finding, and leave denials for a clinician to sign.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='3' width='26' height='26' rx='5' fill='%230F2747'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' stroke='%23F2E35B' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Martian+Mono:wdth,wght@75..112.5,300..700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --navy: #0F2747; --navy-2: #163560; --navy-3: #234A7E; --navy-4: #31609C;
+  --navy: #0F2747; --navy-2: #163560; --navy-3: #234A7E; --navy-4: #31609C; --deep: #0B1F3A;
   --film: #EAF1FA; --film-2: #B9C9DE; --film-3: #8299B8;
   --hi: #F2E35B; --hi-ink: #3A3300;
-  --page: #F4F7FB; --paper: #FFFFFF; --ink: #0F2747; --muted: #52637D; --line: #D7E0EB;
-  --ok: #1E9E6A; --ok-d: #4CD39A; --no: #D63A3A; --no-d: #FF6F66; --ask: #B57A00; --ask-d: #F5B53D;
-  --violet: #6E4BD8; --ai: #9DBBFF; --code: #67D8C3;
-  --wide: "Archivo", system-ui, sans-serif; --mono: "Martian Mono", ui-monospace, monospace;
+  --bg: #EEF2F7; --panel: #FFFFFF; --ink: #0F2747; --ink-2: #33445F; --muted: #5A6B85; --line: #D7E0EB; --line-2: #E6ECF3; --sunk: #F5F8FB;
+  --ok: #17885A; --ok-bg: #DDF3EA; --ok-d: #4CD39A; --no: #C93434; --no-bg: #FBE2E1; --no-d: #FF6F66;
+  --ask: #9A6700; --ask-bg: #FBEFD6; --ask-d: #F5B53D; --na-bg: #E8EDF4;
+  --violet: #6E4BD8; --ai: #2F6FED; --ai-d: #9DBBFF; --code: #0E8C78; --code-d: #67D8C3;
+  --sans: "Archivo", system-ui, sans-serif; --mono: "Martian Mono", ui-monospace, monospace;
 }
 * { box-sizing: border-box; margin: 0; padding: 0 }
-html { scroll-behavior: smooth; scroll-padding-top: 70px }
-body { font-family: var(--wide); font-size: 16px; line-height: 1.55; color: var(--ink); background: var(--page); -webkit-font-smoothing: antialiased }
-button, select, input { font: inherit; color: inherit }
+[hidden] { display: none !important }
+body { font-family: var(--sans); font-size: 15px; line-height: 1.5; color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased }
+button, select, input, textarea { font: inherit; color: inherit }
 button { cursor: pointer }
-:focus-visible { outline: 3px solid var(--hi); outline-offset: 2px; border-radius: 4px }
-.shell { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: 24px }
-@media (max-width: 640px) { .shell { padding-inline: 16px } }
-.wide { font-stretch: 125%; font-weight: 800; letter-spacing: -.015em }
+a { color: var(--ai) }
+:focus-visible { outline: 3px solid #2F6FED; outline-offset: 2px; border-radius: 4px }
 .mono { font-family: var(--mono) }
+.num { font-variant-numeric: tabular-nums }
 
-/* ---------- header */
-.bar { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--navy) 94%, transparent); backdrop-filter: blur(8px); color: var(--film); border-bottom: 1px solid var(--navy-3) }
-.bar .shell { display: flex; align-items: center; gap: 12px 28px; min-height: 60px; flex-wrap: wrap }
-.brand { display: flex; align-items: center; gap: 10px; font-stretch: 125%; font-weight: 800; font-size: 19px; color: var(--film); text-decoration: none }
-.brand svg { width: 28px; height: 28px }
-.bar nav { display: flex; gap: 4px; margin-right: auto; overflow-x: auto; scrollbar-width: none }
-.bar nav a { color: var(--film-2); text-decoration: none; font-size: 15px; padding: 6px 10px; border-radius: 6px; white-space: nowrap }
-.bar nav a:hover { color: var(--film); background: var(--navy-2) }
-.bar .built { font-size: 13px; color: var(--film-3) }
-@media (max-width: 860px) { .bar .built { display: none } .bar .shell { padding-block: 6px } }
+/* ---------- app shell */
+.app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh }
+.side { background: var(--navy); color: var(--film); position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 18px 12px; gap: 22px; z-index: 20 }
+.brand { display: flex; align-items: center; gap: 10px; font-stretch: 125%; font-weight: 850; font-size: 19px; color: var(--film); text-decoration: none; padding: 0 8px }
+.brand svg { width: 28px; height: 28px; flex: none }
+.side nav { display: grid; gap: 2px }
+.side nav a { display: flex; align-items: center; gap: 11px; color: var(--film-2); text-decoration: none; padding: 9px 10px; border-radius: 8px; font-size: 14.5px; font-weight: 500 }
+.side nav a svg { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round }
+.side nav a:hover { background: var(--navy-2); color: var(--film) }
+.side nav a[aria-current="page"] { background: var(--navy-3); color: var(--film); box-shadow: inset 3px 0 var(--hi) }
+.side nav a .count { margin-left: auto; font-size: 12px; color: var(--film-3); font-family: var(--mono) }
+.side nav a .count.due { color: var(--hi-ink); background: var(--hi); border-radius: 99px; padding: 0 7px; font-weight: 700 }
+.side .grp { font-size: 12px; color: var(--film-3); padding: 0 10px; margin-bottom: 4px }
+.side .me { margin-top: auto; border-top: 1px solid var(--navy-3); padding: 14px 10px 0; display: grid; gap: 3px; font-size: 13px; color: var(--film-2) }
+.side .me b { color: var(--film); font-size: 14px }
+.main { min-width: 0; display: flex; flex-direction: column }
+.top { position: sticky; top: 0; z-index: 15; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 14px; padding: 10px 28px; min-height: 58px }
+.search { flex: 1; max-width: 460px; position: relative }
+.search input { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px 8px 34px; font-size: 14px }
+.search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2 }
+.status { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px; white-space: nowrap }
+.status i { width: 8px; height: 8px; border-radius: 50%; background: var(--film-3) }
+.status.on i { background: var(--ok); box-shadow: 0 0 0 3px #17885A30 }
+.status.wake i { background: var(--ask-d); animation: blink 1s infinite }
+@keyframes blink { 50% { opacity: .3 } }
+.demo { font-size: 12.5px; color: var(--muted) }
+.view { padding: 26px 28px 60px; display: grid; gap: 22px; align-content: start; max-width: 1480px; width: 100%; grid-template-columns: minmax(0, 1fr) }
+.view > *, .panel { min-width: 0 }
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr) }
+  .side { position: sticky; height: auto; flex-direction: row; align-items: center; padding: 10px 12px; gap: 12px; overflow-x: auto; scrollbar-width: none }
+  .side > div { flex: none } .side nav { display: flex; gap: 2px } .side .grp, .side .me, .side nav a .count { display: none }
+  .side nav a { white-space: nowrap; padding: 7px 9px } .side nav a svg { display: none }
+  .brand span { display: none }
+  .top { position: static; padding: 10px 16px } .demo { display: none } .search { max-width: none }
+  .view { padding: 18px 16px 48px }
+}
 
-/* ---------- stage */
-.stage { background: var(--navy); color: var(--film); padding-block: 40px 56px; position: relative; overflow: clip;
-  background-image: linear-gradient(var(--navy-2) 1px, transparent 1px), linear-gradient(90deg, var(--navy-2) 1px, transparent 1px);
-  background-size: 48px 48px; background-position: -1px -1px }
-.stage::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0, var(--navy) 420px); pointer-events: none }
-.stage > .shell { position: relative; display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr) }
-.intro { display: grid; gap: 16px; max-width: 900px }
-.intro h1 { font-size: clamp(36px, 5.4vw, 68px); line-height: .96; font-stretch: 125%; font-weight: 850; letter-spacing: -.025em }
-.intro h1 span { display: block; color: var(--film-2); font-weight: 600 }
-.intro p { color: var(--film-2); font-size: 18px; max-width: 62ch }
-.proof { display: inline-flex; align-items: baseline; gap: 10px; color: var(--film); text-decoration: none; border-bottom: 2px solid var(--hi); padding-bottom: 2px; width: fit-content; font-size: 16px }
-.proof b { font-stretch: 125%; font-size: 22px; color: var(--hi) }
-
-h2.small { font-size: 15px; font-weight: 600; color: var(--film-2) }
-.inbox { display: grid; gap: 10px }
-.slips { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity }
-.slip { flex: 1 0 158px; max-width: 260px; scroll-snap-align: start; text-align: left; background: var(--navy-2); border: 1px solid var(--navy-3); border-top: 4px solid var(--navy-3);
-  border-radius: 4px 4px 8px 8px; padding: 12px 14px 14px; display: grid; gap: 4px; align-content: start; color: var(--film) }
-.slip:hover { border-color: var(--navy-4) }
-.slip[aria-pressed="true"] { background: var(--navy-3); border-top-color: var(--hi) }
-.slip b { font-size: 16px }
-.slip .svc { font-size: 13px; color: var(--film-2) }
-.slip .when { font-family: var(--mono); font-size: 11px; color: var(--film-3) }
-.slip q { font-family: var(--mono); font-size: 11.5px; line-height: 1.5; color: var(--film-3); quotes: "\201C" "\201D"; margin-top: 4px }
-.slip.make { border-style: dashed; border-top-width: 1px; background: transparent; justify-content: start }
-.slip.make b { color: var(--hi) }
-
-.builder { background: var(--navy-2); border: 1px solid var(--navy-3); border-radius: 10px; padding: 18px; display: grid; gap: 14px }
-.builder .row { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) }
-.builder label { display: grid; gap: 5px; font-size: 13px; color: var(--film-2) }
-.builder select { background: var(--navy); border: 1px solid var(--navy-4); border-radius: 6px; padding: 8px 10px; color: var(--film); width: 100% }
-.builder .checks { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--film-2) }
-.builder .checks label { display: flex; gap: 8px; align-items: center; font-size: 14px }
-.builder .go { display: flex; gap: 14px; align-items: center; flex-wrap: wrap }
-.builder p { font-size: 13px; color: var(--film-3) }
-
-.btn { border: 0; border-radius: 8px; padding: 12px 18px; font-weight: 700; font-size: 15px; background: var(--hi); color: var(--hi-ink) }
-.btn:hover { filter: brightness(1.05) }
-.btn.ghost { background: transparent; color: var(--film); box-shadow: inset 0 0 0 1.5px var(--navy-4) }
-.btn.ghost:hover { box-shadow: inset 0 0 0 1.5px var(--film-2) }
-.btn:disabled { opacity: .45; cursor: default; filter: none }
-
-/* request + run */
-.desk { display: grid; gap: 20px; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start }
-@media (max-width: 960px) { .desk { grid-template-columns: minmax(0, 1fr) } }
-.fax { background: var(--paper); color: var(--ink); border-radius: 3px; padding: 22px 22px 20px; font-family: var(--mono); font-size: 12.5px; line-height: 1.65;
-  box-shadow: 0 1px 0 #fff3 inset, 0 18px 40px -18px #000a; position: relative }
-.fax::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: repeating-linear-gradient(90deg, var(--navy) 0 8px, transparent 8px 14px); opacity: .12 }
-.fax .head { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1.5px solid var(--ink); padding-bottom: 8px; margin-bottom: 10px; font-weight: 700 }
-.fax dl { display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 3px 12px }
-@media (max-width: 640px) { .fax { padding: 18px 16px; font-size: 12px } .fax dl { grid-template-columns: 6.6em minmax(0, 1fr) } }
-.fax dt { color: var(--muted) }
-.fax .claim { margin-top: 14px; border: 1.5px dashed #9DAABD; border-radius: 4px; padding: 10px 12px; display: grid; gap: 4px }
-.fax .claim small { font-family: var(--wide); font-size: 12px; color: var(--muted); font-weight: 600 }
-
-.run { background: var(--navy-2); border: 1px solid var(--navy-3); border-radius: 10px; padding: 18px; display: grid; gap: 16px }
-.run .ctl { display: flex; gap: 10px; flex-wrap: wrap; align-items: center }
-.meters { display: flex; gap: 26px; flex-wrap: wrap; align-items: end }
-.meter { display: grid; gap: 0 }
-.meter b { font-family: var(--mono); font-size: 26px; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums }
-.meter span { font-size: 12.5px; color: var(--film-3) }
-.runnote { font-size: 13.5px; color: var(--film-2); min-height: 1.4em }
-.rail { list-style: none; display: grid; gap: 0 }
-.rail li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 0 12px; padding-bottom: 12px; position: relative }
-.rail li::before { content: ""; position: absolute; left: 10px; top: 20px; bottom: 0; width: 2px; background: var(--navy-3) }
-.rail li:last-child::before { display: none }
-.rail .pin { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--navy-4); background: var(--navy); margin-top: 1px; position: relative; z-index: 1 }
-.rail li.running .pin { border-color: var(--hi); box-shadow: 0 0 0 4px #F2E35B30; animation: pulse 1.1s infinite }
-.rail li.done .pin { background: var(--film); border-color: var(--film) }
-.rail li.done .pin::after { content: ""; position: absolute; left: 6px; top: 3px; width: 5px; height: 9px; border: solid var(--navy); border-width: 0 2px 2px 0; transform: rotate(45deg) }
-.rail li.skipped { opacity: .45 }
-@keyframes pulse { 50% { box-shadow: 0 0 0 7px #F2E35B10 } }
-.rail .t { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap }
-.rail .t b { font-size: 15px }
+/* ---------- common */
+.vhead { display: flex; justify-content: space-between; align-items: end; gap: 12px 24px; flex-wrap: wrap }
+.vhead h1 { font-size: clamp(26px, 3vw, 36px); line-height: 1.05; font-stretch: 125%; font-weight: 850; letter-spacing: -.02em }
+.vhead p { color: var(--muted); max-width: 74ch; margin-top: 6px }
+.crumbs { font-size: 13.5px; color: var(--muted); display: flex; gap: 8px; align-items: center }
+.crumbs a { color: var(--muted); text-decoration: none } .crumbs a:hover { color: var(--ink) }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px }
+.panel > header { display: flex; justify-content: space-between; align-items: center; gap: 4px 12px; padding: 14px 18px; border-bottom: 1px solid var(--line-2); flex-wrap: wrap }
+.panel > header h2 { font-size: 15.5px; font-weight: 700 }
+.panel > header span { font-size: 13px; color: var(--muted) }
+.pad { padding: 16px 18px }
+.btn { border: 0; border-radius: 8px; padding: 9px 15px; font-weight: 700; font-size: 14px; background: var(--navy); color: var(--film); display: inline-flex; gap: 8px; align-items: center; white-space: nowrap }
+.btn:hover { background: var(--navy-2) }
+.btn.hl { background: var(--hi); color: var(--hi-ink) } .btn.hl:hover { filter: brightness(1.04) }
+.btn.line { background: var(--panel); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line) } .btn.line:hover { box-shadow: inset 0 0 0 1px var(--muted) }
+.btn.danger { background: var(--no); color: #fff } .btn.good { background: var(--ok); color: #fff }
+.btn:disabled { opacity: .45; cursor: default }
+.btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; border-radius: 6px; padding: 2px 8px; white-space: nowrap }
+.chip.APPROVE, .chip.met { background: var(--ok-bg); color: var(--ok) }
+.chip.DENY, .chip.not_met { background: var(--no-bg); color: var(--no) }
+.chip.NEED_INFO, .chip.missing { background: var(--ask-bg); color: var(--ask) }
+.chip.not_applicable, .chip.plain { background: var(--na-bg); color: var(--ink-2) }
+.chip.signed { background: var(--navy); color: var(--film) }
+.chip.due { background: var(--hi); color: var(--hi-ink) }
 .tag { font-size: 11.5px; font-weight: 700; border-radius: 4px; padding: 1px 6px; white-space: nowrap }
-.tag.ai { color: var(--ai); box-shadow: inset 0 0 0 1px #9DBBFF66 }
-.tag.code { color: var(--code); box-shadow: inset 0 0 0 1px #67D8C366 }
-.rail p { font-size: 13.5px; color: var(--film-2) }
-.rail .tools { font-family: var(--mono); font-size: 11px; color: var(--film-3); margin-top: 4px; line-height: 1.7 }
-.rail .flag { font-size: 13px; color: var(--ask-d); margin-top: 3px }
+.tag.ai { color: var(--ai); box-shadow: inset 0 0 0 1px #2F6FED55 } .tag.code { color: var(--code); box-shadow: inset 0 0 0 1px #0E8C7855 }
+.kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 2px; text-align: left; align-content: start }
+button.kpi:hover { border-color: var(--muted) }
+.kpi b { font-stretch: 112%; font-weight: 800; font-size: 28px; line-height: 1.15; font-variant-numeric: tabular-nums }
+.kpi span { font-size: 13px; color: var(--muted) }
+.kpi.due { background: var(--navy); border-color: var(--navy); color: var(--film) } .kpi.due span { color: var(--film-2) } .kpi.due b { color: var(--hi) }
+.tw { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: 14px }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line-2); vertical-align: middle }
+th { font-size: 12.5px; color: var(--muted); font-weight: 600; background: var(--sunk); white-space: nowrap }
+th button { border: 0; background: none; font-weight: 600; color: inherit; padding: 0 }
+td.r, th.r { text-align: right }
+tbody tr.go { cursor: pointer } tbody tr.go:hover { background: #F3F7FC }
+tr.ours td { font-weight: 700 }
+.sub { display: block; font-size: 12px; color: var(--muted) }
+.idc { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--muted) }
+.ok-t { color: var(--ok); font-weight: 700; white-space: nowrap } .no-t { color: var(--no); font-weight: 700; white-space: nowrap }
+.tip { position: fixed; z-index: 60; pointer-events: none; max-width: 340px; background: var(--ink); color: var(--film); border-radius: 8px; padding: 9px 11px; font-size: 12.5px; line-height: 1.5; box-shadow: 0 10px 30px -10px #000a; opacity: 0; transition: opacity .12s }
+.tip.on { opacity: 1 } .tip .mono { font-size: 11.5px; color: var(--film-2) }
+.empty { color: var(--muted); padding: 28px 18px; text-align: center }
+.note { font-size: 12.5px; color: var(--muted) }
 
-/* evidence */
-.evidence { display: grid; gap: 14px; position: relative }
-.evhead { display: flex; justify-content: space-between; gap: 10px 24px; align-items: end; flex-wrap: wrap }
-.evhead h2 { font-size: clamp(20px, 2.4vw, 28px); font-stretch: 112%; font-weight: 750; letter-spacing: -.01em }
-.legend { display: flex; gap: 6px 18px; flex-wrap: wrap; font-size: 13px; color: var(--film-2) }
+/* ---------- queue */
+.featured { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)) }
+@media (max-width: 1100px) { .featured { grid-template-columns: repeat(2, minmax(0, 1fr)) } } @media (max-width: 640px) { .featured { grid-template-columns: minmax(0, 1fr) } }
+.feat { background: var(--navy); color: var(--film); border-radius: 10px; padding: 15px 16px; display: grid; gap: 7px; text-decoration: none; align-content: start; border: 1px solid var(--navy) }
+.feat:hover { border-color: var(--hi) }
+.feat .k { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--film-3); align-items: center }
+.feat .k .chip { font-family: var(--sans) }
+.feat b { font-size: 15.5px } .feat p { font-size: 13.5px; color: var(--film-2) }
+.toolbar { display: flex; gap: 10px 14px; flex-wrap: wrap; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line-2) }
+.seg { display: inline-flex; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 2px; overflow-x: auto; max-width: 100% }
+.seg button { border: 0; background: none; padding: 5px 11px; border-radius: 6px; font-size: 13.5px; font-weight: 600; color: var(--muted); white-space: nowrap }
+.seg button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px #0F274722 }
+.seg button em { font-style: normal; font-weight: 500; color: var(--muted); margin-left: 5px; font-size: 12.5px }
+.toolbar select, .toolbar input { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--panel); font-size: 13.5px }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--muted) }
+.pager div { display: flex; gap: 6px }
+
+/* ---------- case */
+.casehead { display: flex; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; align-items: end }
+.casehead h1 { font-size: clamp(26px, 3.2vw, 38px); font-stretch: 125%; font-weight: 850; letter-spacing: -.02em; line-height: 1.05 }
+.casehead .meta { display: flex; gap: 8px 14px; flex-wrap: wrap; color: var(--muted); font-size: 14px; margin-top: 8px; align-items: center }
+.casehead .acts { display: flex; gap: 8px; flex-wrap: wrap }
+.stepper { list-style: none; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) }
+@media (max-width: 1100px) { .stepper { grid-template-columns: repeat(4, minmax(0, 1fr)) } }
+@media (max-width: 640px) { .stepper { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+.stepper li { padding: 11px 13px 13px; border-right: 1px solid var(--line-2); display: grid; gap: 3px; align-content: start; position: relative; min-width: 0 }
+.stepper li::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--line-2) }
+.stepper li.running::after { background: var(--hi); animation: blink 1s infinite } .stepper li.done::after { background: var(--navy) }
+.stepper li.skipped { opacity: .5 }
+.stepper .h { display: flex; gap: 6px; align-items: center; justify-content: space-between }
+.stepper b { font-size: 13.5px }
+.stepper p { font-size: 12px; color: var(--muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical }
+.runbar { display: flex; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line-2); padding: 12px 18px }
+.meters { display: flex; gap: 22px; align-items: baseline; flex-wrap: wrap }
+.meter { display: grid } .meter b { font-family: var(--mono); font-weight: 500; font-size: 19px; line-height: 1.2 } .meter span { font-size: 12px; color: var(--muted) }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none }
+.tabs button { border: 0; background: none; padding: 10px 14px; font-weight: 600; font-size: 14px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink) }
+.decide { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.25fr); align-items: stretch }
+@media (max-width: 1000px) { .decide { grid-template-columns: minmax(0, 1fr) } .decide .sec { border-left: 0 !important; border-top: 1px solid var(--line-2) } }
+.decide .stampbox { padding: 18px 26px 16px 22px; display: grid; place-items: center start }
+.stamp { font-stretch: 125%; font-weight: 900; font-size: 32px; line-height: 1; padding: 10px 16px 8px; border: 4px solid currentColor; border-radius: 9px; transform: rotate(-5deg); display: grid; gap: 3px; mix-blend-mode: multiply }
+.stamp small { font-size: 12px; font-weight: 700; font-stretch: 100% }
+.stamp.APPROVE { color: var(--ok) } .stamp.DENY { color: var(--no) } .stamp.NEED_INFO { color: var(--ask) } .stamp.none { color: #9AA8BC; border-style: dashed }
+.stamp.slam { animation: slam .45s cubic-bezier(.2, 1.5, .4, 1) }
+@keyframes slam { from { transform: rotate(-14deg) scale(2); opacity: 0 } 60% { opacity: 1 } to { transform: rotate(-5deg) scale(1) } }
+.decide .sec { padding: 14px 18px; border-left: 1px solid var(--line-2); display: grid; gap: 8px; align-content: start }
+.decide h3 { font-size: 13px; color: var(--muted); font-weight: 600 }
+.rl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; font-size: 13.5px; align-items: center }
+.decide textarea { width: 100%; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13.5px; resize: vertical }
+.decide .row { display: flex; gap: 8px; flex-wrap: wrap }
+.signed { background: var(--sunk); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; display: grid; gap: 2px }
+
+/* evidence viewer (dark) */
+.viewer { background: var(--navy); color: var(--film); border-radius: 14px; padding: 18px; display: grid; gap: 14px; position: relative }
+.viewer .evhead { display: flex; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap; align-items: end }
+.viewer h2 { font-size: 16.5px; font-weight: 700 }
+.legend { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--film-2) }
 .legend span { display: inline-flex; align-items: center; gap: 7px }
-.legend i { width: 11px; height: 11px; border-radius: 50%; background: var(--film-3); display: inline-block }
+.legend i { width: 10px; height: 10px; border-radius: 50%; background: var(--film-3); display: inline-block }
 .legend i.q { background: var(--hi); box-shadow: 0 0 0 3px #F2E35B40 }
 .legend i.band { border-radius: 2px; width: 18px; background: #F2E35B26; box-shadow: inset 0 0 0 1px #F2E35B70 }
-.map { background: #0B1F3A; border: 1px solid var(--navy-3); border-radius: 10px; padding: 12px 14px 8px; overflow-x: auto; position: relative; z-index: 1 }
-.map .grid { min-width: 660px }
-.map .grid > div:nth-child(odd) { position: sticky; left: -14px; z-index: 5; background: #0B1F3A; padding-left: 14px; margin-left: -14px }
-.map .grid { display: grid; grid-template-columns: 118px minmax(0, 1fr) }
-@media (max-width: 640px) { .map .grid { grid-template-columns: 104px minmax(0, 1fr) } .map .lab { font-size: 11.5px } }
-.map .lab { font-size: 12.5px; color: var(--film-3); height: 30px; display: flex; align-items: center }
+.map { background: var(--deep); border: 1px solid var(--navy-3); border-radius: 10px; padding: 10px 14px 6px; overflow-x: auto; position: relative; z-index: 1 }
+.map .grid { display: grid; grid-template-columns: 112px minmax(0, 1fr); min-width: 620px }
+.map .grid > div:nth-child(odd) { position: sticky; left: -14px; z-index: 5; background: var(--deep); padding-left: 14px; margin-left: -14px }
+.map .lab { font-size: 12px; color: var(--film-3); height: 28px; display: flex; align-items: center }
 .map .track { position: relative; border-left: 1px solid var(--navy-3) }
-.map .lane { height: 30px; border-bottom: 1px dashed #234A7E80 }
-.map .axis { position: relative; height: 22px; font-family: var(--mono); font-size: 10.5px; color: var(--film-3) }
-.map .axis span { position: absolute; transform: translateX(-50%); top: 4px; white-space: nowrap }
-.map .axis span.end { transform: translateX(-100%) }
+.map .lane { height: 28px; border-bottom: 1px dashed #234A7E80 }
+.map .axis { position: relative; height: 20px; font-family: var(--mono); font-size: 10px; color: var(--film-3) }
+.map .axis span { position: absolute; transform: translateX(-50%); top: 3px; white-space: nowrap } .map .axis span.end { transform: translateX(-100%) }
 .map .vt { position: absolute; top: 0; bottom: 0; width: 1px; background: #234A7E }
 .map .orderline { position: absolute; top: 0; bottom: 0; right: 0; width: 2px; background: var(--hi) }
 .map .win { position: absolute; top: 0; bottom: 0; right: 0; background: #F2E35B14; border-left: 1.5px dashed #F2E35B90 }
-.map .win em { position: absolute; top: 3px; left: 6px; font-style: normal; font-size: 11px; color: var(--hi); white-space: nowrap }
+.map .win em { position: absolute; top: 3px; left: 6px; font-style: normal; font-size: 10.5px; color: var(--hi); white-space: nowrap }
 .map .atleast { position: absolute; top: 0; bottom: 0; border-left: 1.5px dashed #9DBBFFAA }
-.map .atleast em { position: absolute; bottom: 3px; right: 6px; font-style: normal; font-size: 11px; color: var(--ai); white-space: nowrap }
-.dot { position: absolute; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; border: 0; padding: 0; background: var(--film-3); opacity: .7; transition: transform .2s, background .2s, box-shadow .2s }
-.dot:hover, .dot:focus-visible { opacity: 1; transform: scale(1.35) }
+.map .atleast em { position: absolute; bottom: 3px; right: 6px; font-style: normal; font-size: 10.5px; color: var(--ai-d); white-space: nowrap }
+.dot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; border: 0; padding: 0; background: var(--film-3); opacity: .7; transition: transform .2s, background .2s }
+.dot:hover, .dot:focus-visible { opacity: 1; transform: scale(1.4) }
 .dot.hit { opacity: 1; background: var(--hi); box-shadow: 0 0 0 4px #F2E35B40; z-index: 2 }
 .dot.hit.not_met { box-shadow: 0 0 0 4px #FF6F6666 }
-.dot.ping { animation: ping .9s 2 }
-@keyframes ping { 50% { transform: scale(2) } }
-.maphint { display: none; font-size: 12.5px; color: var(--film-3); margin-top: -8px }
-@media (max-width: 700px) { .maphint { display: block } }
+.dot.ping { animation: ping .9s 2 } @keyframes ping { 50% { transform: scale(2.2) } }
 .threads { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 3 }
 .threads path { fill: none; stroke-width: 1.6; opacity: .85 }
 .threads path.pending { stroke-dasharray: 4 4; opacity: .55 }
-.threads path.draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw .7s ease-out forwards }
-@keyframes draw { to { stroke-dashoffset: 0 } }
-
-.rules { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); position: relative; z-index: 4; margin-top: 40px }
-@media (max-width: 900px) { .rules { margin-top: 6px } .threads { display: none } }
-.rule { background: var(--navy-2); border: 1px solid var(--navy-3); border-top: 3px solid var(--navy-4); border-radius: 4px 4px 10px 10px; padding: 14px 15px; display: grid; gap: 9px; align-content: start }
+.threads path.draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw .7s ease-out forwards } @keyframes draw { to { stroke-dashoffset: 0 } }
+.rules { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); position: relative; z-index: 4; margin-top: 30px }
+@media (max-width: 900px) { .rules { margin-top: 4px } .threads { display: none } }
+.rule { background: var(--navy-2); border: 1px solid var(--navy-3); border-top: 3px solid var(--navy-4); border-radius: 4px 4px 10px 10px; padding: 13px 14px; display: grid; gap: 8px; align-content: start }
 .rule.met { border-top-color: var(--ok-d) } .rule.not_met { border-top-color: var(--no-d) } .rule.missing { border-top-color: var(--ask-d) } .rule.not_applicable { border-top-color: var(--film-3) }
-.rule h3 { font-size: 16px; font-weight: 700; line-height: 1.3 }
-.rule .rt { font-size: 12.5px; color: var(--film-3); line-height: 1.5 }
-.rule .why { font-size: 13.5px; color: var(--film-2) }
-.st { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 700; width: fit-content; border-radius: 99px; padding: 2px 10px 2px 7px; background: var(--navy-3); color: var(--film-2) }
-.st i { font-style: normal; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; background: var(--navy-4); color: var(--film) }
+.rule h3 { font-size: 15px; font-weight: 700; line-height: 1.3 }
+.rule .rt { font-size: 12px; color: var(--film-3); line-height: 1.5 }
+.rule .why { font-size: 13px; color: var(--film-2) }
+.st { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 700; width: fit-content; border-radius: 99px; padding: 2px 10px 2px 6px; background: var(--navy-3); color: var(--film-2) }
+.st i { font-style: normal; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; background: var(--navy-4); color: var(--film) }
 .st.met { color: var(--ok-d) } .st.met i { background: var(--ok-d); color: var(--navy) }
 .st.not_met { color: var(--no-d) } .st.not_met i { background: var(--no-d); color: var(--navy) }
 .st.missing { color: var(--ask-d) } .st.missing i { background: var(--ask-d); color: var(--navy) }
-.st.working i { animation: spin 1s linear infinite; background: transparent; border: 2px solid var(--hi); border-right-color: transparent }
-@keyframes spin { to { transform: rotate(360deg) } }
-.quote { text-align: left; background: #0B1F3A; border: 0; border-left: 3px solid var(--hi); border-radius: 0 6px 6px 0; padding: 8px 10px; font-family: var(--mono); font-size: 11.5px; line-height: 1.6; color: var(--film) }
+.st.working i { animation: spin 1s linear infinite; background: transparent; border: 2px solid var(--hi); border-right-color: transparent } @keyframes spin { to { transform: rotate(360deg) } }
+.quote { text-align: left; background: var(--deep); border: 0; border-left: 3px solid var(--hi); border-radius: 0 6px 6px 0; padding: 7px 10px; font-family: var(--mono); font-size: 11px; line-height: 1.6; color: var(--film) }
 .quote:hover { background: #0E2647 }
-.quote .v { display: block; font-family: var(--wide); font-size: 11.5px; font-weight: 700; margin-bottom: 2px; color: var(--film-3) }
+.quote .v { display: block; font-family: var(--sans); font-size: 11.5px; font-weight: 700; margin-bottom: 2px; color: var(--film-3) }
 .quote .v.ok { color: var(--ok-d) } .quote .v.no { color: var(--no-d) }
 .quote.bad { border-left-color: var(--no-d); opacity: .7; text-decoration: line-through }
-details.full { background: transparent; border-top: 1px solid var(--navy-3); padding-top: 10px }
-details.full summary { cursor: pointer; font-size: 14px; color: var(--film-2) }
-details.full ul { list-style: none; margin-top: 10px; max-height: 360px; overflow: auto; font-family: var(--mono); font-size: 11.5px; line-height: 1.6; display: grid; gap: 5px; color: var(--film-2) }
-details.full li.hit { color: var(--film); background: #F2E35B1A; box-shadow: inset 3px 0 var(--hi); padding-left: 8px }
+.flags { display: grid; gap: 6px }
+.flag { font-size: 13px; color: var(--ask-d); background: #F5B53D14; border-left: 3px solid var(--ask-d); padding: 7px 10px; border-radius: 0 6px 6px 0 }
 
-/* verdict */
-.verdict { background: var(--paper); color: var(--ink); border-radius: 12px; padding: 26px; display: grid; gap: 26px; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); box-shadow: 0 24px 50px -24px #000c }
-@media (max-width: 860px) { .verdict { grid-template-columns: minmax(0, 1fr); padding: 20px } }
-.verdict .empty { grid-column: 1 / -1; color: var(--muted); font-size: 15px }
-.stampwrap { display: grid; gap: 18px; align-content: start }
-.stamp { width: fit-content; font-stretch: 125%; font-weight: 900; font-size: clamp(34px, 4.6vw, 52px); line-height: 1; letter-spacing: .01em; padding: 12px 22px 10px; border: 5px solid currentColor; border-radius: 10px;
-  transform: rotate(-6deg); display: grid; gap: 4px; mix-blend-mode: multiply }
-.stamp small { font-size: 13px; font-weight: 700; letter-spacing: 0; font-stretch: 100% }
-.stamp.APPROVE { color: var(--ok) } .stamp.DENY { color: var(--no) } .stamp.NEED_INFO { color: var(--ask) }
-.stamp.slam { animation: slam .45s cubic-bezier(.2, 1.5, .4, 1) }
-@keyframes slam { from { transform: rotate(-14deg) scale(2.1); opacity: 0 } 60% { opacity: 1 } to { transform: rotate(-6deg) scale(1) } }
-.key { display: grid; gap: 7px; font-size: 14px }
-.key > b { font-size: 15px }
-.key .r { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; align-items: baseline }
-.key .r em { font-style: normal; color: var(--muted); font-size: 13px }
-.kst { font-size: 12px; font-weight: 700; border-radius: 4px; padding: 1px 7px; width: fit-content }
-.kst.met { background: #DDF3EA; color: #106B47 } .kst.not_met { background: #FBE2E1; color: #A42222 } .kst.missing { background: #FBEFD6; color: #7E5400 } .kst.not_applicable { background: #E8EDF4; color: #4A5A72 }
-.letter { border: 1px solid var(--line); border-radius: 6px; padding: 18px 20px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; max-height: 440px; overflow: auto; background: #FBFCFE }
-.letter b { font-weight: 700 }
-.lmeta { font-size: 13px; color: var(--muted); margin-bottom: 8px }
+/* trace */
+.gantt { display: grid; grid-template-columns: 230px minmax(0, 1fr); font-size: 13px }
+@media (max-width: 640px) { .gantt { grid-template-columns: 130px minmax(0, 1fr) } }
+.gantt .gl { padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line-2); display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.gantt .gt { position: relative; border-bottom: 1px solid var(--line-2); border-left: 1px solid var(--line); height: 32px }
+.gantt .bar { position: absolute; top: 7px; height: 18px; border-radius: 4px; min-width: 3px; background: var(--ai); display: flex; align-items: center; padding: 0 6px; font-size: 11px; color: #fff; font-family: var(--mono); white-space: nowrap }
+.gantt .bar.code { background: var(--code) }
+.gantt .bar.out { color: var(--ink-2); padding: 0 } .gantt .bar.out span { position: absolute; left: calc(100% + 6px) }
+.gantt .bar.out.end span { left: auto; right: calc(100% + 6px) }
+.gantt .ax { position: relative; height: 22px; font-family: var(--mono); font-size: 10.5px; color: var(--muted) }
+.gantt .ax span { position: absolute; transform: translateX(-50%); top: 4px } .gantt .ax span:last-child { transform: translateX(-100%) }
+.gantt .grid-l { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-2) }
+.events { list-style: none; font-family: var(--mono); font-size: 11.5px; line-height: 1.7; max-height: 360px; overflow: auto; display: grid }
+.events li { display: grid; grid-template-columns: 62px 96px minmax(0, 1fr); gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--line-2) }
+.events li em { font-style: normal; color: var(--muted) }
+@media (max-width: 640px) { .events li { grid-template-columns: 56px minmax(0, 1fr) } .events li span { grid-column: 1 / -1 } }
+.letter { padding: 30px 34px; font-size: 14.5px; line-height: 1.65; white-space: pre-wrap }
+.lhead { display: flex; justify-content: space-between; gap: 10px; align-items: start; border-bottom: 2px solid var(--ink); padding-bottom: 12px; margin-bottom: 16px; white-space: normal }
+.lhead b { font-stretch: 125%; font-weight: 850; font-size: 18px }
+.fax { padding: 20px 22px; font-family: var(--mono); font-size: 12.5px; line-height: 1.65 }
+.fax dl { display: grid; grid-template-columns: 9em minmax(0, 1fr); gap: 3px 12px } .fax dt { color: var(--muted) }
+.fax .claim { margin-top: 14px; border: 1.5px dashed #9DAABD; border-radius: 4px; padding: 10px 12px; display: grid; gap: 4px }
+.fax .claim small { font-family: var(--sans); font-size: 12px; color: var(--muted); font-weight: 600 }
+@media (max-width: 640px) { .fax dl { grid-template-columns: 6.6em minmax(0, 1fr) } .letter { padding: 20px } }
+.reclist { list-style: none; font-family: var(--mono); font-size: 11.5px; line-height: 1.6; max-height: 520px; overflow: auto }
+.reclist li { padding: 7px 18px; border-bottom: 1px solid var(--line-2) }
+.reclist li.hit { background: #FFFBD6; box-shadow: inset 3px 0 #D9C21E }
+.audit { list-style: none; display: grid; padding: 4px 18px 12px }
+.audit li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line-2); font-size: 14px; align-items: start }
+.audit li:last-child { border-bottom: 0 }
+.audit li i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); margin-top: 6px } .audit li.ai i { background: var(--ai) } .audit li.code i { background: var(--code) } .audit li.human i { background: var(--hi); box-shadow: 0 0 0 2px var(--ink) }
+.audit li em { font-style: normal; font-family: var(--mono); font-size: 11.5px; color: var(--muted); white-space: nowrap }
+.audit li span { color: var(--muted); font-size: 13px; display: block }
 
-/* ---------- light sections */
-.sect { padding-block: 72px 24px }
-.sect > .shell { display: grid; gap: 28px }
-.sect h2.big { font-size: clamp(30px, 4.4vw, 54px); line-height: 1; font-stretch: 125%; font-weight: 850; letter-spacing: -.025em; max-width: 18ch }
-.sect .lead { font-size: 18px; color: var(--muted); max-width: 66ch }
-.sect .lead b { color: var(--ink) }
-.waffles { display: grid; gap: 22px; grid-template-columns: repeat(3, minmax(0, 1fr)) }
-@media (max-width: 1060px) { .waffles { grid-template-columns: minmax(0, 1fr) } }
-.wf { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 14px; align-content: start }
-.wf.ours { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink) }
-.wf h3 { font-size: 16px; font-weight: 700 }
-.wf .pct { font-stretch: 125%; font-weight: 850; font-size: 46px; line-height: 1; letter-spacing: -.02em }
-.wf .pct small { font-size: 15px; font-weight: 500; font-stretch: 100%; color: var(--muted); letter-spacing: 0; margin-left: 8px }
+/* runs */
+.hist svg { width: 100%; height: auto; display: block; overflow: visible }
+.charts2 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) }
+@media (max-width: 400px) { .charts2 { grid-template-columns: minmax(0, 1fr) } }
+
+/* policies */
+.pols { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)) }
+@media (max-width: 460px) { .pols { grid-template-columns: minmax(0, 1fr) } }
+.pol { display: grid; align-content: start }
+.pol .ph { padding: 16px 18px; border-bottom: 1px solid var(--line-2); display: grid; gap: 6px }
+.pol .ph h2 { font-size: 17px; line-height: 1.3 }
+.pol .ph .src { font-size: 13px; color: var(--muted) }
+.pol ol { list-style: none; display: grid }
+.pol li { padding: 12px 18px; border-bottom: 1px solid var(--line-2); display: grid; gap: 5px }
+.pol li b { font-size: 14px } .pol li p { font-size: 13px; color: var(--ink-2) }
+.pol .badges { display: flex; gap: 6px; flex-wrap: wrap }
+.pol .foot { padding: 12px 18px; display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted) }
+.pol .foot b { color: var(--ink) }
+
+/* evaluation */
+.lead { font-size: 16px; color: var(--ink-2); max-width: 78ch } .lead b { color: var(--ink) }
+.callouts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) }
+.callout { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 2px; align-content: start }
+.callout b { font-stretch: 112%; font-weight: 800; font-size: 26px; line-height: 1.15 } .callout span { font-size: 13px; color: var(--muted) }
+.waffles { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)) }
+@media (max-width: 1240px) { .waffles { grid-template-columns: minmax(0, 1fr) } }
+.wf { padding: 18px; display: grid; gap: 12px; align-content: start }
+.wf.ours { box-shadow: 0 0 0 2px var(--ink) }
+.wf h3 { font-size: 15px } .wf .pct { font-stretch: 125%; font-weight: 850; font-size: 40px; line-height: 1; letter-spacing: -.02em }
+.wf .pct small { font-size: 14px; font-weight: 500; font-stretch: 100%; color: var(--muted); letter-spacing: 0; margin-left: 8px }
 .cells { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 6px 8px; align-items: center }
 .cells .pl { font-size: 11.5px; line-height: 1.25; color: var(--muted) }
 .cells .sq { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 2px }
 .cell { aspect-ratio: 1; border-radius: 2px; background: #CFD9E6; border: 0; padding: 0; min-width: 0 }
-.cell.wd { background: var(--no) } .cell.wa { background: var(--violet) }
-.cell.ot { background: repeating-linear-gradient(135deg, #52637D 0 2px, #E3E9F1 2px 4px) }
-.cell.lit { outline: 2px solid var(--ink); outline-offset: 1px; z-index: 1; position: relative }
-.wf ul { list-style: none; display: grid; gap: 5px; font-size: 13.5px }
+.cell.wd { background: var(--no) } .cell.wa { background: var(--violet) } .cell.ot { background: repeating-linear-gradient(135deg, #52637D 0 2px, #E3E9F1 2px 4px) }
+.cell.lit { outline: 2px solid var(--ink); outline-offset: 1px; position: relative; z-index: 1 }
+.wf ul { list-style: none; display: grid; gap: 4px; font-size: 13px }
 .wf li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 8px; align-items: center }
 .wf li i { width: 12px; height: 12px; border-radius: 2px; display: block }
-.wf li b { font-variant-numeric: tabular-nums }
-.wf .meta { font-size: 13px; color: var(--muted) }
-.callouts { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) }
-.callout { border-top: 3px solid var(--ink); padding-top: 12px; display: grid; gap: 4px }
-.callout b { font-stretch: 125%; font-weight: 850; font-size: 30px; line-height: 1.05 }
-.callout span { font-size: 14px; color: var(--muted) }
-details.table { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px }
-details.table summary { cursor: pointer; font-weight: 600 }
-.tw { overflow-x: auto; margin-top: 12px }
-table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px }
-th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums }
-th:first-child, td:first-child { text-align: left }
-th { font-size: 12.5px; color: var(--muted); font-weight: 600 }
-tr.ours td { font-weight: 700 }
+.journey { display: grid; gap: 16px; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start }
+@media (max-width: 1000px) { .journey { grid-template-columns: minmax(0, 1fr) } }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible }
+.steps { list-style: none; counter-reset: s; display: grid; gap: 12px }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 2px 12px }
+.steps li::before { content: counter(s); grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--ink); display: grid; place-items: center; font-weight: 800; font-size: 13px }
+.steps b { font-size: 14.5px } .steps span { font-size: 13.5px; color: var(--muted) }
+.limits { list-style: none; display: grid }
+.limits li { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 6px 24px; padding: 14px 18px; border-bottom: 1px solid var(--line-2) }
+.limits li:last-child { border-bottom: 0 }
+@media (max-width: 760px) { .limits li { grid-template-columns: minmax(0, 1fr) } }
+.limits span { color: var(--muted) }
 
-.journey { display: grid; gap: 22px; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start }
-@media (max-width: 960px) { .journey { grid-template-columns: minmax(0, 1fr) } }
-.chartbox { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 10px }
-.chartbox svg { width: 100%; height: auto; display: block; overflow: visible }
-.steps { list-style: none; counter-reset: s; display: grid; gap: 14px }
-.steps li { counter-increment: s; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 2px 12px }
-.steps li::before { content: counter(s); grid-row: span 2; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink); display: grid; place-items: center; font-weight: 800; font-size: 14px }
-.steps b { font-size: 15.5px } .steps span { font-size: 14px; color: var(--muted) }
+/* simulator */
+.sim { display: grid; gap: 16px; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start }
+@media (max-width: 1000px) { .sim { grid-template-columns: minmax(0, 1fr) } }
+.form { display: grid; gap: 16px }
+.form label { display: grid; gap: 5px; font-size: 13px; color: var(--muted); font-weight: 600; align-content: start }
+.form select { border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: var(--panel); font-size: 14px; color: var(--ink); font-weight: 500; width: 100% }
+.form .two { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) }
+.form .checks { display: grid; gap: 8px }
+.form .checks label { display: flex; gap: 10px; align-items: center; font-weight: 500; color: var(--ink); font-size: 14px }
+.form .rt { font-size: 12px; color: var(--muted); font-weight: 400; line-height: 1.45 }
 
-.how { display: grid; gap: 22px }
-.flowsvg { background: var(--navy); border-radius: 14px; padding: 24px 18px; color: var(--film) }
+/* system */
+.flowsvg { background: var(--navy); border-radius: 14px; padding: 22px 16px; color: var(--film) }
 .flowsvg svg { width: 100%; height: auto; display: block }
 .flowlist { display: none; list-style: none; gap: 10px }
 @media (max-width: 760px) { .flowsvg svg { display: none } .flowlist { display: grid } }
-.flowlist li { display: grid; gap: 2px; border-left: 3px solid var(--ai); padding-left: 12px }
-.flowlist li.code { border-left-color: var(--code) }
-.flowlist b { font-size: 15px } .flowlist span { font-size: 13.5px; color: var(--film-2) }
-.reasons { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) }
-.reason { display: grid; gap: 6px; align-content: start }
-.reason h3 { font-size: 19px; font-stretch: 112%; font-weight: 750 }
-.reason p { font-size: 14.5px; color: var(--muted) }
-.limits { list-style: none; display: grid; gap: 0; border-top: 1px solid var(--line) }
-.limits li { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 6px 26px; padding: 16px 0; border-bottom: 1px solid var(--line) }
-@media (max-width: 760px) { .limits li { grid-template-columns: minmax(0, 1fr) } }
-.limits b { font-size: 16px } .limits span { color: var(--muted); font-size: 15px }
-footer { background: var(--navy); color: var(--film-3); padding-block: 28px; margin-top: 72px; font-size: 13.5px }
-footer .shell { display: flex; gap: 10px 30px; flex-wrap: wrap; justify-content: space-between }
-footer b { color: var(--film) }
-.tip { position: fixed; z-index: 60; pointer-events: none; max-width: 340px; background: var(--ink); color: var(--film); border-radius: 8px; padding: 9px 11px; font-size: 12.5px; line-height: 1.5; box-shadow: 0 10px 30px -10px #000a; opacity: 0; transition: opacity .12s }
-.tip.on { opacity: 1 }
-.tip .mono { font-size: 11.5px; color: var(--film-2) }
-[hidden] { display: none !important }
-.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0) }
-@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important } html { scroll-behavior: auto } }
+.flowlist li { display: grid; gap: 2px; border-left: 3px solid var(--ai-d); padding-left: 12px } .flowlist li.code { border-left-color: var(--code-d) }
+.flowlist span { font-size: 13px; color: var(--film-2) }
+.stack { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) }
+.stack .panel { padding: 16px 18px; display: grid; gap: 6px; align-content: start }
+.stack h3 { font-size: 15.5px } .stack p { font-size: 13.5px; color: var(--muted) }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
+@media print { .side, .top, .tabs, .casehead .acts, .crumbs, .decide, #runpanel { display: none !important } .app { display: block } body { background: #fff } .panel { border: 0 } }
 </style>
 </head>
 <body>
-<header class="bar"><div class="shell">
-  <a class="brand" href="#review"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="6" fill="none" stroke="#F2E35B" stroke-width="2.2"/><path d="M9 16.5l4.5 4.5L23 11" stroke="#F2E35B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>AuthPilot</a>
-  <nav aria-label="Sections"><a href="#review">Review</a><a href="#test">The test</a><a href="#how">How it works</a><a href="#limits">Limits</a></nav>
-  <span class="built">Built with LangGraph, MCP and FHIR on Claude Haiku 4.5</span>
-</div></header>
-
-<section class="stage" id="review">
-<div class="shell">
-  <div class="intro">
-    <h1>Prior authorization takes days. <span>Watch it take seconds.</span></h1>
-    <p>A team of AI agents checks each request against the real Medicare policy. Every finding must quote the patient's record, and code checks every quote, counts every date and makes the final call.</p>
-    <a class="proof" href="#test"><b id="proofpct">94%</b><span id="prooftxt">correct on 200 requests it had never seen</span></a>
-  </div>
-
-  <div class="inbox">
-    <h2 class="small" id="inboxh">Requests waiting for review</h2>
-    <div class="slips" id="slips" role="group" aria-labelledby="inboxh"></div>
-    <div class="builder" id="builder" hidden></div>
-  </div>
-
-  <div class="desk">
-    <article class="fax" id="fax" aria-label="The request"></article>
-    <div class="run">
-      <div class="ctl">
-        <button class="btn" id="play">Replay this review</button>
-        <button class="btn ghost" id="live">Run the agents live</button>
-      </div>
-      <p class="runnote" id="runnote" aria-live="polite"></p>
-      <div class="meters">
-        <div class="meter"><b id="clock">0.0s</b><span>review time</span></div>
-        <div class="meter"><b id="cost">$0.000</b><span>model cost</span></div>
-        <div class="meter"><b id="quotes">0</b><span>quotes checked</span></div>
-      </div>
-      <ol class="rail" id="rail"></ol>
+<div class="app">
+  <aside class="side">
+    <a class="brand" href="#/queue"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="6" fill="none" stroke="#F2E35B" stroke-width="2.2"/><path d="M9 16.5l4.5 4.5L23 11" stroke="#F2E35B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>AuthPilot</span></a>
+    <div>
+      <p class="grp">Work</p>
+      <nav aria-label="Work">
+        <a href="#/queue" data-nav="queue"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Review queue<span class="count due" id="nav-due"></span></a>
+        <a href="#/case" data-nav="case"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Open case</a>
+        <a href="#/simulator" data-nav="simulator"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New patient</a>
+      </nav>
     </div>
-  </div>
-
-  <div class="evidence" id="evidence">
-    <div class="evhead">
-      <h2 id="evh">The patient's record, laid out against the order date</h2>
-      <div class="legend"><span><i></i>Record entry</span><span><i class="q"></i>Quoted as evidence</span><span id="lg-band"><i class="band"></i>Policy time window</span></div>
+    <div>
+      <p class="grp">Insight</p>
+      <nav aria-label="Insight">
+        <a href="#/runs" data-nav="runs"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Agent runs<span class="count" id="nav-runs"></span></a>
+        <a href="#/evaluation" data-nav="evaluation"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Evaluation</a>
+        <a href="#/policies" data-nav="policies"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg>Policies<span class="count">5</span></a>
+        <a href="#/system" data-nav="system"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8 7l3 9M16 7l-3 9M8.5 6h7"/></svg>How it works</a>
+      </nav>
     </div>
-    <div class="map" id="map"></div>
-    <p class="maphint" id="maphint">Swipe the timeline sideways to see older entries.</p>
-    <svg class="threads" id="threads" aria-hidden="true"></svg>
-    <div class="rules" id="rules"></div>
-    <details class="full"><summary id="fullsum">Read the full record</summary><ul id="fulllist"></ul></details>
-  </div>
-
-  <div class="verdict" id="verdict" aria-live="polite"></div>
-</div>
-</section>
-
-<section class="sect" id="test">
-<div class="shell">
-  <h2 class="big">Tested on 200 requests it had never seen</h2>
-  <p class="lead" id="t-lead"></p>
-  <div class="callouts" id="callouts"></div>
-  <div class="waffles" id="waffles"></div>
-  <p class="meta" style="font-size:13.5px;color:var(--muted)">Each square is one test request, in the same place in all three grids, so you can follow a single case across systems. Rows are grouped by policy, 40 requests each. Hover a square to see the case.</p>
-  <details class="table"><summary>See the numbers as a table</summary><div class="tw"><table id="t-table"></table></div></details>
-
-  <div class="journey">
-    <div class="chartbox"><h3 style="font-size:16px;margin-bottom:6px">Accuracy on the 100 development cases, by round</h3><div id="rounds"></div></div>
-    <div style="display:grid;gap:14px">
-      <h2 style="font-size:clamp(22px,2.6vw,30px);font-stretch:112%;font-weight:800;line-height:1.1">The first multi-agent design lost to a single call.</h2>
-      <p style="color:var(--muted)">Each round started by reading the failures one by one and asking whether the model had misjudged something, or had simply miscounted or misread a code. Judgement stayed with the model. Bookkeeping moved to code.</p>
-      <ol class="steps" id="steps"></ol>
+    <div class="me"><b>Reviewer: you</b>Synthetic patients only. Your sign-offs stay in this browser.</div>
+  </aside>
+  <div class="main">
+    <div class="top">
+      <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="search" placeholder="Find a member, request ID or service" aria-label="Find a request"></label>
+      <span class="demo">Demo workspace</span>
+      <span class="status" id="svc" title="The live agent service"><i></i><span>Checking agents</span></span>
     </div>
+    <main class="view" id="view" tabindex="-1"></main>
   </div>
 </div>
-</section>
-
-<section class="sect" id="how">
-<div class="shell how">
-  <h2 class="big">Let the model read. Let code count.</h2>
-  <p class="lead">Each step is a node in a LangGraph graph. The patient record is reached through an MCP server in front of a FHIR store, the way an agent would reach a hospital's records. Blue steps are AI agents. Green steps are plain code.</p>
-  <div class="flowsvg"><div id="flowsvg"></div><ol class="flowlist" id="flowlist"></ol></div>
-  <div class="reasons">
-    <div class="reason"><h3>One rule, one specialist</h3><p>A specialist judges a single rule against the whole record. A single call has to juggle every rule at once, and it mixed them up.</p></div>
-    <div class="reason"><h3>Code does the arithmetic</h3><p>Models miscount days. Code dates every record against the order, checks every time window, and sends a wrong count back to the specialist once.</p></div>
-    <div class="reason"><h3>No quote, no finding</h3><p>A finding counts only if its quote is really in the record, with the same numbers and dates. Not one test denial went out without verified evidence.</p></div>
-    <div class="reason"><h3>Search before asking</h3><p>When a rule is undocumented, an investigator searches the record again through MCP tools before the system asks the doctor for more.</p></div>
-  </div>
-  <div class="tw" style="margin-top:0"><table id="h-cost"></table></div>
-</div>
-</section>
-
-<section class="sect" id="limits">
-<div class="shell">
-  <h2 class="big">What this does not show</h2>
-  <ul class="limits">
-    <li><b>The cases are constructed.</b><span>There is no public benchmark for prior authorization, because real requests contain patient data. The 300 cases were generated with known answers from real Medicare rules. Real requests are messier: scanned faxes, missing pages, conflicting notes.</span></li>
-    <li><b>The records are short.</b><span>About 70 entries per patient. Real charts can run to thousands of pages. A long-record version exists, but it costs about four times as much to run and was not part of the test.</span></li>
-    <li><b>The case design changed during development.</b><span>Three case templates were ambiguous and were rewritten, and date and procedure checks moved into code. The 200 test cases were run once, after the system was frozen.</span></li>
-    <li><b>Five policies, one model.</b><span>Other services and other models may behave differently.</span></li>
-    <li><b>A clinician signs every denial.</b><span>This is decision support. It drafts the determination and shows its evidence. It does not send denials on its own.</span></li>
-  </ul>
-</div>
-</section>
-
-<footer><div class="shell">
-  <span><b>AuthPilot</b>, built by Divya Sri.</span>
-  <span>Synthetic patients. Coverage rules from Medicare NCD 240.2, 100.1 and 20.4, and LCD L33718, L33797 and L33822.</span>
-</div></footer>
 <div class="tip" id="tip" role="tooltip"></div>
 
 <script>
 const DATA = /*DATA*/null;
-const $ = s => document.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/^#+\s*/gm, "").replace(/^---$/gm, "").replace(/\n{3,}/g, "\n\n").trim();
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -402,379 +381,576 @@ const LABEL = { cpap_eval: "Evaluated before the sleep test", cpap_test: "Sleep 
   icd_exclusions: "No recent heart attack or stent", cgm_dx: "Diabetes diagnosis", cgm_need: "Insulin or severe lows", cgm_visit: "Visit within 6 months" };
 const STATUS = { met: ["Met", "✓"], not_met: ["Not met", "✕"], missing: ["Undocumented", "?"], not_applicable: ["Not needed", "–"] };
 const DEC = { APPROVE: "Approved", DENY: "Denied", NEED_INFO: "Records requested" };
-const DEC_SUB = { APPROVE: "Coverage criteria met", DENY: "Held for clinician sign-off", NEED_INFO: "Sent back to the provider" };
+const DEC_SUB = { APPROVE: "Coverage criteria met", DENY: "Awaiting clinician sign-off", NEED_INFO: "Sent back to the provider" };
 const NAME = { baseline: "Single AI call", single_plus: "Single call with the same code checks", authpilot: "AuthPilot" };
 const POLICY_SHORT = { cpap: "CPAP machine", oxygen: "Home oxygen", bariatric: "Weight-loss surgery", icd: "Defibrillator", cgm: "Glucose monitor" };
 const LANES = [["cond", "Diagnoses"], ["obs", "Tests and vitals"], ["doc", "Clinical notes"], ["enc", "Visits"], ["med", "Medications"], ["proc", "Procedures"], ["order", "Orders"]];
 const WINDOW_TEXT = { o2_timing: "30-day test window", cgm_visit: "6-month visit window", icd_exclusions: "90-day stent window" };
-const RAIL = [["intake", "Read the request", "ai", "AI agent"], ["policy", "Pick the policy", "code", "Code, then AI"], ["record", "Fetch the record over MCP", "code", "Code"],
-  ["specialist", "Specialists judge each rule", "ai", "AI agents in parallel"], ["verify", "Verify quotes, dates and codes", "code", "Code"],
-  ["investigator", "Investigator searches again", "ai", "AI agent with tools"], ["letter", "Draft the letter", "ai", "AI agent"]];
+const STEPS = [["intake", "Read request", "ai"], ["policy", "Pick policy", "code"], ["record", "Fetch record", "code"], ["specialist", "Specialists", "ai"],
+  ["verify", "Verify", "code"], ["investigator", "Investigator", "ai"], ["letter", "Letter", "ai"]];
+const ORDER = STEPS.map(s => s[0]);
+const HOOKS = { "0181": "The provider says every rule is met. A stent placed 84 days earlier says otherwise.",
+  "0246": "Also “meets all criteria”. Code catches that the last diabetes visit falls outside six months.",
+  "0123": "No supervised diet program on file. The investigator searches the chart before asking the surgeon.",
+  "0002": "The sleep test qualifies, but nothing shows an evaluation before it. Records requested, not a denial.",
+  "0188": "Approved, with the deciding evidence buried in free-text clinical notes.",
+  "0061": "An SpO2 of 89% only qualifies alongside a Group II condition. The specialist finds one." };
+const Q = DATA.queue.map(r => ({ n: r[0], id: r[1], name: r[2], service: r[3], policy: r[4], ordered: r[5], dec: r[6], truth: r[7], cites: r[8], secs: r[9], cost: r[10], split: r[11], calls: r[12], toks: r[13], at: r[14] }));
+const QI = Object.fromEntries(Q.map(r => [r.n, r]));
+const ruleText = t => esc(t).replace(/\*\*([a-z0-9_]+)\*\*/g, (m, k) => LABEL[k] ? `\u201c${LABEL[k]}\u201d` : k);
+const pct = x => (Math.round(x * 1000) / 10) + "%";
+const median = a => { const s = [...a].sort((x, y) => x - y); return s.length ? (s[(s.length - 1) >> 1] + s[s.length >> 1]) / 2 : 0; };
+const quant = (a, q) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(q * s.length))]; };
+
+/* ---------- reviewer actions (this browser only) */
+const store = { get() { try { return JSON.parse(localStorage.getItem("authpilot.actions") || "{}"); } catch { return {}; } },
+  put(all) { try { localStorage.setItem("authpilot.actions", JSON.stringify(all)); } catch {} },
+  set(n, v) { const a = store.get(); a[n] = v; store.put(a); }, drop(n) { const a = store.get(); delete a[n]; store.put(a); } };
+function queueStatus(r) { const a = store.get()[r.n]; if (a) return a.kind; return r.dec === "DENY" ? "due" : r.dec === "NEED_INFO" ? "sent" : r.dec === "APPROVE" ? "approved" : "error"; }
+const QS = { due: ["Needs sign-off", "due"], sent: ["Records requested", "NEED_INFO"], approved: ["Approved", "APPROVE"], signed: ["Denial signed", "signed"],
+  overturned: ["Overturned to approval", "APPROVE"], confirmed: ["Confirmed", "APPROVE"], flagged: ["Flagged for review", "plain"], error: ["No decision", "plain"] };
+const HANDLED = ["signed", "overturned", "confirmed", "flagged"];
+function refreshNav() { const due = Q.filter(r => queueStatus(r) === "due").length; $("#nav-due").textContent = due || ""; $("#nav-due").hidden = !due; $("#nav-runs").textContent = Q.length; }
 
 /* ---------- tooltip */
 const tip = $("#tip");
-function showTip(html, ev) {
-  tip.innerHTML = html; tip.classList.add("on");
-  const r = ev.target.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
-  let x = r.left + r.width / 2 - w / 2, y = r.top - h - 10;
-  if (y < 64) y = r.bottom + 10;
-  tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + "px"; tip.style.top = y + "px";
-}
+function showTip(html, ev) { tip.innerHTML = html; tip.classList.add("on"); const r = ev.target.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = r.left + r.width / 2 - w / 2, y = r.top - h - 10; if (y < 8) y = r.bottom + 10; tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + "px"; tip.style.top = y + "px"; }
 const hideTip = () => tip.classList.remove("on");
 addEventListener("scroll", hideTip, { passive: true });
+function hover(el, html) { el.onmouseenter = el.onfocus = ev => showTip(typeof html === "function" ? html() : html, ev); el.onmouseleave = el.onblur = hideTip; }
 
-/* ---------- state */
-let current = null, timers = [], running = false, crit = {}, tick = null;
+/* ---------- live service status */
+let svcState = "unknown";
+function setSvc(s, text) { svcState = s; const el = $("#svc"); el.className = "status " + s; $("span", el).textContent = text; }
+async function ping() {
+  if (!DATA.api) { setSvc("off", "Live agents offline here"); return; }
+  setSvc("wake", "Waking the agents");
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 75000);
+  try { const r = await fetch(DATA.api + "/health", { signal: ctl.signal }); setSvc(r.ok ? "on" : "off", r.ok ? "Agents online" : "Agents unavailable"); }
+  catch { setSvc("off", "Agents unavailable"); }
+  clearTimeout(t);
+}
 
+/* ---------- data */
+const cache = {}, BUILT = {};
+async function getCase(n) {
+  if (BUILT[n]) return BUILT[n];
+  if (!cache[n]) { const r = await fetch(`data/cases/${n}.json`); if (!r.ok) throw new Error("case not found"); cache[n] = await r.json(); }
+  return cache[n];
+}
+
+/* ---------- router */
+let lastCase = null;
+function route() {
+  hideTip();
+  const [view, arg, tab] = (location.hash.replace(/^#\/?/, "") || "queue").split("/");
+  $$(".side nav a").forEach(a => a.dataset.nav === view ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  const fn = { queue: viewQueue, case: viewCase, runs: viewRuns, evaluation: viewEval, policies: viewPolicies, simulator: viewSim, system: viewSystem }[view] || viewQueue;
+  fn($("#view"), arg, tab);
+  scrollTo(0, 0);
+}
+addEventListener("hashchange", route);
+$("#q").addEventListener("input", e => { qstate.text = e.target.value; qstate.page = 0; if (!/^#\/queue/.test(location.hash) && location.hash) location.hash = "#/queue"; else drawQueueTable(); });
+
+/* =========================================================== QUEUE */
+const qstate = { tab: "all", policy: "", text: "", page: 0, sort: "n", dir: 1 };
+function viewQueue(v) {
+  refreshNav();
+  const st = Q.map(queueStatus), cnt = k => st.filter(s => s === k).length, agree = Q.filter(r => r.dec === r.truth).length;
+  v.innerHTML = `<div class="vhead"><div><h1>Review queue</h1><p>Every request here has been reviewed by the agents against its Medicare policy. Approvals and records requests go out on their own. Denials wait for a clinician to sign.</p></div></div>
+  <div class="kpis">
+    <button class="kpi due" data-tab="due"><span>Waiting for your sign-off</span><b>${cnt("due")}</b><span>denials the agents recommend</span></button>
+    <button class="kpi" data-tab="sent"><span>Records requested</span><b>${cnt("sent")}</b><span>a rule was undocumented</span></button>
+    <button class="kpi" data-tab="approved"><span>Approved by the agents</span><b>${cnt("approved")}</b><span>every rule met, with evidence</span></button>
+    <div class="kpi"><span>Median review time</span><b>${median(Q.map(r => r.secs)).toFixed(1)}s</b><span>about $${(Q.reduce((a, r) => a + r.cost, 0) / Q.length).toFixed(3)} per request</span></div>
+    <div class="kpi"><span>Agrees with the answer key</span><b>${pct(agree / Q.length)}</b><span>${agree} of ${Q.length} requests</span></div>
+  </div>
+  <section class="panel"><header><h2>Worth a look first</h2><span>Six requests that show what the agents do</span></header>
+    <div class="pad featured">${DATA.featured.map(n => { const r = QI[n]; return `<a class="feat" href="#/case/${n}"><span class="k"><span>${esc(r.id)}</span><span class="chip ${r.dec}">${DEC[r.dec]}</span></span><b>${esc(r.name)}, ${POLICY_SHORT[r.policy].toLowerCase()}</b><p>${esc(HOOKS[n] || "")}</p></a>`; }).join("")}</div></section>
+  <section class="panel">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Status">${[["all", "All", Q.length], ["due", "Needs sign-off", cnt("due")], ["sent", "Records requested", cnt("sent")], ["approved", "Approved", cnt("approved")], ["done", "Handled by you", st.filter(s => HANDLED.includes(s)).length]]
+        .map(([k, t, c]) => `<button data-tab="${k}" aria-pressed="${qstate.tab === k}">${t}<em>${c}</em></button>`).join("")}</div>
+      <select id="qpol" aria-label="Service"><option value="">All services</option>${Object.entries(POLICY_SHORT).map(([k, t]) => `<option value="${k}"${qstate.policy === k ? " selected" : ""}>${t}</option>`).join("")}</select>
+    </div>
+    <div class="tw"><table id="qt"></table></div><div class="pager" id="qp"></div>
+  </section>`;
+  $$("[data-tab]", v).forEach(b => b.onclick = () => { qstate.tab = b.dataset.tab; qstate.page = 0; viewQueue(v); });
+  $("#qpol").onchange = e => { qstate.policy = e.target.value; qstate.page = 0; drawQueueTable(); };
+  drawQueueTable();
+}
+function drawQueueTable() {
+  if (!$("#qt")) return;
+  const t = qstate.text.trim().toLowerCase();
+  let rows = Q.filter(r => { const s = queueStatus(r);
+    if (qstate.tab === "done" ? !HANDLED.includes(s) : qstate.tab !== "all" && s !== qstate.tab) return false;
+    if (qstate.policy && r.policy !== qstate.policy) return false;
+    return !t || (r.name + " " + r.id + " " + r.service + " " + POLICY_SHORT[r.policy]).toLowerCase().includes(t); });
+  const key = { n: r => r.n, ordered: r => r.ordered, secs: r => r.secs, cites: r => r.cites, dec: r => r.dec }[qstate.sort];
+  rows.sort((a, b) => (key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * qstate.dir);
+  const per = 25, pages = Math.max(1, Math.ceil(rows.length / per)); qstate.page = Math.min(qstate.page, pages - 1);
+  const page = rows.slice(qstate.page * per, qstate.page * per + per);
+  const sh = (k, t, cls = "") => `<th class="${cls}"><button data-sort="${k}">${t}${qstate.sort === k ? (qstate.dir > 0 ? " ↑" : " ↓") : ""}</button></th>`;
+  $("#qt").innerHTML = `<thead><tr>${sh("n", "Request")}<th>Service</th>${sh("ordered", "Ordered")}${sh("dec", "Agent decision")}<th>Status</th>${sh("cites", "Evidence", "r")}${sh("secs", "Review time", "r")}<th class="r">Answer key</th></tr></thead><tbody>` +
+    (page.length ? page.map(r => { const s = QS[queueStatus(r)];
+      return `<tr class="go" data-n="${r.n}" tabindex="0"><td><b>${esc(r.name)}</b><span class="idc">${esc(r.id)}</span></td><td style="white-space:nowrap">${POLICY_SHORT[r.policy]}</td>
+      <td class="num" style="white-space:nowrap">${esc(r.ordered)}</td><td><span class="chip ${r.dec}">${DEC[r.dec] || "None"}</span></td><td><span class="chip ${s[1]}">${s[0]}</span></td>
+      <td class="r num">${r.cites} quotes</td><td class="r num">${r.secs.toFixed(1)}s</td><td class="r">${r.dec === r.truth ? '<span class="ok-t">✓ Agrees</span>' : `<span class="no-t">✕ ${DEC[r.truth]}</span>`}</td></tr>`; }).join("")
+      : `<tr><td colspan="8" class="empty">No requests match. Clear the search or pick another status.</td></tr>`) + "</tbody>";
+  $$("#qt [data-sort]").forEach(b => b.onclick = () => { qstate.dir = qstate.sort === b.dataset.sort ? -qstate.dir : 1; qstate.sort = b.dataset.sort; drawQueueTable(); });
+  $$("#qt tr.go").forEach(tr => { tr.onclick = () => location.hash = `#/case/${tr.dataset.n}`; tr.onkeydown = e => { if (e.key === "Enter") tr.onclick(); }; });
+  $("#qp").innerHTML = `<span>${rows.length ? `${qstate.page * per + 1} to ${Math.min(rows.length, qstate.page * per + per)} of ${rows.length}` : "0 requests"}</span><div><button class="btn line" id="pv" ${qstate.page ? "" : "disabled"}>Previous</button><button class="btn line" id="nx" ${qstate.page < pages - 1 ? "" : "disabled"}>Next</button></div>`;
+  $("#pv").onclick = () => { qstate.page--; drawQueueTable(); }; $("#nx").onclick = () => { qstate.page++; drawQueueTable(); };
+}
+
+/* =========================================================== CASE */
+let C = null, crit = {}, timers = [], tick = null, running = false, live = null, curTab = "evidence";
 function parseChart(c) {
   const order = new Date(c.request.order_date + "T00:00:00Z");
-  return c.chart.map(line => {
-    const m = line.match(/^\[([a-z]+)-(\d+)\]\s*(.*)$/); if (!m) return null;
+  return c.chart.map(line => { const m = line.match(/^\[([a-z]+)-(\d+)\]\s*(.*)$/); if (!m) return null;
     const date = (m[3].match(/\d{4}-\d{2}-\d{2}/) || [])[0];
-    const days = date ? Math.round((order - new Date(date + "T00:00:00Z")) / 864e5) : null;
-    return { id: `${m[1]}-${m[2]}`, kind: m[1], date, days, line, text: m[3].replace(/^(started |onset )?\d{4}-\d{2}-\d{2}\s*/, "") };
-  }).filter(Boolean);
+    return { id: `${m[1]}-${m[2]}`, kind: m[1], date, days: date ? Math.round((order - new Date(date + "T00:00:00Z")) / 864e5) : null, line, text: m[3].replace(/^(started |onset )?\d{4}-\d{2}-\d{2}\s*/, "") }; }).filter(Boolean);
 }
-
-/* ---------- inbox */
-function claimOf(e) { const s = e.request.clinical_summary || ""; return s.length > 72 ? s.slice(0, 70).replace(/\s+\S*$/, "") + "…" : s; }
-function drawSlips() {
-  $("#slips").innerHTML = DATA.examples.map((e, i) => `<button class="slip" data-i="${i}" aria-pressed="${current && current.case_id === e.case_id}">
-    <b>${esc(e.request.patient_name)}</b><span class="svc">${POLICY_SHORT[e.policy]}</span><q>${esc(claimOf(e))}</q></button>`).join("") +
-    `<button class="slip make" id="makebtn" aria-expanded="${!$("#builder").hidden}"><b>Build a patient</b><span class="svc">Choose which rules they meet, then watch the agents find out.</span></button>` +
-    (current && current.built ? `<button class="slip" aria-pressed="true"><b>${esc(current.request.patient_name)}</b><span class="svc">${POLICY_SHORT[current.policy]}, built by you</span><q>${esc(claimOf(current))}</q></button>` : "");
-  $$("#slips [data-i]").forEach(b => b.onclick = () => { if (!running) { load(DATA.examples[+b.dataset.i]); } });
-  $("#makebtn").onclick = () => { const b = $("#builder"); b.hidden = !b.hidden; $("#makebtn").setAttribute("aria-expanded", !b.hidden); if (!b.hidden) b.scrollIntoView({ block: "nearest" }); };
-}
-
-function drawFax(c) {
+async function viewCase(v, n, tab) {
+  n = n || lastCase || DATA.featured[0];
+  if (n !== lastCase) { stopRun(); live = null; }
+  curTab = tab || (n !== lastCase ? "evidence" : curTab);
+  v.innerHTML = `<p class="empty">Opening the case</p>`;
+  let c; try { c = await getCase(n); } catch { v.innerHTML = `<div class="panel"><p class="empty">This case is not available. A patient built on the live service is forgotten when the service restarts. <a href="#/simulator">Build a new patient</a>.</p></div>`; return; }
+  C = c; lastCase = n;
   const r = c.request;
-  $("#fax").innerHTML = `<div class="head"><span>Prior authorization request</span><span>${esc(r.request_id)}</span></div>
-  <dl><dt>Member</dt><dd>${esc(r.patient_name)}, born ${esc(r.birth_date)}</dd><dt>Member ID</dt><dd>${esc(r.patient_id)}</dd>
-  <dt>Service</dt><dd>${esc(r.service)} (${esc(r.code)})</dd><dt>Diagnosis</dt><dd>${esc(r.diagnosis.text)} (${esc(r.diagnosis.code)})</dd>
-  <dt>Ordered</dt><dd>${esc(r.order_date)} by ${esc(r.ordering_provider)}</dd></dl>
-  <div class="claim"><small>The provider's summary. A claim, not evidence.</small>${esc(r.clinical_summary)}</div>`;
+  v.innerHTML = `<nav class="crumbs"><a href="#/queue">Review queue</a><span>/</span><span>${esc(r.request_id)}</span></nav>
+  <div class="casehead"><div><h1>${esc(r.patient_name)}</h1><div class="meta"><span class="chip plain">${POLICY_SHORT[c.policy]}</span><span>${esc(r.service)} (${esc(r.code)})</span><span>Ordered ${esc(r.order_date)} by ${esc(r.ordering_provider)}</span>${c.split ? `<span class="chip plain">${c.split === "test" ? "Held-out test case" : "Development case"}</span>` : `<span class="chip due">Built by you</span>`}</div></div>
+    <div class="acts">${c.recorded ? `<button class="btn line" id="replay"><svg viewBox="0 0 24 24"><path d="M4 4v6h6"/><path d="M5 15a8 8 0 1 0 2-9L4 10"/></svg>Replay the agents</button>` : ""}<button class="btn hl" id="golive"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>Run the agents live</button></div></div>
+  <section class="panel" id="runpanel"><ol class="stepper" id="stepper"></ol>
+    <div class="runbar"><p class="note" id="runnote" aria-live="polite" style="font-size:13.5px"></p>
+    <div class="meters"><div class="meter"><b id="m-clock">-</b><span>review time</span></div><div class="meter"><b id="m-cost">-</b><span>model cost</span></div><div class="meter"><b id="m-calls">-</b><span>model calls</span></div><div class="meter"><b id="m-quotes">-</b><span>quotes verified</span></div></div></div></section>
+  <section class="panel decide" id="decide" aria-live="polite"></section>
+  <div class="tabs" role="tablist">${[["evidence", "Evidence"], ["trace", "Agent trace"], ["letter", "Letter"], ["record", "Request and record"], ["audit", "Audit trail"]].map(([k, t]) => `<button role="tab" data-t="${k}" aria-selected="${curTab === k}">${t}</button>`).join("")}</div>
+  <div id="tabbody"></div>`;
+  $$(".tabs [data-t]").forEach(b => b.onclick = () => selectTab(b.dataset.t));
+  if ($("#replay")) $("#replay").onclick = replay;
+  $("#golive").onclick = runLive;
+  if (running) { drawStepper(); drawTab(); drawDecide(null); $("#runnote").textContent = "A run is in progress."; $$(".acts button").forEach(b => b.disabled = true); return; }
+  showFinal();
+}
+function selectTab(t) { curTab = t; $$(".tabs [data-t]").forEach(x => x.setAttribute("aria-selected", x.dataset.t === t)); drawTab(); history.replaceState(null, "", `#/case/${lastCase}/${t}`); }
+function result() { return live && live.decision ? live : C.recorded || null; }
+function showFinal() {
+  const r = result();
+  drawStepper(); crit = initCrit();
+  if (r) {
+    ORDER.forEach(s => setStep(s, s === "investigator" && !r.trace.some(e => e.node === s) ? "skipped" : "done", stepSummary(s, r.trace)));
+    for (const [k, v] of Object.entries(r.criteria || {})) crit[k] = { ...v };
+    meters(r); $("#runnote").textContent = r === live ? `Result of your live run, ${r.seconds.toFixed(1)}s.` : `Reviewed by the agents in ${r.seconds.toFixed(1)}s. Replay the review, or run the agents live on it again.`;
+  } else { $("#runnote").textContent = "Nothing has reviewed this patient yet. Run the agents live."; }
+  drawTab(); drawDecide(r);
+}
+function initCrit() { return Object.fromEntries(Object.keys(DATA.choices[C.policy]).map(k => [k, { status: null, citations: [] }])); }
+function stepSummary(s, trace) {
+  const e = [...trace].reverse().find(e => e.node === s); if (!e) return s === "investigator" ? "Not needed" : "";
+  if (s === "specialist") { const n = trace.filter(e => e.node === "specialist").length; return `${n} rule judgement${n > 1 ? "s" : ""}`; }
+  return e.summary || "";
+}
+function drawStepper() { $("#stepper").innerHTML = STEPS.map(([id, name, kind]) => `<li id="st-${id}"><div class="h"><b>${name}</b><span class="tag ${kind}">${kind === "ai" ? "AI" : "Code"}</span></div><p id="sp-${id}">Waiting</p></li>`).join(""); }
+function setStep(id, state, text) { const el = $("#st-" + id); if (!el) return; el.className = state; if (text !== undefined) $("#sp-" + id).textContent = text || (state === "done" ? "Done" : state === "running" ? "Working" : "Waiting"); }
+function meters(r) {
+  $("#m-clock").textContent = r.seconds != null ? r.seconds.toFixed(1) + "s" : "-";
+  $("#m-cost").textContent = r.cost != null ? "$" + r.cost.toFixed(3) : "-";
+  $("#m-calls").textContent = r.usage ? Object.values(r.usage).reduce((a, u) => a + (u.calls || 0), 0) : "-";
+  $("#m-quotes").textContent = Object.values(r.criteria || {}).reduce((a, v) => a + (v.citations || []).filter(q => q.verified).length, 0);
 }
 
-/* ---------- evidence map */
-function drawMap(c) {
-  const ents = parseChart(c).filter(e => e.days !== null && LANES.some(l => l[0] === e.kind));
-  const maxD = Math.max(365, ...ents.map(e => e.days));
-  const X = d => 100 * (1 - Math.log1p(Math.max(0, d)) / Math.log1p(maxD));
-  const ticks = [[0, "Order"], [30, "30 d"], [90, "90 d"], [183, "6 mo"], [365, "1 yr"], [730, "2 yr"], [1825, "5 yr"], [3650, "10 yr"]].filter(t => t[0] <= maxD * .98 || t[0] === 0);
-  const wins = DATA.windows[c.policy] || {};
+/* ----- tabs */
+function drawTab() {
+  const b = $("#tabbody"); if (!b) return;
+  const r = running ? null : result();
+  if (curTab === "evidence") drawEvidence(b);
+  else if (curTab === "trace") drawTrace(b, running ? null : r);
+  else if (curTab === "letter") b.innerHTML = r && r.letter ? `<article class="panel letter"><div class="lhead"><div><b>AuthPilot utilization review</b><div class="note">Determination for ${esc(C.request.request_id)}, ${esc(C.request.patient_name)}</div></div><button class="btn line" onclick="print()">Print</button></div>${md(r.letter)}</article><p class="note">Written by the letter agent from verified findings only. A denial is not sent until a clinician signs it.</p>` : `<div class="panel"><p class="empty">The letter is drafted at the end of a review.</p></div>`;
+  else if (curTab === "record") drawRecordTab(b);
+  else drawAudit(b, r);
+}
+function drawEvidence(b) {
+  b.innerHTML = `<section class="viewer" id="viewer"><div class="evhead"><h2 id="evh">The record against the order date</h2>
+    <div class="legend"><span><i></i>Record entry</span><span><i class="q"></i>Quoted as evidence</span><span id="lg-band"><i class="band"></i>Policy time window</span></div></div>
+    <div class="map" id="map"></div><div class="flags" id="flags"></div><svg class="threads" id="threads" aria-hidden="true"></svg><div class="rules" id="rules"></div></section>`;
+  drawMap(); drawRules(); for (const [k, v] of Object.entries(crit)) if (v.status) paintRule(k, v); drawFlags(); markDots(); requestAnimationFrame(() => drawThreads());
+}
+function drawMap() {
+  const ents = parseChart(C).filter(e => e.days !== null && LANES.some(l => l[0] === e.kind));
+  const maxD = Math.max(365, ...ents.map(e => e.days)), X = d => 100 * (1 - Math.log1p(Math.max(0, d)) / Math.log1p(maxD));
+  const ticks = [[0, "Order"], [30, "30 d"], [90, "90 d"], [183, "6 mo"], [365, "1 yr"], [730, "2 yr"], [1825, "5 yr"], [3650, "10 yr"]].filter(t => t[0] <= maxD * .98 || !t[0]);
   let bands = "";
-  for (const [k, chk] of Object.entries(wins)) {
+  for (const [k, chk] of Object.entries(DATA.windows[C.policy] || {})) {
     if (chk.within_days) bands += `<div class="win" style="left:${X(chk.within_days)}%"><em>${WINDOW_TEXT[k] || chk.within_days + "-day window"}</em></div>`;
-    if (chk.at_least_days) bands += `<div class="atleast" style="left:${X(chk.at_least_days)}%"><em>Therapy must start before this line</em></div>`;
-  }
-  if (c.policy === "icd") bands += `<div class="win" style="left:${X(90)}%"><em>${WINDOW_TEXT.icd_exclusions}</em></div>`;
+    if (chk.at_least_days) bands += `<div class="atleast" style="left:${X(chk.at_least_days)}%"><em>Therapy must start before this line</em></div>`; }
+  if (C.policy === "icd") bands += `<div class="win" style="left:${X(90)}%"><em>${WINDOW_TEXT.icd_exclusions}</em></div>`;
   $("#lg-band").hidden = !bands;
   const placed = {};
-  const dots = ents.map(e => {
-    const lane = LANES.findIndex(l => l[0] === e.kind), x = X(e.days);
-    const key = lane + ":" + Math.round(x / 1.6); placed[key] = (placed[key] || 0) + 1;
-    const n = placed[key] - 1, dy = n === 0 ? 0 : (n % 2 ? -1 : 1) * Math.ceil(n / 2) * 6;
-    return `<button class="dot" data-id="${e.id}" style="left:${x}%;top:${lane * 30 + 15 + Math.max(-11, Math.min(11, dy))}px" aria-label="${esc(e.line)}"></button>`;
-  }).join("");
-  $("#map").innerHTML = `<div class="grid"><div></div><div class="axis">${ticks.map(t => `<span class="${t[0] === 0 ? "end" : ""}" style="left:${X(t[0])}%">${t[1]}</span>`).join("")}</div>
-    <div>${LANES.map(l => `<div class="lab">${l[1]}</div>`).join("")}</div>
-    <div class="track">${ticks.slice(1).map(t => `<div class="vt" style="left:${X(t[0])}%"></div>`).join("")}${bands}<div class="orderline"></div>${LANES.map(() => `<div class="lane"></div>`).join("")}${dots}</div></div>`;
+  const dots = ents.map(e => { const lane = LANES.findIndex(l => l[0] === e.kind), x = X(e.days), key = lane + ":" + Math.round(x / 1.6); placed[key] = (placed[key] || 0) + 1;
+    const k = placed[key] - 1, dy = k ? (k % 2 ? -1 : 1) * Math.ceil(k / 2) * 6 : 0;
+    return `<button class="dot" data-id="${e.id}" style="left:${x}%;top:${lane * 28 + 14 + Math.max(-10, Math.min(10, dy))}px" aria-label="${esc(e.line)}"></button>`; }).join("");
+  $("#map").innerHTML = `<div class="grid"><div></div><div class="axis">${ticks.map(t => `<span class="${t[0] ? "" : "end"}" style="left:${X(t[0])}%">${t[1]}</span>`).join("")}</div>
+    <div>${LANES.map(l => `<div class="lab">${l[1]}</div>`).join("")}</div><div class="track">${ticks.slice(1).map(t => `<div class="vt" style="left:${X(t[0])}%"></div>`).join("")}${bands}<div class="orderline"></div>${LANES.map(() => `<div class="lane"></div>`).join("")}${dots}</div></div>`;
   $("#map").scrollLeft = $("#map").scrollWidth;
-  $("#evh").textContent = `The patient's record: ${ents.length} entries, laid out against the order date`;
+  $("#map").onscroll = () => drawThreads();
+  $("#evh").textContent = `${ents.length} record entries against the order date`;
   const byId = Object.fromEntries(ents.map(e => [e.id, e]));
-  $$("#map .dot").forEach(d => {
-    const e = byId[d.dataset.id];
-    const html = () => `<b>${esc(e.id)}</b>, ${e.days === 0 ? "on the order date" : e.days + " days before the order"}<div class="mono">${esc(e.text.slice(0, 260))}</div>`;
-    d.onmouseenter = ev => showTip(html(), ev); d.onfocus = ev => showTip(html(), ev); d.onmouseleave = hideTip; d.onblur = hideTip;
-    d.onclick = () => { const li = $(`#fulllist li[data-id="${e.id}"]`); if (li) { $("details.full").open = true; li.scrollIntoView({ block: "nearest" }); } };
-  });
-  $("#fullsum").textContent = `Read the full record (${c.chart.length} entries)`;
-  $("#fulllist").innerHTML = c.chart.map(l => { const id = (l.match(/^\[([a-z]+-\d+)\]/) || [])[1]; return `<li data-id="${id}">${esc(l)}</li>`; }).join("");
+  $$("#map .dot").forEach(d => { const e = byId[d.dataset.id]; hover(d, () => `<b>${esc(e.id)}</b>, ${e.days === 0 ? "on the order date" : e.days + " days before the order"}<div class="mono">${esc(e.text.slice(0, 260))}</div>`);
+    d.onclick = () => { hideTip(); selectTab("record"); const li = $(`#reclist li[data-id="${e.id}"]`); if (li) li.scrollIntoView({ block: "center" }); }; });
 }
-
-/* ---------- rules */
-function drawRules(c) {
-  const ks = Object.keys(DATA.choices[c.policy]);
-  crit = Object.fromEntries(ks.map(k => [k, { status: null, citations: [] }]));
-  $("#rules").innerHTML = ks.map(k => `<article class="rule" id="r-${k}"><span class="st"><i>·</i>Not reviewed yet</span><h3>${LABEL[k]}</h3>
-    <p class="rt">${esc(DATA.choices[c.policy][k].text)}</p><p class="why"></p><div class="qs" style="display:grid;gap:7px"></div></article>`).join("");
+function drawRules() {
+  $("#rules").innerHTML = Object.keys(crit).map(k => `<article class="rule" id="r-${k}"><span class="st"><i>·</i>Not reviewed yet</span><h3>${LABEL[k]}</h3>
+    <p class="rt">${ruleText(DATA.choices[C.policy][k].text)}</p><p class="why"></p><div class="qs" style="display:grid;gap:6px"></div></article>`).join("");
 }
-function setStatus(el, s) { el.className = "st " + (s || ""); el.innerHTML = s === "working" ? "<i></i>Reviewing" : s ? `<i>${STATUS[s][1]}</i>${STATUS[s][0]}` : "<i>·</i>Not reviewed yet"; }
-function paintRule(k, v, final) {
+function setSt(el, s) { if (!el) return; el.className = "st " + (s || ""); el.innerHTML = s === "working" ? "<i></i>Reviewing" : s ? `<i>${STATUS[s][1]}</i>${STATUS[s][0]}` : "<i>·</i>Not reviewed yet"; }
+function paintRule(k, v) {
+  crit[k] = { ...crit[k], ...v };
   const card = $("#r-" + k); if (!card) return;
-  crit[k] = { status: v.status, citations: v.citations || [], final };
-  card.className = "rule " + (v.status || "");
-  setStatus(card.querySelector(".st"), v.status);
-  if (v.reason) card.querySelector(".why").textContent = v.reason;
-  card.querySelector(".qs").innerHTML = (v.citations || []).map(q => {
-    const tag = q.verified === undefined ? `<span class="v">${esc(q.id)}, being checked</span>` : q.verified ? `<span class="v ok">✓ ${esc(q.id)}, verified in the record</span>` : `<span class="v no">✕ ${esc(q.id)}, not in the record. Not counted.</span>`;
-    return `<button class="quote${q.verified === false ? " bad" : ""}" data-id="${esc(q.id)}">${tag}${esc(String(q.quote).slice(0, 200))}</button>`;
-  }).join("");
-  $$(".quote", card).forEach(b => b.onclick = () => { const d = $(`#map .dot[data-id="${b.dataset.id}"]`); if (d) { d.classList.remove("ping"); void d.offsetWidth; d.classList.add("ping"); d.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" }); } });
-  markDots(); drawThreads(k);
+  card.className = "rule " + (v.status || ""); setSt($(".st", card), v.status);
+  if (v.reason) $(".why", card).textContent = v.reason;
+  $(".qs", card).innerHTML = (v.citations || []).map(q => { const tag = q.verified === undefined ? `<span class="v">${esc(q.id)}, being checked</span>` : q.verified ? `<span class="v ok">✓ ${esc(q.id)}, verified in the record</span>` : `<span class="v no">✕ ${esc(q.id)}, not in the record. Not counted.</span>`;
+    return `<button class="quote${q.verified === false ? " bad" : ""}" data-id="${esc(q.id)}">${tag}${esc(String(q.quote).slice(0, 200))}</button>`; }).join("");
+  $$(".quote", card).forEach(b => b.onclick = () => { const d = $(`#map .dot[data-id="${b.dataset.id}"]`); if (d) { d.classList.remove("ping"); void d.offsetWidth; d.classList.add("ping"); d.scrollIntoView({ block: "nearest", inline: "center", behavior: reduced ? "auto" : "smooth" }); } });
 }
 function markDots() {
-  const rank = { not_met: 3, missing: 2, met: 1, not_applicable: 0 };
-  const best = {};
-  for (const v of Object.values(crit)) for (const q of v.citations) if (q.verified !== false) { if (!(q.id in best) || rank[v.status] > rank[best[q.id]]) best[q.id] = v.status; }
+  const rank = { not_met: 3, missing: 2, met: 1, not_applicable: 0 }, best = {};
+  for (const v of Object.values(crit)) for (const q of v.citations || []) if (q.verified !== false && v.status) { if (!(q.id in best) || rank[v.status] > rank[best[q.id]]) best[q.id] = v.status; }
   $$("#map .dot").forEach(d => { const s = best[d.dataset.id]; d.className = "dot" + (s !== undefined ? " hit " + s : ""); });
-  $$("#fulllist li").forEach(li => li.classList.toggle("hit", li.dataset.id in best));
-  $("#quotes").textContent = Object.values(crit).reduce((n, v) => n + v.citations.filter(q => q.verified !== undefined).length, 0);
+}
+function drawFlags() {
+  const f = $("#flags"); if (!f) return;
+  const trace = running ? (live ? live.trace : (C.recorded ? C.recorded.trace.filter(e => e.shown) : [])) : (result() || { trace: [] }).trace;
+  const parts = [];
+  for (const e of trace) {
+    if (e.node === "verify" && e.window_problems) for (const [k, m] of Object.entries(e.window_problems)) parts.push(`Date check on “${LABEL[k]}”: ${esc(m)}. Code sent it back to the specialist with the right count.`);
+    if (e.node === "verify") for (const o of e.overrides || []) { const [k, ...rest] = o.split(": "); parts.push(`${LABEL[k] || esc(k)}: ${esc(rest.join(": "))}`); }
+    if (e.node === "verify" && e.unverified_citations) parts.push(`${e.unverified_citations} quote${e.unverified_citations > 1 ? "s" : ""} did not match the record and ${e.unverified_citations > 1 ? "were" : "was"} not counted.`);
+    if (e.node === "investigator") parts.push(`Investigator: ${esc(e.summary)}`);
+  }
+  f.innerHTML = [...new Set(parts)].map(p => `<p class="flag">${p}</p>`).join("");
 }
 const COLOR = { met: "#4CD39A", not_met: "#FF6F66", missing: "#F5B53D", not_applicable: "#8299B8" };
 function drawThreads(fresh) {
-  const svg = $("#threads"), wrap = $("#evidence");
+  const svg = $("#threads"), wrap = $("#viewer"); if (!svg || !wrap) return;
   if (innerWidth < 900) { svg.innerHTML = ""; return; }
-  const W = wrap.getBoundingClientRect();
-  svg.setAttribute("viewBox", `0 0 ${W.width} ${W.height}`); svg.style.width = W.width + "px"; svg.style.height = W.height + "px";
-  let out = "";
-  for (const [k, v] of Object.entries(crit)) {
-    const card = $("#r-" + k); if (!card || !v.status) continue;
-    const C = card.getBoundingClientRect();
-    v.citations.forEach((q, i) => {
-      if (q.verified === false) return;
-      const d = $(`#map .dot[data-id="${q.id}"]`); if (!d) return;
-      const D = d.getBoundingClientRect();
-      const x1 = D.left + D.width / 2 - W.left, y1 = D.top + D.height / 2 - W.top;
-      const x2 = C.left - W.left + 22 + i * 16, y2 = C.top - W.top;
-      const len = Math.hypot(x2 - x1, y2 - y1) * 1.25;
-      const cls = (q.verified === undefined ? "pending " : "") + (fresh === k && !reduced ? "draw" : "");
-      out += `<path class="${cls}" style="--len:${len}" stroke="${COLOR[v.status]}" d="M${x1},${y1} C${x1},${y1 + 60} ${x2},${y2 - 70} ${x2},${y2}"/><circle cx="${x2}" cy="${y2}" r="3" fill="${COLOR[v.status]}"/>`;
-    });
-  }
+  const W = wrap.getBoundingClientRect(); svg.setAttribute("viewBox", `0 0 ${W.width} ${W.height}`); svg.style.width = W.width + "px"; svg.style.height = W.height + "px";
+  const M = $("#map").getBoundingClientRect(); let out = "";
+  for (const [k, v] of Object.entries(crit)) { const card = $("#r-" + k); if (!card || !v.status) continue; const R = card.getBoundingClientRect();
+    (v.citations || []).forEach((q, i) => { if (q.verified === false) return; const d = $(`#map .dot[data-id="${q.id}"]`); if (!d) return; const D = d.getBoundingClientRect();
+      if (D.left < M.left + 110 || D.right > M.right) return;
+      const x1 = D.left + D.width / 2 - W.left, y1 = D.top + D.height / 2 - W.top, x2 = R.left - W.left + 22 + i * 15, y2 = R.top - W.top, len = Math.hypot(x2 - x1, y2 - y1) * 1.25;
+      out += `<path class="${q.verified === undefined ? "pending " : ""}${fresh === k && !reduced ? "draw" : ""}" style="--len:${len}" stroke="${COLOR[v.status]}" d="M${x1},${y1} C${x1},${y1 + 60} ${x2},${y2 - 70} ${x2},${y2}"/><circle cx="${x2}" cy="${y2}" r="3" fill="${COLOR[v.status]}"/>`; }); }
   svg.innerHTML = out;
 }
 new ResizeObserver(() => drawThreads()).observe(document.body);
 
-/* ---------- run rail */
-function drawRail() {
-  $("#rail").innerHTML = RAIL.map(([id, name, kind, tag]) => `<li id="n-${id}"><span class="pin"></span><div><div class="t"><b>${name}</b><span class="tag ${kind}">${tag}</span></div>
-    <p id="s-${id}">${id === "investigator" ? "Only when a rule is still undocumented." : ""}</p><div id="x-${id}"></div></div></li>`).join("");
+function spans(trace, seconds) {
+  if (!trace || !trace.length) return [];
+  const t0 = trace[trace.length - 1].t - (seconds || 0), at = e => Math.max(0, e.t - t0), out = [];
+  let prev = 0, specStart = 0, lastVerify = null;
+  for (const e of trace) {
+    const end = at(e);
+    if (e.node === "specialist") out.push({ name: LABEL[e.criterion] || e.criterion, kind: "ai", s: Math.min(specStart, end), e: end, note: STATUS[e.status] ? STATUS[e.status][0] : "" });
+    else {
+      let s = prev;
+      if (e.node === "letter" && lastVerify !== null) s = lastVerify;
+      out.push({ name: { intake: "Read request", policy: "Pick policy", record: "Fetch record over MCP", verify: "Verify", investigator: "Investigator", letter: "Letter" }[e.node] || e.node, kind: ["policy", "record", "verify"].includes(e.node) ? "code" : "ai", s: Math.min(s, end), e: end });
+      if (["record", "investigator", "verify"].includes(e.node)) specStart = end;
+      if (e.node === "verify") lastVerify = end;
+    }
+    prev = Math.max(prev, end);
+  }
+  return out;
 }
-function setNode(id, state, text) {
-  const n = $("#n-" + id); if (!n) return;
-  n.className = state; if (text !== undefined) $("#s-" + id).textContent = text;
+const PRICE = x => (x.input || 0) * 1e-6 + (x.output || 0) * 5e-6 + (x.cache_read || 0) * 1e-7 + (x.cache_write || 0) * 1.25e-6;
+function drawTrace(b, r) {
+  if (!r) { b.innerHTML = `<div class="panel"><p class="empty">${running ? "The trace appears when the run finishes." : "The trace appears once the agents have run."}</p></div>`; return; }
+  const sp = spans(r.trace, r.seconds), T = Math.max(r.seconds || 0, ...sp.map(s => s.e)) || 1;
+  const u = r.usage || {}, tot = k => Object.values(u).reduce((a, x) => a + (x[k] || 0), 0);
+  const ticks = [0, .25, .5, .75, 1].map(f => f * T);
+  const nodeName = { intake: "Read request", policy: "Pick policy", specialist: "Specialists", investigator: "Investigator", letter: "Letter" };
+  const t0 = r.trace[r.trace.length - 1].t - (r.seconds || 0);
+  b.innerHTML = `<div style="display:grid;gap:16px">
+  <div class="kpis"><div class="kpi"><span>Wall time</span><b>${(r.seconds || T).toFixed(1)}s</b><span>specialists ran in parallel</span></div>
+    <div class="kpi"><span>Model calls</span><b>${tot("calls")}</b><span>Claude Haiku 4.5, temperature 0</span></div>
+    <div class="kpi"><span>Tokens in and out</span><b>${(tot("input") / 1000).toFixed(1)}k / ${(tot("output") / 1000).toFixed(1)}k</b><span>${tot("cache_read") ? (tot("cache_read") / 1000).toFixed(1) + "k read from cache" : "no cache reads on this run"}</span></div>
+    <div class="kpi"><span>Cost</span><b>$${(r.cost != null ? r.cost : Object.values(u).reduce((a, x) => a + PRICE(x), 0)).toFixed(4)}</b><span>at Haiku 4.5 list prices</span></div></div>
+  <section class="panel"><header><h2>Timeline</h2><span>Each bar is a LangGraph node, timed from the run's events</span></header><div class="pad">
+    <div class="gantt"><div></div><div class="ax">${ticks.map(t => `<span style="left:${100 * t / T}%">${t.toFixed(1)}s</span>`).join("")}</div>
+    ${sp.map(s => { const w = 100 * (s.e - s.s) / T, out = w < 16, end = out && s.e / T > .8; return `<div class="gl"><span class="tag ${s.kind}">${s.kind === "ai" ? "AI" : "Code"}</span>${esc(s.name)}</div><div class="gt">${ticks.map(t => `<span class="grid-l" style="left:${100 * t / T}%"></span>`).join("")}<span class="bar ${s.kind}${out ? " out" : ""}${end ? " end" : ""}" style="left:${100 * s.s / T}%;width:${Math.max(.4, w)}%"><span>${(s.e - s.s).toFixed(2)}s${s.note ? ", " + s.note.toLowerCase() : ""}</span></span></div>`; }).join("")}</div></div></section>
+  <section class="panel"><header><h2>Model usage by node</h2><span>Token counts reported by the model</span></header><div class="tw"><table><thead><tr><th>Node</th><th class="r">Calls</th><th class="r">Input tokens</th><th class="r">Output tokens</th><th class="r">Cache reads</th><th class="r">Cost</th></tr></thead><tbody>
+    ${Object.entries(u).map(([k, x]) => `<tr><td>${nodeName[k] || esc(k)}</td><td class="r num">${x.calls || 0}</td><td class="r num">${(x.input || 0).toLocaleString()}</td><td class="r num">${(x.output || 0).toLocaleString()}</td><td class="r num">${(x.cache_read || 0).toLocaleString()}</td><td class="r num">$${PRICE(x).toFixed(4)}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">No usage recorded.</td></tr>`}</tbody></table></div></section>
+  <section class="panel"><header><h2>Event log</h2><span>${r.trace.length} events streamed from the graph</span></header><div class="pad"><ol class="events">${[...r.trace].sort((x, y) => x.t - y.t).map(e => `<li><em>+${Math.max(0, e.t - t0).toFixed(2)}s</em><b>${esc(e.node)}</b><span>${esc(e.node === "specialist" ? `${LABEL[e.criterion] || e.criterion}: ${STATUS[e.status] ? STATUS[e.status][0] : e.status}` : e.summary)}${e.tool_calls ? `<br>${e.tool_calls.map(esc).join("<br>")}` : ""}</span></li>`).join("")}</ol></div></section></div>`;
 }
-const ORDER = RAIL.map(r => r[0]);
+function drawRecordTab(b) {
+  const r = C.request, cited = new Set(Object.values(crit).flatMap(v => (v.citations || []).filter(q => q.verified).map(q => q.id)));
+  b.innerHTML = `<div style="display:grid;gap:16px"><section class="panel"><header><h2>Prior authorization request</h2><span class="mono">${esc(r.request_id)}</span></header><div class="fax">
+    <dl><dt>Member</dt><dd>${esc(r.patient_name)}, born ${esc(r.birth_date)}</dd><dt>Member ID</dt><dd>${esc(r.patient_id)}</dd><dt>Service</dt><dd>${esc(r.service)} (${esc(r.code)})</dd>
+    <dt>Diagnosis</dt><dd>${esc(r.diagnosis.text)} (${esc(r.diagnosis.code)})</dd><dt>Ordered</dt><dd>${esc(r.order_date)} by ${esc(r.ordering_provider)}</dd></dl>
+    <div class="claim"><small>The provider's summary. A claim, not evidence.</small>${esc(r.clinical_summary)}</div></div></section>
+  <section class="panel"><header><h2>Patient record over MCP</h2><span>${C.chart.length} FHIR entries, newest first. Highlighted entries were quoted as verified evidence.</span></header>
+    <div class="toolbar"><input id="recq" type="search" placeholder="Filter the record" style="min-width:220px" aria-label="Filter the record"></div>
+    <ul class="reclist" id="reclist">${C.chart.map(l => { const id = (l.match(/^\[([a-z]+-\d+)\]/) || [])[1]; return `<li data-id="${id}" class="${cited.has(id) ? "hit" : ""}">${esc(l)}</li>`; }).join("")}</ul></section></div>`;
+  $("#recq").oninput = e => { const t = e.target.value.toLowerCase(); $$("#reclist li").forEach(li => li.hidden = !!t && !li.textContent.toLowerCase().includes(t)); };
+}
+function drawAudit(b, r) {
+  const a = store.get()[lastCase];
+  const t0 = r && r.trace.length ? r.trace[r.trace.length - 1].t - (r.seconds || 0) : 0;
+  const items = [["", `Request received from ${esc(C.request.ordering_provider)}`, `${esc(C.request.service)}, ordered ${esc(C.request.order_date)}`, ""]];
+  if (r) {
+    items.push(["", r === live ? "Live agent run started" : "Agent review started", "", t0 > 1e9 ? new Date(t0 * 1000).toISOString().replace("T", " ").slice(0, 16) + " UTC" : ""]);
+    for (const e of r.trace) items.push([["policy", "record", "verify"].includes(e.node) ? "code" : "ai",
+      e.node === "specialist" ? `Specialist: ${LABEL[e.criterion] || e.criterion}` : ({ intake: "Request read", policy: "Policy chosen", record: "Record fetched over MCP", verify: "Code verification", investigator: "Investigator search", letter: "Letter drafted" }[e.node] || e.node),
+      e.node === "specialist" ? `${STATUS[e.status] ? STATUS[e.status][0] : e.status}, ${(e.citations || []).length} quote${(e.citations || []).length === 1 ? "" : "s"}` : esc(e.summary), `+${Math.max(0, e.t - t0).toFixed(1)}s`]);
+    items.push(["code", `Recommendation: ${DEC[r.decision] || "none"}`, DEC_SUB[r.decision] || "", ""]);
+  }
+  if (a) items.push(["human", `${QS[a.kind][0]} by you`, a.note ? `“${esc(a.note)}”` : "No note", new Date(a.at).toLocaleString()]);
+  b.innerHTML = `<section class="panel"><header><h2>Audit trail</h2><span>Every step that touched this request</span></header><ol class="audit">${items.map(([k, t, s, w]) => `<li class="${k}"><i></i><div><b>${t}</b><span>${s}</span></div><em>${w}</em></li>`).join("")}</ol></section>`;
+}
+
+/* ----- decision panel */
+function drawDecide(r, fresh) {
+  const d = $("#decide"); if (!d) return;
+  if (!r) { d.innerHTML = `<div class="stampbox"><div class="stamp none">${running ? "Reviewing" : "Not reviewed"}<small>${running ? "The agents are working" : "Run the agents to review"}</small></div></div><div class="sec"><h3>Answer key</h3><p class="note">Revealed after the agents decide.</p></div><div class="sec"><h3>Your decision</h3><p class="note">Available once there is a recommendation.</p></div>`; return; }
+  const key = C.answer_key, a = store.get()[lastCase];
+  const diffs = key ? Object.entries(key.statuses).map(([k, v]) => { const got = r.criteria && r.criteria[k] && r.criteria[k].status; return got && got !== v ? `<p class="note">The key says “${LABEL[k]}” is ${STATUS[v][0].toLowerCase()}; the agents said ${STATUS[got][0].toLowerCase()}.</p>` : ""; }).join("") : "";
+  const opts = { DENY: [["signed", "Sign and send denial", "danger"], ["overturned", "Overturn to approval", "line"]], NEED_INFO: [["confirmed", "Send records request", ""], ["overturned", "Approve anyway", "line"]], APPROVE: [["confirmed", "Confirm approval", "good"], ["flagged", "Flag for review", "line"]] }[r.decision] || [];
+  d.innerHTML = `<div class="stampbox"><div class="stamp ${r.decision}${fresh && !reduced ? " slam" : ""}">${DEC[r.decision] || "No decision"}<small>${a ? QS[a.kind][0] : DEC_SUB[r.decision] || ""}</small></div></div>
+    ${key ? `<div class="sec"><h3>Answer key</h3><p style="font-size:14px">${key.decision === r.decision ? `<span class="ok-t">✓ Agrees:</span> ${DEC[key.decision].toLowerCase()}` : `<span class="no-t">✕ Disagrees:</span> the right answer is ${DEC[key.decision].toLowerCase()}`}</p>${diffs || `<p class="note">${Object.keys(key.statuses).length} of ${Object.keys(key.statuses).length} rule statuses match.</p>`}</div>` : `<div class="sec"><h3>Answer key</h3><p class="note">Revealed after the agents decide.</p></div>`}
+    <div class="sec"><h3>Your decision</h3>${a ? `<div class="signed"><b>${QS[a.kind][0]}</b><span class="note">${new Date(a.at).toLocaleString()}${a.note ? `. “${esc(a.note)}”` : ""}</span></div><div><button class="btn line" id="undo">Undo</button></div>`
+      : `<textarea id="note" placeholder="Note for the record (optional)" aria-label="Note for the record"></textarea><div class="row">${opts.map(([k, t, c]) => `<button class="btn ${c}" data-act="${k}">${t}</button>`).join("")}</div><p class="note">Saved in this browser only.</p>`}</div>`;
+  $$("[data-act]", d).forEach(b => b.onclick = () => { store.set(lastCase, { kind: b.dataset.act, note: $("#note").value.trim(), at: Date.now() }); refreshNav(); drawDecide(r); if (curTab === "audit") drawTab(); });
+  if ($("#undo")) $("#undo").onclick = () => { store.drop(lastCase); refreshNav(); drawDecide(r); if (curTab === "audit") drawTab(); };
+}
+
+/* ----- running */
+function stopRun() { timers.forEach(clearTimeout); timers = []; clearInterval(tick); running = false; }
+function startRun(note) {
+  stopRun(); running = true; crit = initCrit();
+  if (curTab !== "evidence") { curTab = "evidence"; $$(".tabs [data-t]").forEach(x => x.setAttribute("aria-selected", x.dataset.t === "evidence")); }
+  drawStepper(); drawTab(); drawDecide(null); setStep("intake", "running", "Working");
+  ["m-cost", "m-calls", "m-quotes"].forEach(i => $("#" + i).textContent = "-"); $("#runnote").textContent = note;
+  $$(".acts button").forEach(b => b.disabled = true);
+  const start = performance.now(); tick = setInterval(() => { if ($("#m-clock")) $("#m-clock").textContent = ((performance.now() - start) / 1000).toFixed(1) + "s"; }, 100);
+}
+function endRun() { clearInterval(tick); running = false; $$(".acts button").forEach(b => b.disabled = false); }
 function onStep(e) {
+  if (!$("#stepper")) return;
   const idx = ORDER.indexOf(e.node);
-  ORDER.slice(0, idx).forEach(n => { if ($("#n-" + n).className === "running") setNode(n, "done"); });
+  ORDER.slice(0, idx).forEach(n => { if ($("#st-" + n).className === "running") setStep(n, "done"); });
   if (e.node === "specialist") {
-    setNode("specialist", "running");
+    setStep("specialist", "running");
     paintRule(e.criterion, { status: e.status, reason: e.reason, citations: (e.citations || []).map(q => ({ ...q, verified: undefined })) });
     const left = Object.values(crit).filter(v => !v.status).length;
-    $("#s-specialist").textContent = left ? `${Object.keys(crit).length - left} of ${Object.keys(crit).length} rules judged` : "All rules judged";
-    if (left) Object.entries(crit).forEach(([k, v]) => { if (!v.status) setStatus($("#r-" + k + " .st"), "working"); });
-  } else if (e.node === "verify") {
-    setNode("specialist", "done"); setNode("verify", "done", e.summary);
-    const parts = [];
-    if (e.window_problems) for (const [k, v] of Object.entries(e.window_problems)) parts.push(`<p class="flag">Date check on "${LABEL[k]}": ${esc(v)}. Sent back to the specialist.</p>`);
-    for (const o of e.overrides || []) { const [k, ...rest] = o.split(": "); parts.push(`<p class="flag">${LABEL[k] || esc(k)}: ${esc(rest.join(": "))}</p>`); }
-    if (e.unverified_citations) parts.push(`<p class="flag">${e.unverified_citations} quote${e.unverified_citations > 1 ? "s" : ""} did not match the record and ${e.unverified_citations > 1 ? "were" : "was"} not counted.</p>`);
-    $("#x-verify").innerHTML = parts.join("");
-    if (e.window_problems && Object.keys(e.window_problems).length) setNode("specialist", "running", "Second look at the dates");
-  } else if (e.node === "investigator") {
-    setNode("investigator", "done", e.summary);
-    $("#x-investigator").innerHTML = `<div class="tools">${(e.tool_calls || []).map(t => esc(t)).join("<br>")}</div>`;
-    setNode("specialist", "running", "Second look at the undocumented rules");
-  } else {
-    setNode(e.node, "done", e.summary);
-    const next = ORDER[idx + 1]; if (next && next !== "investigator" && next !== "verify") setNode(next, "running");
-    if (e.node === "record") Object.keys(crit).forEach(k => setStatus($("#r-" + k + " .st"), "working"));
-  }
+    $("#sp-specialist").textContent = left ? `${Object.keys(crit).length - left} of ${Object.keys(crit).length} rules judged` : "All rules judged";
+    markDots(); drawThreads(e.criterion);
+  } else if (e.node === "verify") { setStep("specialist", "done"); setStep("verify", "done", e.summary); drawFlags();
+    if (e.window_problems && Object.keys(e.window_problems).length) setStep("specialist", "running", "Second look at the dates");
+  } else if (e.node === "investigator") { setStep("investigator", "done", e.summary); setStep("specialist", "running", "Second look"); drawFlags();
+  } else { setStep(e.node, "done", e.summary); const next = ORDER[idx + 1]; if (next && next !== "investigator" && next !== "verify") setStep(next, "running", "Working");
+    if (e.node === "record") Object.keys(crit).forEach(k => setSt($(`#r-${k} .st`), "working")); }
 }
-function finish(r, key) {
-  ORDER.forEach(n => { const el = $("#n-" + n); if (el.className !== "done") setNode(n, n === "investigator" ? "skipped" : "done"); });
-  for (const [k, v] of Object.entries(r.criteria || {})) paintRule(k, v, true);
-  drawThreads();
-  if (r.cost != null) $("#cost").textContent = "$" + r.cost.toFixed(3);
-  if (r.seconds) $("#clock").textContent = r.seconds.toFixed(1) + "s";
-  const rows = key ? Object.entries(key.statuses).map(([k, v]) => { const got = r.criteria && r.criteria[k] && r.criteria[k].status;
-    return `<div class="r"><span class="kst ${v}">${STATUS[v][0]}</span><span>${LABEL[k]}${got && got !== v ? ` <em>(agents said ${STATUS[got][0].toLowerCase()})</em>` : ""}</span></div>`; }).join("") : "";
-  const match = key && key.decision === r.decision;
-  $("#verdict").innerHTML = `<div class="stampwrap"><div class="stamp ${r.decision}${reduced ? "" : " slam"}">${DEC[r.decision] || "No decision"}<small>${DEC_SUB[r.decision] || ""}</small></div>
-    ${key ? `<div class="key"><b>${match ? "Matches the answer key" : "Does not match the answer key"}: ${DEC[key.decision].toLowerCase()}</b>${rows}</div>` : ""}</div>
-    <div><p class="lmeta">Determination letter, written from verified findings only</p><div class="letter">${md(r.letter || "")}</div></div>`;
-  running = false; $("#play").disabled = !current.recorded; $("#live").disabled = false;
+function finishRun(r) {
+  endRun();
+  if (!$("#stepper")) return;
+  ORDER.forEach(n => { const el = $("#st-" + n); if (el.className !== "done") setStep(n, n === "investigator" ? "skipped" : "done", n === "investigator" ? "Not needed" : undefined); });
+  for (const [k, v] of Object.entries(r.criteria || {})) paintRule(k, v);
+  markDots(); drawThreads(); drawFlags(); meters(r); drawDecide(r, true);
 }
-function stop() { timers.forEach(clearTimeout); timers = []; clearInterval(tick); running = false; $("#play").disabled = false; $("#live").disabled = false; }
-function reset(c) {
-  stop(); drawRail(); drawRules(c); markDots(); drawThreads();
-  $("#clock").textContent = "0.0s"; $("#cost").textContent = "$0.000"; $("#quotes").textContent = "0";
-  $("#verdict").innerHTML = `<p class="empty">The decision lands here, with the answer key and the letter to the provider.</p>`;
+function replay() {
+  const rec = C.recorded; if (!rec || running) return;
+  live = null; rec.trace.forEach(e => delete e.shown); startRun("Replaying the recorded run at its real speed.");
+  const tr = rec.trace, t0 = tr[0].t - 0.6;
+  tr.forEach(e => timers.push(setTimeout(() => { e.shown = true; onStep(e); }, reduced ? 0 : (e.t - t0) * 1000)));
+  timers.push(setTimeout(() => { finishRun(rec); if ($("#runnote")) $("#runnote").textContent = "Replay finished. These are the agents' recorded findings."; }, reduced ? 20 : (tr[tr.length - 1].t - t0 + .4) * 1000));
 }
-function load(c) {
-  current = c; drawSlips(); drawFax(c); drawMap(c); reset(c);
-  $("#play").hidden = !c.recorded;
-  $("#live").className = c.recorded ? "btn ghost" : "btn";
-  $("#runnote").textContent = c.recorded ? `Replay a real run (${c.recorded.seconds.toFixed(1)}s), or send it to the agents now.` : "A new patient. Only the live agents can review it.";
-}
-
-/* ---------- replay */
-$("#play").onclick = () => {
-  const c = current; if (!c || !c.recorded || running) return;
-  reset(c); running = true; $("#play").disabled = true; $("#live").disabled = true;
-  $("#runnote").textContent = "Replaying a real run at its real speed.";
-  const tr = c.recorded.trace, t0 = tr[0].t - 0.6;
-  setNode("intake", "running");
-  const start = performance.now(); tick = setInterval(() => $("#clock").textContent = ((performance.now() - start) / 1000).toFixed(1) + "s", 100);
-  tr.forEach(e => timers.push(setTimeout(() => onStep(e), reduced ? 0 : (e.t - t0) * 1000)));
-  timers.push(setTimeout(() => { clearInterval(tick); finish(c.recorded, c.answer_key); $("#runnote").textContent = "Replay finished. Run it live to see the agents do it again."; }, reduced ? 20 : (tr[tr.length - 1].t - t0 + .4) * 1000));
-};
-
-/* ---------- live */
-$("#live").onclick = async () => {
-  const c = current; if (!c || running) return;
+async function runLive() {
+  if (running) return;
   if (!DATA.api && location.protocol === "file:") { $("#runnote").textContent = "Live runs need the hosted service."; return; }
-  reset(c); running = true; $("#play").disabled = true; $("#live").disabled = true; setNode("intake", "running");
-  $("#runnote").textContent = "Connecting to the agents. After a quiet spell the service takes up to a minute to wake.";
-  const start = performance.now(); tick = setInterval(() => $("#clock").textContent = ((performance.now() - start) / 1000).toFixed(1) + "s", 100);
+  const c = C, n = lastCase, here = () => lastCase === n && $("#stepper");
+  live = { trace: [], criteria: {}, decision: null };
+  startRun(svcState === "on" ? "Connecting to the agents." : "Connecting. After a quiet spell the service takes up to a minute to wake.");
   try {
     const res = await fetch((DATA.api || "") + "/api/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ case_id: c.case_id }) });
     if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error || b.detail || `the service returned ${res.status}`); }
-    $("#runnote").textContent = "Live run in progress. These are the real agents, working now.";
-    const reader = res.body.getReader(), dec = new TextDecoder(); let buf = "", ended = false;
-    for (;;) {
-      const { value, done } = await reader.read(); if (done) break;
-      buf += dec.decode(value, { stream: true });
-      let i; while ((i = buf.indexOf("\n\n")) >= 0) {
-        const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
-        if (!chunk.startsWith("data: ")) continue;
-        const e = JSON.parse(chunk.slice(6));
-        if (e.type === "step") onStep(e);
-        if (e.type === "done") { ended = true; clearInterval(tick); finish(e, e.answer_key); $("#runnote").textContent = "Live run complete."; }
-        if (e.type === "error") throw new Error(e.message);
-      }
-    }
+    setSvc("on", "Agents online"); if (here()) $("#runnote").textContent = "Live run in progress. These are the real agents, working now.";
+    const reader = res.body.getReader(), dec = new TextDecoder(); let buf = "", ended = false; const t0 = Date.now() / 1000;
+    for (;;) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true }); let i;
+      while ((i = buf.indexOf("\n\n")) >= 0) { const chunk = buf.slice(0, i); buf = buf.slice(i + 2); if (!chunk.startsWith("data: ")) continue; const e = JSON.parse(chunk.slice(6));
+        if (e.type === "step") { e.t = t0 + (e.elapsed || 0); live.trace.push(e); if (here()) onStep(e); }
+        if (e.type === "done") { ended = true; Object.assign(live, { criteria: e.criteria, decision: e.decision, letter: e.letter, seconds: e.seconds, cost: e.cost, usage: e.usage });
+          if (live.trace.length) { const shift = (t0 + e.seconds) - live.trace[live.trace.length - 1].t; if (shift < 0) live.trace.forEach(x => x.t += shift); }
+          if (here()) { finishRun(live); $("#runnote").textContent = `Live run complete in ${e.seconds.toFixed(1)}s.`; } else endRun(); }
+        if (e.type === "error") throw new Error(e.message); } }
     if (!ended) throw new Error("the connection closed before the run finished. Please try again.");
-  } catch (err) { clearInterval(tick); $("#runnote").textContent = "Live run stopped: " + err.message; running = false; $("#live").disabled = false; $("#play").disabled = !c.recorded; }
-};
+  } catch (err) { endRun(); live = null; if (here()) { $("#runnote").textContent = "Live run stopped: " + err.message; showFinal(); $("#runnote").textContent = "Live run stopped: " + err.message; } }
+}
 
-/* ---------- builder */
-function drawBuilder(policy) {
-  policy = policy || "cpap";
-  const ch = DATA.choices[policy];
-  $("#builder").innerHTML = `<label>Service<select id="b-policy">${Object.entries(DATA.policies).map(([k, t]) => `<option value="${k}"${k === policy ? " selected" : ""}>${esc(t)}</option>`).join("")}</select></label>
-    <div class="row">${Object.entries(ch).map(([k, v]) => `<label>${LABEL[k]}<select data-k="${k}">${Object.entries(v.options).map(([s, t]) => `<option value="${s}">${esc(t)}</option>`).join("")}</select></label>`).join("")}</div>
-    <div class="checks">${Object.entries(DATA.traps).map(([k, t]) => `<label><input type="checkbox" value="${k}"> ${esc(t)}</label>`).join("")}</div>
-    <div class="go"><button class="btn" id="b-make">Create this patient</button><p id="b-note">The agents are not told what you chose. The answer key appears after the run.</p></div>`;
-  $("#b-policy").onchange = e => drawBuilder(e.target.value);
+/* =========================================================== RUNS */
+function viewRuns(v) {
+  const secs = Q.map(r => r.secs), costs = Q.map(r => r.cost), calls = Q.map(r => r.calls), sum = a => a.reduce((x, y) => x + y, 0);
+  v.innerHTML = `<div class="vhead"><div><h1>Agent runs</h1><p>Every review the agents made: ${Q.length} runs of the LangGraph pipeline, each with its trace, token counts and cost. Open a run to see its timeline.</p></div></div>
+  <div class="kpis"><div class="kpi"><span>Runs</span><b>${Q.length}</b><span>${Q.filter(r => r.dec).length} reached a decision</span></div><div class="kpi"><span>Median time</span><b>${median(secs).toFixed(1)}s</b><span>90th percentile ${quant(secs, .9).toFixed(1)}s</span></div>
+    <div class="kpi"><span>Cost per run</span><b>$${(sum(costs) / costs.length).toFixed(3)}</b><span>$${sum(costs).toFixed(2)} for all ${Q.length}</span></div>
+    <div class="kpi"><span>Model calls per run</span><b>${(sum(calls) / calls.length).toFixed(1)}</b><span>${Q.filter(r => r.calls > 7).length} runs took a second look</span></div>
+    <div class="kpi"><span>Tokens per run</span><b>${(sum(Q.map(r => r.toks)) / Q.length / 1000).toFixed(1)}k</b><span>mostly the record, read once per specialist</span></div></div>
+  <div class="charts2"><section class="panel"><header><h2>Review time</h2><span>Runs by seconds of wall time</span></header><div class="pad hist" id="h1"></div></section>
+    <section class="panel"><header><h2>Cost per run</h2><span>Runs by model cost</span></header><div class="pad hist" id="h2"></div></section></div>
+  <section class="panel"><header><h2>All runs</h2><span>Newest first. Open one to see its trace.</span></header><div class="tw"><table><thead><tr><th>Run</th><th>Request</th><th>Started (UTC)</th><th class="r">Time</th><th class="r">Calls</th><th class="r">Tokens</th><th class="r">Cost</th><th>Decision</th></tr></thead><tbody id="rt"></tbody></table></div><div class="pager" id="rp"></div></section>`;
+  hist($("#h1"), secs, 1, x => x.toFixed(0) + "s"); hist($("#h2"), costs, .005, x => "$" + x.toFixed(3));
+  const rows = [...Q].sort((a, b) => (b.at || 0) - (a.at || 0)); let page = 0; const per = 20;
+  const draw = () => { $("#rt").innerHTML = rows.slice(page * per, page * per + per).map(r => `<tr class="go" data-n="${r.n}" tabindex="0"><td class="mono" style="font-size:12px">run-${r.n}</td><td><b>${esc(r.name)}</b><span class="sub">${POLICY_SHORT[r.policy]}</span></td>
+      <td class="num">${r.at ? new Date(r.at * 1000).toISOString().replace("T", " ").slice(0, 16) : ""}</td><td class="r num">${r.secs.toFixed(1)}s</td><td class="r num">${r.calls}</td><td class="r num">${(r.toks / 1000).toFixed(1)}k</td><td class="r num">$${r.cost.toFixed(3)}</td><td><span class="chip ${r.dec}">${DEC[r.dec]}</span></td></tr>`).join("");
+    $$("#rt tr").forEach(tr => { tr.onclick = () => location.hash = `#/case/${tr.dataset.n}/trace`; tr.onkeydown = e => { if (e.key === "Enter") tr.onclick(); }; });
+    const pages = Math.ceil(rows.length / per);
+    $("#rp").innerHTML = `<span>${page * per + 1} to ${Math.min(rows.length, page * per + per)} of ${rows.length}</span><div><button class="btn line" id="rpv" ${page ? "" : "disabled"}>Previous</button><button class="btn line" id="rnx" ${page < pages - 1 ? "" : "disabled"}>Next</button></div>`;
+    $("#rpv").onclick = () => { page--; draw(); }; $("#rnx").onclick = () => { page++; draw(); }; };
+  draw();
+}
+function hist(el, vals, step, fmt) {
+  const lo = Math.floor(Math.min(...vals) / step) * step, nb = Math.min(30, Math.ceil((Math.max(...vals) - lo) / step) + 1), bins = Array(nb).fill(0);
+  vals.forEach(x => bins[Math.min(nb - 1, Math.floor((x - lo) / step))]++);
+  const W = 560, H = 190, L = 34, B = 26, T = 8, max = Math.max(...bins), bw = (W - L) / nb, Y = y => T + (H - T - B) * (1 - y / max);
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogram of ${vals.length} runs">${[0, Math.round(max / 2), max].map(y => `<line x1="${L}" x2="${W}" y1="${Y(y)}" y2="${Y(y)}" stroke="#E6ECF3"/><text x="${L - 6}" y="${Y(y) + 4}" text-anchor="end" font-size="11" fill="#5A6B85">${y}</text>`).join("")}
+    ${bins.map((c, i) => { const h = (H - T - B) * c / max; return `<rect x="${L + i * bw + 1}" y="${H - B - h}" width="${Math.max(1, bw - 2)}" height="${h}" rx="2" fill="#2F6FED"/>`; }).join("")}
+    ${bins.map((_, i) => i % Math.ceil(nb / 6) === 0 ? `<text x="${L + i * bw + bw / 2}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#5A6B85">${fmt(lo + i * step)}</text>` : "").join("")}
+    ${bins.map((_, i) => `<rect class="hh" data-i="${i}" x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}" fill="transparent"/>`).join("")}</svg>`;
+  $$(".hh", el).forEach(h => { const i = +h.dataset.i; hover(h, `<b>${fmt(lo + i * step)} to ${fmt(lo + (i + 1) * step)}</b><br>${bins[i]} run${bins[i] === 1 ? "" : "s"}`); });
+}
+
+/* =========================================================== EVALUATION */
+const SYS = ["baseline", "single_plus", "authpilot"];
+const ROUNDS = [[1, "Agents search the record, one reviewer judges everything", 69, 84], [2, "Stricter output formats, record sorted by date", 62, 88],
+  [3, "One specialist per rule, each reading the whole record", 62, 68], [4, "Code checks date windows and sends mistakes back", 73, 68], [5, "Policy and covered procedures decided by code lookup", 92, 71]];
+function viewEval(v) {
+  const R = DATA.results.test || DATA.results.dev, S = R.systems, P = R.paired, pts = x => (x * 100).toFixed(1), a = S.authpilot, b = S.baseline;
+  const ni = [a.by_truth.NEED_INFO.split("/"), b.by_truth.NEED_INFO.split("/")];
+  v.innerHTML = `<div class="vhead"><div><h1>Evaluation</h1><p>200 held-out requests, run once with the system frozen at commit ${esc(R.frozen_commit || "")}. Three systems, same model, same policies, same rules. Only the way the work is organised differs.</p></div></div>
+  <p class="lead">AuthPilot decided <b>${pct(a.accuracy)}</b> correctly, against ${pct(b.accuracy)} for a single AI call: <b>+${pts(P.authpilot_vs_baseline.accuracy_gain)} points</b> (95% interval ${pts(P.authpilot_vs_baseline.ci95[0])} to ${pts(P.authpilot_vs_baseline.ci95[1])}). Against a single call given the same code checks, <b>+${pts(P.authpilot_vs_single_plus.accuracy_gain)} points</b> (${pts(P.authpilot_vs_single_plus.ci95[0])} to ${pts(P.authpilot_vs_single_plus.ci95[1])}).</p>
+  <div class="callouts">${[[`${a.wrongful_denials} vs ${b.wrongful_denials}`, "covered requests wrongly denied, AuthPilot against a single call"], [`${a.wrongful_approvals} vs ${b.wrongful_approvals}`, "uncovered requests wrongly approved"],
+    [`${ni[0][0]} of ${ni[0][1]}`, `times it correctly asked for missing records, against ${ni[1][0]} for a single call`], [`${a.denials_without_verified_evidence}`, `denials without verified evidence. ${pct(a.citations_verified)} of ${a.citations.toLocaleString()} quotes matched the record.`]]
+    .map(([x, y]) => `<div class="callout"><b>${x}</b><span>${y}</span></div>`).join("")}</div>
+  <div class="waffles" id="waffles"></div>
+  <p class="note">Each square is one test request, in the same place in all three grids, so you can follow a case across systems. Rows are grouped by service, 40 requests each. Click a square to open the case.</p>
+  <details class="panel"><summary class="pad" style="cursor:pointer;font-weight:600">See the numbers as a table</summary><div class="tw"><table><thead><tr><th></th><th class="r">Correct</th><th class="r">Covered care denied</th><th class="r">Uncovered care approved</th><th class="r">Denials without verified evidence</th>${Object.values(POLICY_SHORT).map(p => `<th class="r">${p}</th>`).join("")}<th class="r">Cost</th><th class="r">Median time</th></tr></thead><tbody>
+    ${SYS.map(s => { const x = S[s]; return `<tr class="${s === "authpilot" ? "ours" : ""}"><td>${NAME[s]}</td><td class="r">${x.correct}/${x.cases}</td><td class="r">${x.wrongful_denials}</td><td class="r">${x.wrongful_approvals}</td><td class="r">${x.denials_without_verified_evidence}</td>${Object.keys(POLICY_SHORT).map(p => `<td class="r">${x.by_policy[p]}</td>`).join("")}<td class="r">$${x.cost_per_case.toFixed(3)}</td><td class="r">${x.median_seconds.toFixed(1)}s</td></tr>`; }).join("")}</tbody></table></div></details>
+  <div class="journey"><section class="panel"><header><h2>Accuracy on the 100 development cases, by round</h2></header><div class="pad chart" id="rounds"></div></section>
+    <section class="panel pad" style="display:grid;gap:12px;align-content:start"><h2 style="font-size:20px;font-stretch:112%;font-weight:800;line-height:1.15">The first multi-agent design lost to a single call.</h2>
+      <p class="note" style="font-size:14px">Each round began by reading failures one by one: did the model misjudge something, or miscount and misread? Judgement stayed with the model. Bookkeeping moved to code.</p>
+      <ol class="steps">${[["Searching lost evidence.", "Agents that searched the record missed entries a single call simply read. Specialists now read the whole record."], ["The model miscounted days.", "Code dates every entry against the order and sends a wrong count back once."],
+        ["Routing failed.", "The model sometimes picked no policy. Routing became a procedure-code lookup."], ["Procedures got confused.", "Open and keyhole weight-loss surgery were mixed up. Covered codes are now checked by code."]].map(([x, y]) => `<li><b>${x}</b><span>${y}</span></li>`).join("")}</ol></section></div>
+  <section class="panel"><header><h2>What this does not show</h2></header><ul class="limits">
+    <li><b>The cases are constructed.</b><span>There is no public benchmark for prior authorization. The 300 cases were generated with known answers from real Medicare rules. Real requests are messier: scanned faxes, missing pages, conflicting notes.</span></li>
+    <li><b>The records are short.</b><span>About 70 entries per patient. Real charts can run to thousands of pages. A long-record version exists but costs about four times as much and was not part of the test.</span></li>
+    <li><b>The case design changed during development.</b><span>Three ambiguous templates were rewritten, and date and procedure checks moved into code, all before the single test run.</span></li>
+    <li><b>Five policies, one model.</b><span>Other services and models may behave differently.</span></li>
+    <li><b>A clinician signs every denial.</b><span>This is decision support. It never sends a denial on its own.</span></li></ul></section>`;
+  drawWaffles(S); drawRounds();
+}
+function outcome(t, d) { return d === t ? "ok" : d === "DENY" ? "wd" : d === "APPROVE" ? "wa" : "ot"; }
+function drawWaffles(S) {
+  const order = Object.keys(POLICY_SHORT);
+  $("#waffles").innerHTML = SYS.map(s => { const rows = DATA.cases[s] || [], st = S[s], cnt = { wd: 0, wa: 0, ot: 0 };
+    const grid = order.map(p => `<div class="pl">${POLICY_SHORT[p]}</div><div class="sq">${rows.filter(r => r[1] === p).map(r => { const o = outcome(r[2], r[3]); if (o !== "ok") cnt[o]++;
+      return `<button class="cell ${o}" data-c="${r[0]}" aria-label="Case ${r[0]}: should be ${DEC[r[2]]}, ${NAME[s]} decided ${DEC[r[3]] || "nothing"}"></button>`; }).join("")}</div>`).join("");
+    return `<section class="panel wf${s === "authpilot" ? " ours" : ""}"><h3>${NAME[s]}</h3><div class="pct">${pct(st.accuracy)}<small>${st.correct} of ${st.cases} correct</small></div><div class="cells">${grid}</div>
+      <ul><li><i style="background:#CFD9E6"></i>Correct<b>${st.correct}</b></li><li><i style="background:var(--no)"></i>Covered care denied<b>${cnt.wd}</b></li><li><i style="background:var(--violet)"></i>Uncovered care approved<b>${cnt.wa}</b></li><li><i class="cell ot" style="aspect-ratio:auto;height:12px"></i>Asked for records it did not need<b>${cnt.ot}</b></li></ul>
+      <p class="note">$${st.cost_per_case.toFixed(3)} and about ${Math.round(st.median_seconds)} seconds per request</p></section>`; }).join("");
+  $$("#waffles .cell").forEach(cell => { const id = cell.dataset.c;
+    cell.onmouseenter = cell.onfocus = ev => { $$(`#waffles .cell[data-c="${id}"]`).forEach(x => x.classList.add("lit"));
+      const r = DATA.cases.authpilot.find(r => r[0] === id), lines = SYS.map(s => { const x = DATA.cases[s].find(y => y[0] === id); return `${NAME[s]}: ${DEC[x[3]] || "none"} ${x[2] === x[3] ? "✓" : "✕"}`; });
+      showTip(`<b>${esc(QI[id] ? QI[id].name : "Case " + id)}, ${POLICY_SHORT[r[1]].toLowerCase()}</b><br>Correct answer: ${DEC[r[2]]}<div class="mono">${lines.join("<br>")}</div>`, ev); };
+    cell.onmouseleave = cell.onblur = () => { $$("#waffles .cell.lit").forEach(x => x.classList.remove("lit")); hideTip(); };
+    cell.onclick = () => location.hash = `#/case/${id}`; });
+}
+function drawRounds() {
+  const el = $("#rounds"); if (!el) return;
+  const W = Math.max(340, Math.min(640, el.clientWidth || 640)), small = W < 480, H = small ? 250 : 290, L = 42, Rr = small ? 100 : 118, T = 18, B = 36;
+  const X = i => L + (W - L - Rr) * (i / 4), Y = v => T + (H - T - B) * (1 - (v - 50) / 50);
+  const line = (k, col, w) => `<path d="${ROUNDS.map((r, i) => (i ? "L" : "M") + X(i) + "," + Y(r[k])).join(" ")}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round"/>` + ROUNDS.map((r, i) => `<circle cx="${X(i)}" cy="${Y(r[k])}" r="5" fill="${col}" stroke="#fff" stroke-width="2"/>`).join("");
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="AuthPilot accuracy by round: 69, 62, 62, 73, 92 percent. Single call: 84, 88, 68, 68, 71 percent.">
+    ${[50, 60, 70, 80, 90, 100].map(v => `<line x1="${L}" x2="${W - Rr + 8}" y1="${Y(v)}" y2="${Y(v)}" stroke="#E6ECF3"/><text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end" font-size="12" fill="#5A6B85">${v}%</text>`).join("")}
+    <line x1="${(X(1) + X(2)) / 2}" x2="${(X(1) + X(2)) / 2}" y1="${T}" y2="${H - B}" stroke="#7A8597" stroke-dasharray="3 4"/><text x="${(X(1) + X(2)) / 2 + 6}" y="${T + 10}" font-size="11" fill="#5A6B85">${small ? "Stricter rules from here" : "Single call given strict output rules from here"}</text>
+    ${ROUNDS.map((r, i) => `<text x="${X(i)}" y="${H - B + 22}" text-anchor="middle" font-size="12" fill="#5A6B85">${small ? "R" : "Round "}${r[0]}</text>`).join("")}${line(3, "#7A8597", 2)}${line(2, "#2F6FED", 3)}
+    <text x="${X(4) + 12}" y="${Y(92) + 4}" font-size="13" font-weight="700" fill="#0F2747">AuthPilot 92%</text><text x="${X(4) + 12}" y="${Y(71) + 4}" font-size="13" fill="#5A6B85">Single call 71%</text>
+    ${ROUNDS.map((r, i) => `<rect class="hr" data-i="${i}" x="${X(i) - 28}" y="${T}" width="56" height="${H - T - B}" fill="transparent"/>`).join("")}</svg>`;
+  $$(".hr", el).forEach(h => { const r = ROUNDS[+h.dataset.i]; hover(h, `<b>Round ${r[0]}</b><br>${esc(r[1])}<div class="mono">AuthPilot ${r[2]}%<br>Single call ${r[3]}%</div>`); });
+}
+
+/* =========================================================== POLICIES */
+function viewPolicies(v) {
+  const T = DATA.results.test && DATA.results.test.systems.authpilot.by_policy;
+  v.innerHTML = `<div class="vhead"><div><h1>Policies</h1><p>The five Medicare coverage policies the agents apply. Each rule becomes one AI specialist. Rules marked "checked by code" also have a machine check the model cannot override.</p></div></div>
+  <div class="pols">${Object.entries(DATA.policies).map(([k, p]) => `<section class="panel pol"><div class="ph"><span class="chip plain" style="width:fit-content">${POLICY_SHORT[k]}</span><h2>${esc(p.title)}</h2>
+    <p class="src">${esc(p.source.replace(/\.+$/, ""))}${p.url ? `. <a href="${esc(p.url)}" target="_blank" rel="noopener">Read the source</a>` : ""}</p></div>
+    <ol>${p.criteria.map(c => `<li><b>${LABEL[c.id] || esc(c.id)}</b><p>${ruleText(c.text)}</p><div class="badges"><span class="tag ai">One AI specialist</span>${c.conditional ? `<span class="chip plain">Applies only sometimes</span>` : ""}${c.check.within_days ? `<span class="tag code">Checked by code: within ${c.check.within_days} days</span>` : ""}${c.check.at_least_days ? `<span class="tag code">Checked by code: at least ${c.check.at_least_days} days</span>` : ""}${c.check.covered_codes ? `<span class="tag code">Checked by code: covered procedure codes</span>` : ""}</div></li>`).join("")}</ol>
+    <div class="foot"><span>Routed by code <b class="mono">${p.codes.map(esc).join(", ")}</b></span>${T ? `<span>Held-out test <b>${T[k]}</b> correct</span>` : ""}<span><a href="#/queue" data-pol="${k}">${Q.filter(r => r.policy === k).length} requests in the queue</a></span></div></section>`).join("")}</div>`;
+  $$("[data-pol]", v).forEach(a => a.onclick = () => { qstate.policy = a.dataset.pol; qstate.tab = "all"; qstate.page = 0; });
+}
+
+/* =========================================================== SIMULATOR */
+let simPolicy = "cpap";
+function viewSim(v) {
+  const policy = simPolicy, ch = DATA.choices[policy];
+  v.innerHTML = `<div class="vhead"><div><h1>New patient</h1><p>Build a patient to order: choose which coverage rules they meet and add traps. The service writes a full FHIR record to match, then the real agents review it live. They are not told what you chose.</p></div></div>
+  <div class="sim"><section class="panel"><header><h2>Patient</h2><span>${POLICY_SHORT[policy]}</span></header><div class="pad form">
+    <label>Service<select id="b-policy">${Object.entries(DATA.policies).map(([k, p]) => `<option value="${k}"${k === policy ? " selected" : ""}>${esc(p.title)}</option>`).join("")}</select></label>
+    <div class="two">${Object.entries(ch).map(([k, o]) => `<label>${LABEL[k]}<select data-k="${k}">${Object.entries(o.options).map(([s, t]) => `<option value="${s}">${esc(t)}</option>`).join("")}</select><span class="rt">${ruleText(o.text.slice(0, 150))}${o.text.length > 150 ? "…" : ""}</span></label>`).join("")}</div>
+    <div class="checks"><span style="font-size:13px;color:var(--muted);font-weight:600">Traps</span>${Object.entries(DATA.traps).map(([k, t]) => `<label><input type="checkbox" value="${k}"> ${esc(t)}</label>`).join("")}</div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn hl" id="b-make">Create the patient</button><span class="note" id="b-note"></span></div></div></section>
+  <section class="panel pad" style="display:grid;gap:12px;align-content:start"><h2 style="font-size:16px">What happens next</h2><ol class="steps"><li><b>The service writes the record.</b><span>About 70 FHIR entries, with background history so the key facts are not easy to find.</span></li>
+    <li><b>The case opens, unreviewed.</b><span>The answer key stays hidden until the agents decide.</span></li><li><b>You run the agents live.</b><span>Usually 8 to 15 seconds and about 3 cents. The first run after a quiet spell waits up to a minute for the service to wake.</span></li><li><b>You compare.</b><span>The decision panel shows whether the agents found what you built in.</span></li></ol></section></div>`;
+  $("#b-policy").onchange = e => { simPolicy = e.target.value; viewSim(v); };
   $("#b-make").onclick = async () => {
-    const statuses = {}; $$("#builder select[data-k]").forEach(s => statuses[s.dataset.k] = s.value);
-    const traps = $$("#builder input:checked").map(x => x.value);
-    $("#b-note").textContent = "Creating the patient. After a quiet spell the service takes up to a minute to wake.";
-    try {
-      const res = await fetch((DATA.api || "") + "/api/case", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ policy, statuses, traps }) });
-      if (!res.ok) throw new Error(`the service returned ${res.status}`);
-      const c = await res.json(); $("#builder").hidden = true; drawBuilder(policy); load(c); $("#fax").scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
-    } catch (err) { $("#b-note").textContent = "Could not create the patient: " + err.message; }
+    const statuses = {}; $$("select[data-k]", v).forEach(s => statuses[s.dataset.k] = s.value); const traps = $$("input:checked", v).map(x => x.value);
+    $("#b-note").textContent = svcState === "on" ? "Creating the patient" : "Creating the patient. The service may take up to a minute to wake."; $("#b-make").disabled = true;
+    try { const res = await fetch((DATA.api || "") + "/api/case", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ policy, statuses, traps }) });
+      if (!res.ok) throw new Error(`the service returned ${res.status}`); const c = await res.json(); setSvc("on", "Agents online");
+      BUILT[c.case_id] = c; location.hash = `#/case/${c.case_id}`;
+    } catch (err) { $("#b-note").textContent = "Could not create the patient: " + err.message; $("#b-make").disabled = false; }
   };
 }
 
-/* ---------- results */
-const SYS = ["baseline", "single_plus", "authpilot"];
-function outcome(t, d) { return d === t ? "ok" : d === "DENY" ? "wd" : d === "APPROVE" ? "wa" : "ot"; }
-function drawResults() {
-  const R = DATA.results.test || DATA.results.dev; if (!R) return;
-  const S = R.systems, P = R.paired, pct = x => (Math.round(x * 1000) / 10) + "%", pts = x => (x * 100).toFixed(1);
-  $("#proofpct").textContent = pct(S.authpilot.accuracy);
-  $("#prooftxt").textContent = R.split === "test" ? `correct on ${R.cases} requests it had never seen` : `correct on ${R.cases} development requests`;
-  $("#t-lead").innerHTML = `Same model, same policies, same rules. The system was frozen at commit ${esc(R.frozen_commit || "")} and the test was run once. ` +
-    (P ? `AuthPilot beat a single AI call by <b>${pts(P.authpilot_vs_baseline.accuracy_gain)} points</b> (95% interval ${pts(P.authpilot_vs_baseline.ci95[0])} to ${pts(P.authpilot_vs_baseline.ci95[1])}), and a single call given the same code checks by <b>${pts(P.authpilot_vs_single_plus.accuracy_gain)} points</b> (${pts(P.authpilot_vs_single_plus.ci95[0])} to ${pts(P.authpilot_vs_single_plus.ci95[1])}).` : "");
-  const a = S.authpilot, b = S.baseline, nt = k => { const [x, n] = a.by_truth[k].split("/"); const [y] = b.by_truth[k].split("/"); return [x, n, y]; };
-  const ni = nt("NEED_INFO");
-  $("#callouts").innerHTML = [[`${a.wrongful_denials} of ${a.cases}`, `covered requests wrongly denied, against ${b.wrongful_denials} for a single call`],
-    [`${a.wrongful_approvals} vs ${b.wrongful_approvals}`, "uncovered requests wrongly approved, AuthPilot against a single call"],
-    [`${ni[0]} of ${ni[1]}`, `times it correctly asked for missing records, against ${ni[2]} for a single call`],
-    [`${a.denials_without_verified_evidence}`, `denials without verified evidence. ${Math.round(a.citations_verified * 1000) / 10}% of ${a.citations.toLocaleString()} quotes matched the record.`]]
-    .map(([x, y]) => `<div class="callout"><b>${x}</b><span>${y}</span></div>`).join("");
-  const order = DATA.cases.authpilot ? Object.keys(POLICY_SHORT) : [];
-  $("#waffles").innerHTML = SYS.map(s => {
-    const rows = DATA.cases[s] || [], st = S[s];
-    const counts = { wd: 0, wa: 0, ot: 0 };
-    const grid = order.map(p => `<div class="pl">${POLICY_SHORT[p]}</div><div class="sq">${rows.filter(r => r[1] === p).map(r => { const o = outcome(r[2], r[3]); if (o !== "ok") counts[o]++;
-      return `<button class="cell ${o}" data-c="${r[0]}" data-s="${s}" aria-label="Case ${r[0]}: should be ${DEC[r[2]]}, ${NAME[s]} decided ${DEC[r[3]] || "nothing"}"></button>`; }).join("")}</div>`).join("");
-    return `<div class="wf${s === "authpilot" ? " ours" : ""}"><h3>${NAME[s]}</h3><div class="pct">${pct(st.accuracy)}<small>${st.correct} of ${st.cases} correct</small></div>
-      <div class="cells">${grid}</div>
-      <ul><li><i style="background:#CFD9E6"></i>Correct<b>${st.correct}</b></li><li><i style="background:var(--no)"></i>Covered care denied<b>${counts.wd}</b></li>
-      <li><i style="background:var(--violet)"></i>Uncovered care approved<b>${counts.wa}</b></li><li><i class="cell ot" style="aspect-ratio:auto;height:12px"></i>Asked for records it did not need<b>${counts.ot}</b></li></ul>
-      <p class="meta">$${st.cost_per_case.toFixed(3)} and about ${Math.round(st.median_seconds)} seconds per request</p></div>`;
-  }).join("");
-  $$("#waffles .cell").forEach(cell => {
-    const id = cell.dataset.c;
-    cell.onmouseenter = cell.onfocus = ev => {
-      $$(`#waffles .cell[data-c="${id}"]`).forEach(x => x.classList.add("lit"));
-      const lines = SYS.map(s => { const r = (DATA.cases[s] || []).find(r => r[0] === id); return r ? `${NAME[s]}: ${DEC[r[3]] || "none"} ${r[2] === r[3] ? "✓" : "✕"}` : ""; });
-      const r = DATA.cases.authpilot.find(r => r[0] === id);
-      showTip(`<b>Case ${id}, ${POLICY_SHORT[r[1]]}</b><br>Correct answer: ${DEC[r[2]]}<div class="mono">${lines.join("<br>")}</div>`, ev);
-    };
-    cell.onmouseleave = cell.onblur = () => { $$("#waffles .cell.lit").forEach(x => x.classList.remove("lit")); hideTip(); };
-  });
-  $("#t-table").innerHTML = `<thead><tr><th></th><th>Correct</th><th>Covered care denied</th><th>Uncovered care approved</th><th>Denials without verified evidence</th>${Object.keys(POLICY_SHORT).map(p => `<th>${POLICY_SHORT[p]}</th>`).join("")}<th>Cost per request</th><th>Median time</th></tr></thead><tbody>` +
-    SYS.map(s => { const x = S[s]; return `<tr class="${s === "authpilot" ? "ours" : ""}"><td>${NAME[s]}</td><td>${x.correct}/${x.cases}</td><td>${x.wrongful_denials}</td><td>${x.wrongful_approvals}</td><td>${x.denials_without_verified_evidence}</td>${Object.keys(POLICY_SHORT).map(p => `<td>${x.by_policy[p]}</td>`).join("")}<td>$${x.cost_per_case.toFixed(3)}</td><td>${x.median_seconds.toFixed(1)}s</td></tr>`; }).join("") + "</tbody>";
-  $("#h-cost").innerHTML = `<thead><tr><th></th><th>Model calls per request</th><th>Cost per request</th><th>Median time</th><th>Correct</th></tr></thead><tbody>` +
-    SYS.map(s => { const x = S[s]; return `<tr class="${s === "authpilot" ? "ours" : ""}"><td>${NAME[s]}</td><td>${x.model_calls_per_case}</td><td>$${x.cost_per_case.toFixed(3)}</td><td>${x.median_seconds.toFixed(1)}s</td><td>${pct(x.accuracy)}</td></tr>`; }).join("") + "</tbody>";
+/* =========================================================== SYSTEM */
+function viewSystem(v) {
+  const S = DATA.results.test && DATA.results.test.systems;
+  v.innerHTML = `<div class="vhead"><div><h1>How it works</h1><p>Let the model read. Let code count. Each step is a node in a LangGraph graph, and the record is reached through an MCP server in front of a FHIR store, the way an agent would reach a hospital's records.</p></div></div>
+  <div class="flowsvg"><div id="flowsvg"></div><ol class="flowlist" id="flowlist"></ol></div>
+  <div class="stack">${[["One rule, one specialist", "A specialist judges a single rule against the whole record. A single call juggles every rule at once and mixed them up."],
+    ["Code does the arithmetic", "Models miscount days. Code dates every entry against the order, checks each time window, and sends a wrong count back once."],
+    ["No quote, no finding", "A finding counts only if its quote is really in the record, with the same numbers and dates. No test denial went out without verified evidence."],
+    ["Search before asking", "When a rule is undocumented, an investigator agent searches the record through MCP tools before the doctor is asked for more."]].map(([h, p]) => `<div class="panel"><h3>${h}</h3><p>${p}</p></div>`).join("")}</div>
+  <section class="panel"><header><h2>Built with</h2></header><div class="tw"><table><tbody>
+    <tr><td><b>LangGraph</b></td><td>The review graph: parallel specialists with Send, a verify loop back to the specialists, an optional investigator branch, and shared state with reducers.</td></tr>
+    <tr><td><b>Model Context Protocol</b></td><td>A FastMCP server exposes the record as tools such as get_record, search_notes and list_medications. The agents load them with langchain-mcp-adapters.</td></tr>
+    <tr><td><b>FHIR</b></td><td>Patient, Condition, Observation, MedicationStatement, Procedure, Encounter, DocumentReference and ServiceRequest resources.</td></tr>
+    <tr><td><b>Claude Haiku 4.5</b></td><td>Every agent, at temperature 0, with structured outputs validated by pydantic schemas.</td></tr>
+    <tr><td><b>FastAPI</b></td><td>The live service streams each graph step to this page as Server-Sent Events, with per-visitor and daily limits so a public page cannot run up a bill.</td></tr>
+    <tr><td><b>Evaluation</b></td><td>300 truth-first synthetic cases, a frozen held-out test of 200, paired bootstrap intervals, and a GitHub Actions workflow that runs any system on any split.</td></tr></tbody></table></div></section>
+  ${S ? `<section class="panel"><header><h2>What each design costs</h2></header><div class="tw"><table><thead><tr><th></th><th class="r">Model calls per request</th><th class="r">Cost per request</th><th class="r">Median time</th><th class="r">Correct</th></tr></thead><tbody>${SYS.map(s => `<tr class="${s === "authpilot" ? "ours" : ""}"><td>${NAME[s]}</td><td class="r">${S[s].model_calls_per_case}</td><td class="r">$${S[s].cost_per_case.toFixed(3)}</td><td class="r">${S[s].median_seconds.toFixed(1)}s</td><td class="r">${pct(S[s].accuracy)}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
+  drawFlowSvg();
 }
-
-/* ---------- rounds chart */
-const ROUNDS = [[1, "Agents search the record, one reviewer judges everything", 69, 84], [2, "Stricter output formats, record sorted by date", 62, 88],
-  [3, "One specialist per rule, each reading the whole record", 62, 68], [4, "Code checks date windows and sends mistakes back", 73, 68], [5, "Policy and covered procedures decided by code lookup", 92, 71]];
-function drawRounds() {
-  const W = Math.max(340, Math.min(640, ($("#rounds").clientWidth || 640))), H = W < 480 ? 260 : 300, L = 44, Rr = W < 480 ? 104 : 120, T = 18, B = 40, y0 = 50, y1 = 100;
-  const X = i => L + (W - L - Rr) * (i / 4), Y = v => T + (H - T - B) * (1 - (v - y0) / (y1 - y0));
-  const grid = [50, 60, 70, 80, 90, 100].map(v => `<line x1="${L}" x2="${W - Rr + 8}" y1="${Y(v)}" y2="${Y(v)}" stroke="#D7E0EB"/><text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end" font-size="12" fill="#52637D">${v}%</text>`).join("");
-  const line = (k, col, w) => `<path d="${ROUNDS.map((r, i) => (i ? "L" : "M") + X(i) + "," + Y(r[k])).join(" ")}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>` +
-    ROUNDS.map((r, i) => `<circle cx="${X(i)}" cy="${Y(r[k])}" r="5" fill="${col}" stroke="#fff" stroke-width="2"/>`).join("");
-  const hits = ROUNDS.map((r, i) => `<rect class="hitr" data-i="${i}" x="${X(i) - 30}" y="${T}" width="60" height="${H - T - B}" fill="transparent"/>`).join("");
-  $("#rounds").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="AuthPilot accuracy by round: 69, 62, 62, 73, 92 percent. Single call: 84, 88, 68, 68, 71 percent.">
-    ${grid}<line x1="${(X(1) + X(2)) / 2}" x2="${(X(1) + X(2)) / 2}" y1="${T}" y2="${H - B}" stroke="#7A8597" stroke-dasharray="3 4"/>
-    <text x="${(X(1) + X(2)) / 2 + 6}" y="${T + 10}" font-size="11" fill="#52637D">${W < 480 ? "Stricter rules from here" : "Single call given strict output rules from here"}</text>
-    ${ROUNDS.map((r, i) => `<text x="${X(i)}" y="${H - B + 22}" text-anchor="middle" font-size="12.5" fill="#52637D">${W < 480 ? "R" : "Round "}${r[0]}</text>`).join("")}
-    ${line(3, "#7A8597", 2)}${line(2, "#2F6FED", 3)}
-    <text x="${X(4) + 12}" y="${Y(92) + 4}" font-size="13" font-weight="700" fill="#0F2747">AuthPilot 92%</text>
-    <text x="${X(4) + 12}" y="${Y(71) + 4}" font-size="13" fill="#52637D">Single call 71%</text>${hits}</svg>`;
-  $$("#rounds .hitr").forEach(h => { const r = ROUNDS[+h.dataset.i];
-    h.onmouseenter = ev => showTip(`<b>Round ${r[0]}</b><br>${esc(r[1])}<div class="mono">AuthPilot ${r[2]}%<br>Single call ${r[3]}%</div>`, ev); h.onmouseleave = hideTip; });
-  $("#steps").innerHTML = [["Searching lost evidence.", "Agents that searched the record missed entries a single call simply read. Each specialist now reads the whole record."],
-    ["The model miscounted days.", "Code dates every entry against the order and checks each time window, sending a wrong count back once."],
-    ["Routing failed.", "The model sometimes picked no policy at all. Routing moved to a procedure-code lookup."],
-    ["Procedures got confused.", "Open and keyhole weight-loss surgery were mixed up. Covered procedure codes are now checked by code."]]
-    .map(([b, s]) => `<li><b>${b}</b><span>${s}</span></li>`).join("");
-}
-
-/* ---------- how it works diagram */
 function drawFlowSvg() {
-  const row = [["Read the request", "ai", "Request form to fields"], ["Pick the policy", "code", "By procedure code"], ["Fetch the record", "code", "MCP tools over FHIR"],
-    ["Specialists", "ai", "One per rule, in parallel"], ["Verify", "code", "Quotes, dates, decision"], ["Letter", "ai", "From verified findings"]];
-  const inv = ["Investigator", "ai", "Searches with MCP tools"];
-  const W = 1200, bw = 160, gap = (W - 6 * bw) / 5, y = 96, h = 80, iy = 290;
+  const row = [["Read the request", "ai", "Request form to fields"], ["Pick the policy", "code", "By procedure code"], ["Fetch the record", "code", "MCP tools over FHIR"], ["Specialists", "ai", "One per rule, in parallel"], ["Verify", "code", "Quotes, dates, decision"], ["Letter", "ai", "From verified findings"]];
+  const inv = ["Investigator", "ai", "Searches with MCP tools"], W = 1200, bw = 160, gap = (W - 6 * bw) / 5, y = 96, h = 80, iy = 290;
   const x = i => i * (bw + gap), col = k => k === "ai" ? "#9DBBFF" : "#67D8C3";
-  const box = (n, bx, by) => `<rect x="${bx}" y="${by}" width="${bw}" height="${h}" rx="10" fill="${n[1] === "ai" ? "#163560" : "#0F3A44"}" stroke="${col(n[1])}" stroke-width="1.5"/>
-    <text x="${bx + bw / 2}" y="${by + 34}" text-anchor="middle" font-size="17" font-weight="700" fill="#EAF1FA">${n[0]}</text>
-    <text x="${bx + bw / 2}" y="${by + 57}" text-anchor="middle" font-size="12.5" fill="#B9C9DE">${n[2]}</text>
-    <text x="${bx + 12}" y="${by - 10}" font-size="12" font-weight="700" fill="${col(n[1])}">${n[1] === "ai" ? "AI" : "Code"}</text>`;
-  const arrows = row.slice(1).map((_, i) => `<path d="M${x(i) + bw + 4},${y + h / 2} L${x(i + 1) - 8},${y + h / 2}" stroke="#8299B8" stroke-width="1.6" marker-end="url(#ah)"/>`).join("");
+  const box = (n, bx, by) => `<rect x="${bx}" y="${by}" width="${bw}" height="${h}" rx="10" fill="${n[1] === "ai" ? "#163560" : "#0F3A44"}" stroke="${col(n[1])}" stroke-width="1.5"/><text x="${bx + bw / 2}" y="${by + 34}" text-anchor="middle" font-size="17" font-weight="700" fill="#EAF1FA">${n[0]}</text><text x="${bx + bw / 2}" y="${by + 57}" text-anchor="middle" font-size="12.5" fill="#B9C9DE">${n[2]}</text><text x="${bx + 12}" y="${by - 10}" font-size="12" font-weight="700" fill="${col(n[1])}">${n[1] === "ai" ? "AI" : "Code"}</text>`;
   const sx = x(3) + bw / 2, vx = x(4) + bw / 2, ix = (x(3) + x(4) + bw) / 2 - bw / 2;
-  const loops = `
-    <path d="M${vx},${y - 4} C${vx},${y - 62} ${sx},${y - 62} ${sx},${y - 10}" stroke="#F5B53D" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#ah2)"/>
-    <text x="${(sx + vx) / 2}" y="${y - 52}" text-anchor="middle" font-size="13" fill="#F5B53D">Wrong date count: sent back once with the right number</text>
-    <path d="M${vx + 20},${y + h + 4} C${vx + 20},${iy - 30} ${ix + bw - 10},${iy - 40} ${ix + bw - 30},${iy - 6}" stroke="#F5B53D" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#ah2)"/>
-    <text x="${vx + 34}" y="${y + h + 44}" font-size="13" fill="#F5B53D">A rule is still undocumented</text>
-    <path d="M${ix + 56},${iy - 6} C${ix + 40},${iy - 40} ${sx - 20},${iy - 30} ${sx - 20},${y + h + 10}" stroke="#F5B53D" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#ah2)"/>
-    <text x="${sx - 34}" y="${y + h + 44}" text-anchor="end" font-size="13" fill="#F5B53D">Found more: second look</text>`;
-  $("#flowsvg").innerHTML = `<svg viewBox="-6 20 ${W + 12} ${iy + h - 4}" role="img" aria-label="The review graph: read the request, pick the policy, fetch the record, specialists in parallel, verify, then the letter. Verify can send a wrong date back to the specialists. If a rule is still undocumented, an investigator searches the record and sends what it finds back for a second look.">
-    <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8299B8"/></marker>
-    <marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#F5B53D"/></marker></defs>
-    ${arrows}${loops}${row.map((n, i) => box(n, x(i), y)).join("")}${box(inv, ix, iy)}</svg>`;
-  $("#flowlist").innerHTML = row.map(n => `<li class="${n[1]}"><b>${n[0]} (${n[1] === "ai" ? "AI" : "code"})</b><span>${n[2]}</span></li>`).join("") +
-    `<li class="ai"><b>Investigator (AI, only when needed)</b><span>If a rule is still undocumented, it searches the record with MCP tools and sends what it finds back for a second look.</span></li>
-     <li class="code"><b>Date loop</b><span>Verify sends a wrong date count back to the specialist once, with the right number.</span></li>`;
+  $("#flowsvg").innerHTML = `<svg viewBox="-6 20 ${W + 12} ${iy + h - 4}" role="img" aria-label="Read the request, pick the policy, fetch the record, specialists in parallel, verify, then the letter. Verify can send a wrong date back to the specialists. If a rule is undocumented, an investigator searches and sends what it finds back for a second look.">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8299B8"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#F5B53D"/></marker></defs>
+    ${row.slice(1).map((_, i) => `<path d="M${x(i) + bw + 4},${y + h / 2} L${x(i + 1) - 8},${y + h / 2}" stroke="#8299B8" stroke-width="1.6" marker-end="url(#ah)"/>`).join("")}
+    <path d="M${vx},${y - 4} C${vx},${y - 62} ${sx},${y - 62} ${sx},${y - 10}" stroke="#F5B53D" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#ah2)"/><text x="${(sx + vx) / 2}" y="${y - 52}" text-anchor="middle" font-size="13" fill="#F5B53D">Wrong date count: sent back once with the right number</text>
+    <path d="M${vx + 20},${y + h + 4} C${vx + 20},${iy - 30} ${ix + bw - 10},${iy - 40} ${ix + bw - 30},${iy - 6}" stroke="#F5B53D" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#ah2)"/><text x="${vx + 34}" y="${y + h + 44}" font-size="13" fill="#F5B53D">A rule is still undocumented</text>
+    <path d="M${ix + 56},${iy - 6} C${ix + 40},${iy - 40} ${sx - 20},${iy - 30} ${sx - 20},${y + h + 10}" stroke="#F5B53D" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#ah2)"/><text x="${sx - 34}" y="${y + h + 44}" text-anchor="end" font-size="13" fill="#F5B53D">Found more: second look</text>
+    ${row.map((n, i) => box(n, x(i), y)).join("")}${box(inv, ix, iy)}</svg>`;
+  $("#flowlist").innerHTML = row.map(n => `<li class="${n[1]}"><b>${n[0]} (${n[1] === "ai" ? "AI" : "code"})</b><span>${n[2]}</span></li>`).join("") + `<li class="ai"><b>Investigator (AI, only when needed)</b><span>Searches the record with MCP tools and sends what it finds back for a second look.</span></li><li class="code"><b>Date loop</b><span>Verify sends a wrong date count back to the specialist once.</span></li>`;
 }
 
-let rw = 0; new ResizeObserver(() => { const w = $("#rounds").clientWidth; if (Math.abs(w - rw) > 40) { rw = w; drawRounds(); } }).observe($("#rounds"));
-drawBuilder(); drawResults(); drawFlowSvg(); load(DATA.examples[0]);
-if (DATA.api) fetch(DATA.api + "/health").catch(() => {});  // wake the hosted service while the visitor reads
+let rw = 0; new ResizeObserver(() => { const el = $("#rounds"); if (el && Math.abs(el.clientWidth - rw) > 40) { rw = el.clientWidth; drawRounds(); } }).observe(document.body);
+refreshNav(); route(); ping();
 </script>
 </body>
 </html>

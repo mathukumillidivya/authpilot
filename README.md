@@ -2,7 +2,13 @@
 
 **Prior authorization review by a team of AI agents, with every finding quoted from the patient record and checked by code.**
 
-**Live demo:** https://authpilot-app.onrender.com. Pick a patient, or build your own case, and watch the agents work. Live runs call the real model.
+**Live demo:** https://authpilot-app.onrender.com, a utilization review workspace over all 300 recorded agent runs. It has five parts:
+
+- **Review queue**, with sign-off for denials.
+- **Case view**, with an evidence map linking each finding to the record entries it quotes, plus a per-node agent trace, the letter and an audit trail.
+- **Run monitoring**, covering latency, cost and model calls.
+- **Evaluation and policy library.**
+- **Patient simulator**, which builds a new case for the real agents to review live.
 
 Before an insurer pays for a CPAP machine, home oxygen, a defibrillator or bariatric surgery, a reviewer checks the
 request against the coverage policy and the patient's chart. This usually takes days, and wrong denials are common.

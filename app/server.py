@@ -168,7 +168,7 @@ def limited(ip: str) -> str | None:
 @app.post("/api/run")
 async def run(request: Request):
     body = await request.json()
-    case = CASES.get(body.get("case_id")) if body.get("case_id") in DEV else CUSTOM.get(body.get("case_id"))
+    case = CASES.get(body.get("case_id")) or CUSTOM.get(body.get("case_id"))  # the test has been run, so all 300 may run live
     if not case:  # built cases live in memory, so a restart forgets them
         raise HTTPException(404, "This case is no longer on the server (it restarts when idle). Please build it again.")
     ip = visitor(request)
@@ -195,7 +195,7 @@ async def run(request: Request):
                 cost = sum(v.get("input", 0) * 1e-6 + v.get("output", 0) * 5e-6 + v.get("cache_read", 0) * 1e-7
                            + v.get("cache_write", 0) * 1.25e-6 for v in (final.get("usage") or {}).values())
                 done = {"type": "done", "decision": final.get("decision"), "criteria": final.get("verified"),
-                        "letter": final.get("letter"), "seconds": round(time.time() - t0, 1), "cost": round(cost, 4),
+                        "letter": final.get("letter"), "seconds": round(time.time() - t0, 1), "cost": round(cost, 4), "usage": final.get("usage"),
                         "answer_key": case["truth"]}
                 yield f"data: {json.dumps(done, default=str)}\n\n"
             except Exception as e:  # the page shows the failure rather than hanging
