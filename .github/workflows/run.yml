@@ -36,4 +36,4 @@ jobs:
           git config user.email "hellosweety789@gmail.com"
           git add "results/runs/${{ inputs.run_id }}"
           git commit -m "Results: ${{ inputs.run_id }}"
-          git pull --rebase && git push
+          for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep $((RANDOM % 20 + 5)); done
