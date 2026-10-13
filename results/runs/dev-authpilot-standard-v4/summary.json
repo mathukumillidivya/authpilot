@@ -1,0 +1,46 @@
+{
+  "dev-authpilot-standard-v4": {
+    "cases": 100,
+    "errors": 14,
+    "accuracy": 0.73,
+    "correct": 73,
+    "wrongful_denials": 11,
+    "wrongful_approvals": 2,
+    "denials": 38,
+    "denials_without_verified_evidence": 0,
+    "criterion_accuracy": 0.9167,
+    "citations": 509,
+    "citations_verified": 0.998,
+    "confusion": {
+      "APPROVE->APPROVE": 30,
+      "APPROVE->DENY": 1,
+      "APPROVE->None": 5,
+      "DENY->APPROVE": 2,
+      "DENY->DENY": 27,
+      "DENY->None": 5,
+      "NEED_INFO->DENY": 10,
+      "NEED_INFO->NEED_INFO": 16,
+      "NEED_INFO->None": 4
+    },
+    "by_policy": {
+      "bariatric": "18/20",
+      "cgm": "13/20",
+      "cpap": "18/20",
+      "icd": "5/20",
+      "oxygen": "19/20"
+    },
+    "by_truth": {
+      "APPROVE": "30/36",
+      "DENY": "27/34",
+      "NEED_INFO": "16/30"
+    },
+    "by_trap": {
+      "note_only": "29/42",
+      "boundary": "20/26",
+      "claim": "10/13"
+    },
+    "cost_per_case": 0.0323,
+    "model_calls_per_case": 8.1,
+    "median_seconds": 9.95
+  }
+}
