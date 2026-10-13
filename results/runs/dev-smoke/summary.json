@@ -1,0 +1,37 @@
+{
+  "dev-smoke": {
+    "cases": 10,
+    "errors": 0,
+    "accuracy": 0.9,
+    "correct": 9,
+    "wrongful_denials": 0,
+    "wrongful_approvals": 1,
+    "denials": 3,
+    "denials_without_verified_evidence": 0,
+    "criterion_accuracy": 0.95,
+    "citations": 53,
+    "citations_verified": 1.0,
+    "confusion": {
+      "APPROVE->APPROVE": 4,
+      "DENY->APPROVE": 1,
+      "DENY->DENY": 3,
+      "NEED_INFO->NEED_INFO": 2
+    },
+    "by_policy": {
+      "cpap": "9/10"
+    },
+    "by_truth": {
+      "APPROVE": "4/4",
+      "DENY": "3/4",
+      "NEED_INFO": "2/2"
+    },
+    "by_trap": {
+      "note_only": "0/0",
+      "boundary": "4/4",
+      "claim": "0/0"
+    },
+    "cost_per_case": 0.0334,
+    "model_calls_per_case": 9.5,
+    "median_seconds": 22.799999999999997
+  }
+}
