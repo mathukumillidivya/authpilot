@@ -1,0 +1,10 @@
+{
+  "system": "baseline",
+  "split": "dev",
+  "limit": 0,
+  "concurrency": 4,
+  "model": "claude-haiku-4-5-20251001",
+  "run_id": "dev-baseline-standard-v5",
+  "history": "standard",
+  "cases": 100
+}
