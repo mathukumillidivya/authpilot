@@ -23,6 +23,7 @@ Code steps (deterministic):
 from __future__ import annotations
 
 import json
+from datetime import date
 import operator
 import re
 import time
@@ -237,7 +238,8 @@ When done, return the ids of the records that bear on these criteria (empty if t
 LETTER = """You write prior authorization determination letters to the ordering provider. Plain, professional,
 short. State the decision, then each criterion with the evidence relied on (record dates and values), and for a
 denial or request for information, exactly what is missing or not met and what the provider can send. Do not
-invent any clinical fact that is not in the material given. No more than 220 words."""
+invent any clinical fact that is not in the material given. Use the dates, names and ids given; never write a
+placeholder such as [Date] or [Name], leave a line out instead. No more than 220 words."""
 
 
 # ------------------------------------------------------------------------------------------ code checks
@@ -422,7 +424,9 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
 
     async def letter(state: State) -> State:
         r = state["request"]
-        body = json.dumps({"decision": state["decision"], "service": r["service"], "order_date": r["order_date"],
+        body = json.dumps({"letter_date": date.today().isoformat(), "member_id": r.get("patient_id"),
+                           "ordering_provider": r.get("ordering_provider"),
+                           "decision": state["decision"], "service": r["service"], "order_date": r["order_date"],
                            "criteria": {k: {"status": v["status"], "reason": v["reason"],
                                             "evidence": [x["quote"] + f" ({x['id']})" for x in v["citations"] if x["verified"]]}
                                         for k, v in state["verified"].items()}}, indent=1)
