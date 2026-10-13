@@ -1,0 +1,6 @@
+langgraph==1.2.15
+langchain-anthropic==1.7.6
+langchain-core==1.6.10
+langchain-mcp-adapters==0.3.2
+mcp==1.30.0
+pytest==8.4.2

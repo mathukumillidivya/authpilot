@@ -1,0 +1,38 @@
+name: run
+on:
+  workflow_dispatch:
+    inputs:
+      run_id: {required: true}
+      system: {description: "authpilot, authpilot_noguard or baseline", default: "authpilot"}
+      split: {default: "dev"}
+      limit: {default: "0"}
+      model: {default: "claude-haiku-4-5-20251001"}
+      concurrency: {default: "4"}
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: Check the API key is configured
+        env: {ANTHROPIC_API_KEY: "${{ secrets.ANTHROPIC_API_KEY }}"}
+        run: test -n "$ANTHROPIC_API_KEY" || { echo "ANTHROPIC_API_KEY secret is not set"; exit 1; }
+      - name: Run
+        env: {ANTHROPIC_API_KEY: "${{ secrets.ANTHROPIC_API_KEY }}"}
+        run: |
+          python scripts/run.py --system "${{ inputs.system }}" --split "${{ inputs.split }}" --limit "${{ inputs.limit }}" \
+            --model "${{ inputs.model }}" --concurrency "${{ inputs.concurrency }}" --run-id "${{ inputs.run_id }}"
+      - name: Score and save
+        if: always()
+        run: |
+          python scripts/evaluate.py "results/runs/${{ inputs.run_id }}" --out "results/runs/${{ inputs.run_id }}/summary.json" | head -40
+          git config user.name "Divya Sri"
+          git config user.email "hellosweety789@gmail.com"
+          git add "results/runs/${{ inputs.run_id }}"
+          git commit -m "Results: ${{ inputs.run_id }}"
+          git pull --rebase && git push
