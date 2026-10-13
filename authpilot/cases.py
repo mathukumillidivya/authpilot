@@ -481,7 +481,7 @@ CAN_FAIL = {
     "oxygen": {"o2_test": [NOT_MET, MISSING], "o2_group2": [NOT_MET], "o2_timing": [NOT_MET], "o2_tester": [NOT_MET]},
     "bariatric": {"bar_bmi": [NOT_MET], "bar_comorbid": [NOT_MET], "bar_prior": [MISSING], "bar_procedure": [NOT_MET]},
     "icd": {"icd_indication": [NOT_MET], "icd_gdmt": [NOT_MET], "icd_sdm": [MISSING], "icd_exclusions": [NOT_MET]},
-    "cgm": {"cgm_dx": [NOT_MET], "cgm_need": [NOT_MET], "cgm_visit": [NOT_MET, MISSING]},
+    "cgm": {"cgm_dx": [NOT_MET], "cgm_need": [NOT_MET], "cgm_visit": [NOT_MET]},
 }
 
 

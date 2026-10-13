@@ -51,11 +51,13 @@ def load_policies() -> dict:
         crit = []
         for m in re.finditer(r"^- \*\*([a-z0-9_]+)\.\*\*(.+?)(?=^- \*\*|^\S|\Z)", text, re.S | re.M):
             raw = m.group(2)
-            check = dict((k, int(v)) for k, v in re.findall(r"<!-- check: (\w+)=(\d+) -->", raw))
+            check = {k: (int(v) if v.isdigit() else v.split("|")) for k, v in re.findall(r"<!-- check: (\w+)=([\w|]+) -->", raw)}
             body = " ".join(re.sub(r"<!--.*?-->", "", raw).split())
             crit.append({"id": m.group(1), "text": body, "conditional": body.startswith("Applies only"), "check": check})
         shown = re.sub(r"\n?\s*<!--.*?-->", "", text)          # the machine checks are for code, not for the models
-        out[f.stem] = {"id": f.stem, "title": text.splitlines()[0].lstrip("# ").strip(), "text": shown, "criteria": crit}
+        routes = re.search(r"<!-- route_codes: ([\w,]+) -->", text)
+        out[f.stem] = {"id": f.stem, "title": text.splitlines()[0].lstrip("# ").strip(), "text": shown, "criteria": crit,
+                       "route_codes": routes.group(1).split(",") if routes else []}
     return out
 
 
@@ -251,6 +253,8 @@ def check_review(policy_id: str, patient_id: str, review: dict, use_guards: bool
     out, notes = {}, []
     for c in p["criteria"]:
         v = review.get(c["id"]) or {"status": "missing", "reason": "not assessed", "citations": []}
+        if use_guards and "covered_codes" in c.get("check", {}):
+            v = code_lookup(c, records, order_date, v, notes)
         status = v.get("status") if v.get("status") in STATUSES else "missing"
         cites = []
         for ct in v.get("citations") or []:
@@ -269,6 +273,21 @@ def check_review(policy_id: str, patient_id: str, review: dict, use_guards: bool
             if problem:
                 out[c["id"]]["window_problem"] = problem
     return out, notes, decide({k: v["status"] for k, v in out.items()})
+
+
+def code_lookup(criterion: dict, records: dict, order_date: str | None, judged: dict, notes: list) -> dict:
+    """Some criteria are lookups, not judgements: is the ordered procedure code on the covered list? Code decides."""
+    orders = [r for r in records.values() if r["resourceType"] == "ServiceRequest" and (not order_date or fhir.when(r) == order_date)]
+    if not orders:
+        return judged
+    o = orders[0]
+    code = o["code"]["coding"][0]["code"]
+    status = "met" if code in criterion["check"]["covered_codes"] else "not_met"
+    if judged.get("status") != status:
+        notes.append(f"{criterion['id']}: judged {judged.get('status')}, but code {code} is "
+                     f"{'on' if status == 'met' else 'not on'} the covered list; set to {status}")
+    return {"status": status, "reason": f"Ordered procedure code {code} is {'a covered' if status == 'met' else 'not a covered'} type.",
+            "citations": [{"id": o["id"], "quote": f"{o['code']['text']} (code {code})"}]}
 
 
 def window_problem(criterion: dict, cited: list, order_date: str) -> str | None:
@@ -313,6 +332,11 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
 
     async def policy(state: State) -> State:
         r = state["request"]
+        by_code = [p for p in POLICIES.values() if r["code"].strip().upper() in p["route_codes"]]
+        if len(by_code) == 1:
+            p = by_code[0]
+            return {"policy_id": p["id"], "trace": ev("policy", f"Applied {p['title']} (matched by code {r['code']})",
+                                                    criteria=[c["id"] for c in p["criteria"]])}
         parsed, raw = await structured(model, PolicyOut, [SystemMessage(POLICY.format(catalog=catalog)),
                                                           HumanMessage(f"Service: {r['service']}\nCode: {r['code']}\nDiagnosis: {r['diagnosis']}")])
         if parsed.policy_id not in POLICIES:
@@ -455,5 +479,10 @@ async def baseline(model, case: dict, annotated: bool = False, use_guards: bool 
                                                         HumanMessage(f"{request_form(req)}\nMedical record:\n{chart_text}")])
     review = {c.criterion_id: c.model_dump() for c in parsed.criteria}
     crit, notes, code_decision = check_review(case["truth"]["policy"], req["patient_id"], review, use_guards, req["order_date"])
+    if use_guards:                       # same date rule as AuthPilot, without the second look
+        for k, v in crit.items():
+            if v.get("window_problem"):
+                v["status"] = "not_met"
+        code_decision = decide({k: v["status"] for k, v in crit.items()})
     return {"decision": code_decision if use_guards else parsed.decision, "verified": crit, "model_decision": parsed.decision,
             "usage": tokens("single", [raw])}

@@ -1,4 +1,5 @@
 # Continuous glucose monitor (CGM)
+<!-- route_codes: E2103 -->
 
 Source: Medicare LCD L33822, Glucose Monitors (revision effective 10/01/2024).
 https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?lcdid=33822

@@ -1,4 +1,5 @@
 # Implantable cardioverter defibrillator (ICD) for primary prevention in dilated cardiomyopathy
+<!-- route_codes: 33249 -->
 
 Source: Medicare NCD 20.4, Implantable Cardioverter Defibrillators (indications effective
 02/15/2018). https://www.cms.gov/medicare-coverage-database/details/ncd-details.aspx?NCDId=110

@@ -1,4 +1,5 @@
 # Positive airway pressure (CPAP, HCPCS E0601) for obstructive sleep apnea: initial coverage
+<!-- route_codes: E0601 -->
 
 Source: Medicare LCD L33718, Positive Airway Pressure (PAP) Devices for the Treatment of
 Obstructive Sleep Apnea (DME MACs; revision effective 01/01/2024), consistent with NCD 240.4.
