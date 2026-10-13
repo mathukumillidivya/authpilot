@@ -52,7 +52,10 @@ def main():
         lc_file = ROOT / run / "letter_check.jsonl"
         checks = {json.loads(l)["case_id"]: json.loads(l) for l in open(lc_file)} if lc_file.exists() else {}
         load = lambda f: {json.loads(l)["case_id"]: json.loads(l) for l in open(f)} if f.exists() else {}  # noqa: E731
-        v2_letters, v2_checks = load(ROOT / run / "letters_v2.jsonl"), load(ROOT / run / "letter_check_v2.jsonl")
+        # version 2.1 letters, shown only once all of them were regenerated (letters_v2.jsonl lost its reason lines)
+        v2_letters, v2_checks = load(ROOT / run / "letters_v21.jsonl"), load(ROOT / run / "letter_check_v21.jsonl")
+        if len(v2_letters) < 200 or not all(x.get("reasons") for x in v2_letters.values()):
+            v2_letters, v2_checks = {}, {}
         for line in open(ROOT / run / "results.jsonl"):
             r = json.loads(line)
             c = cases[r["case_id"]]
@@ -88,10 +91,12 @@ def main():
     lc = ROOT / RUNS["test"] / "letter_check.json"
     if lc.exists():
         results["letters"] = json.loads(lc.read_text())
-    lc2 = ROOT / RUNS["test"] / "letter_check_v2.json"
-    if lc2.exists():
+    lc2 = ROOT / RUNS["test"] / "letter_check_v21.json"
+    l21 = ROOT / RUNS["test"] / "letters_v21.jsonl"
+    rows21 = [json.loads(l) for l in open(l21)] if l21.exists() else []
+    if lc2.exists() and len(rows21) == 200 and all(x.get("reasons") for x in rows21):
         results["letters_v2"] = json.loads(lc2.read_text())
-        gates = [json.loads(l)["gate"] for l in open(ROOT / RUNS["test"] / "letters_v2.jsonl")]
+        gates = [x["gate"] for x in rows21]
         results["letters_v2"]["gate_blocked"] = {"count": sum(bool(g) for g in gates), "of": len(gates)}
     per_case = {}
     for s in ("baseline", "single_plus", "authpilot"):
