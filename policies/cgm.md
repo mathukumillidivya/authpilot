@@ -12,3 +12,4 @@ A CGM is covered when all of the following are met.
   mental or physical state requiring third-party assistance).
 - **cgm_visit.** An in-person or approved telehealth visit with the treating practitioner,
   evaluating diabetes control, within 6 months before the order.
+  <!-- check: within_days=183 -->

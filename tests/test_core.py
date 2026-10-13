@@ -84,3 +84,15 @@ def test_quote_check_on_every_record_line():
             assert not fhir.quote_found(r, f"{fhir.line(r)} [days before order: {db + 3}]", od), r["id"]
             tot += 1
     assert tot > 1000
+
+
+def test_window_check_flags_stale_evidence():
+    from authpilot.graph import window_problem
+    c = next(x for x in CASES if x["truth"]["policy"] == "cgm")
+    od = c["request"]["order_date"]
+    crit = next(k for k in POLICIES["cgm"]["criteria"] if k["id"] == "cgm_visit")
+    old = {"resourceType": "Encounter", "period": {"start": "2020-01-01"}}
+    assert window_problem(crit, [old], od)
+    from datetime import date, timedelta
+    recent = {"resourceType": "Encounter", "period": {"start": (date.fromisoformat(od) - timedelta(days=40)).isoformat()}}
+    assert window_problem(crit, [old, recent], od) is None

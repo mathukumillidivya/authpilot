@@ -50,9 +50,12 @@ def load_policies() -> dict:
         text = f.read_text()
         crit = []
         for m in re.finditer(r"^- \*\*([a-z0-9_]+)\.\*\*(.+?)(?=^- \*\*|^\S|\Z)", text, re.S | re.M):
-            body = " ".join(m.group(2).split())
-            crit.append({"id": m.group(1), "text": body, "conditional": body.startswith("Applies only")})
-        out[f.stem] = {"id": f.stem, "title": text.splitlines()[0].lstrip("# ").strip(), "text": text, "criteria": crit}
+            raw = m.group(2)
+            check = dict((k, int(v)) for k, v in re.findall(r"<!-- check: (\w+)=(\d+) -->", raw))
+            body = " ".join(re.sub(r"<!--.*?-->", "", raw).split())
+            crit.append({"id": m.group(1), "text": body, "conditional": body.startswith("Applies only"), "check": check})
+        shown = re.sub(r"\n?\s*<!--.*?-->", "", text)          # the machine checks are for code, not for the models
+        out[f.stem] = {"id": f.stem, "title": text.splitlines()[0].lstrip("# ").strip(), "text": shown, "criteria": crit}
     return out
 
 
@@ -177,6 +180,9 @@ class State(TypedDict, total=False):
     letter: str
     retries: int
     focus: list
+    feedback: dict
+    window_retried: bool
+    route: str
     trace: Annotated[list, operator.add]
     usage: Annotated[dict, add_usage]
 
@@ -187,16 +193,19 @@ class SpecialistInput(TypedDict):
     request: dict
     record: str
     extra: list
+    feedback: str
 
 
 # ------------------------------------------------------------------------------------------ prompts
 
 INTAKE = "You read prior authorization request forms and extract the fields exactly as written."
 
-POLICY = """You route prior authorization requests to the coverage policy that governs them.
+POLICY = """You route prior authorization requests to the coverage policy that governs the requested service.
+Route by the service and code only. Do not judge whether the patient qualifies; that is decided later.
 Policies available:
 {catalog}
-Return the policy id (one of the ids above, or "none") and a one-sentence reason."""
+Return the policy id (one of the ids above, or "none" only if no policy covers this kind of service) and a
+one-sentence reason."""
 
 SPECIALIST = """You are a utilization review specialist. You judge ONE coverage criterion for a prior authorization
 request, using the patient's medical record below.
@@ -255,7 +264,28 @@ def check_review(policy_id: str, patient_id: str, review: dict, use_guards: bool
                 notes.append(f"{c['id']}: '{status}' had no verified citation; treated as missing")
                 status = "missing"
         out[c["id"]] = {"status": status, "reason": v.get("reason", ""), "citations": cites, "model_status": v.get("status")}
+        if use_guards and status == "met" and c.get("check") and order_date:
+            problem = window_problem(c, [records[x["id"]] for x in cites if x["verified"]], order_date)
+            if problem:
+                out[c["id"]]["window_problem"] = problem
     return out, notes, decide({k: v["status"] for k, v in out.items()})
+
+
+def window_problem(criterion: dict, cited: list, order_date: str) -> str | None:
+    """Time windows are arithmetic, so code checks them: a 'met' needs cited evidence inside the window."""
+    dates = [fhir.days_before(fhir.when(r), order_date) for r in cited]
+    dates = [d for d in dates if d is not None and d >= 0]
+    if "within_days" in criterion["check"]:
+        n = criterion["check"]["within_days"]
+        if not any(d <= n for d in dates):
+            return (f"the evidence cited is {', '.join(str(d) for d in sorted(dates)) or 'not'} days before the order, "
+                    f"but this criterion requires evidence within {n} days")
+    if "at_least_days" in criterion["check"]:
+        n = criterion["check"]["at_least_days"]
+        if not dates or min(dates) < n:
+            return (f"the evidence cited starts {min(dates) if dates else 'an unknown number of'} days before the order, "
+                    f"but this criterion requires at least {n} days")
+    return None
 
 
 # ------------------------------------------------------------------------------------------ graph
@@ -303,7 +333,8 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
         p = POLICIES[state["policy_id"]]
         focus = state.get("focus") or [c["id"] for c in p["criteria"]]
         return [Send("specialist", {"criterion": c, "policy_id": state["policy_id"], "request": state["request"],
-                                    "record": state["record"], "extra": (state.get("extra") or {}).get(c["id"], [])})
+                                    "record": state["record"], "extra": (state.get("extra") or {}).get(c["id"], []),
+                                    "feedback": (state.get("feedback") or {}).get(c["id"], "")})
                 for c in p["criteria"] if c["id"] in focus]
 
     async def specialist(inp: SpecialistInput) -> State:
@@ -316,6 +347,9 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
                f"Provider's clinical summary (a claim, not evidence): {r.get('provider_claims')}")
         if inp["extra"]:
             ask += f"\nAn investigator points to these records as relevant: {', '.join(inp['extra'])}. Look at them closely."
+        if inp.get("feedback"):
+            ask += (f"\nA date check on your previous answer failed: {inp['feedback']}. Re-read the day counts in the "
+                    "record and judge again. If no evidence falls inside the window, the criterion is not met.")
         parsed, raw = await structured(model, CriterionOut, [sys_msg, HumanMessage(ask)])
         out = parsed.model_dump()
         out["criterion_id"] = c["id"]
@@ -326,11 +360,20 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
     def verify(state: State) -> State:
         r = state["request"]
         out, notes, decision = check_review(state["policy_id"], r["patient_id"], state.get("review") or {}, use_guards, r["order_date"])
+        windows = {k: v["window_problem"] for k, v in out.items() if v.get("window_problem")}
+        if windows and not state.get("window_retried"):
+            return {"verified": out, "focus": list(windows), "feedback": windows, "window_retried": True, "route": "specialist",
+                    "trace": ev("verify", f"Date check failed on {len(windows)} criteria; returned to the specialist with the dates",
+                                window_problems=windows, overrides=notes)}
+        for k, msg in windows.items():                 # still outside the window after a second look
+            out[k]["status"] = "not_met"
+            notes.append(f"{k}: judged met, but {msg}; treated as not met")
+        decision = decide({k: v["status"] for k, v in out.items()})
         gaps = [k for k, v in out.items() if v["status"] == "missing"]
         retry = bool(use_guards and gaps and (state.get("retries") or 0) < max_retries)
         bad = sum(1 for v in out.values() for x in v["citations"] if not x["verified"])
-        return {"verified": out, "decision": decision, "focus": gaps if retry else [],
-                "retries": (state.get("retries") or 0) + (1 if retry else 0),
+        return {"verified": out, "decision": decision, "focus": gaps if retry else [], "feedback": {},
+                "retries": (state.get("retries") or 0) + (1 if retry else 0), "route": "investigator" if retry else "letter",
                 "trace": ev("verify", (f"{len(gaps)} criteria undocumented; sending the investigator back into the record"
                                        if retry else f"Decision computed from the criteria: {decision}"),
                             unverified_citations=bad, overrides=notes, decision=decision,
@@ -371,7 +414,8 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
     g.add_edge("policy", "record")
     g.add_conditional_edges("record", fan_out, ["specialist"])
     g.add_edge("specialist", "verify")
-    g.add_conditional_edges("verify", lambda s: "investigator" if s.get("focus") else "letter", ["investigator", "letter"])
+    g.add_conditional_edges("verify", lambda s: fan_out(s) if s.get("route") == "specialist" else s.get("route", "letter"),
+                            ["specialist", "investigator", "letter"])
     g.add_conditional_edges("investigator", fan_out, ["specialist"])
     g.add_edge("letter", END)
     return g.compile()

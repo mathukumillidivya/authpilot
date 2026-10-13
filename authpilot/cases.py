@@ -264,14 +264,14 @@ def cpap(c: Chart, st: dict, traps: set) -> dict:
         if rng.random() < 0.5 and "note_only" not in traps:
             ev["cpap_symptoms"] = [c.condition("Essential hypertension", "I10", D - days(rng.randint(400, 3000)))]
         else:
-            ev["cpap_symptoms"] = [c.note("Primary care progress note", when,
-                                          f"Reports excessive daytime sleepiness, dozing while reading and watching TV. "
-                                          f"Epworth Sleepiness Scale {rng.randint(12, 18)}.")]
+            ev["cpap_symptoms"] = [c.note("Patient-completed sleep questionnaire", when,
+                                          f"Patient reports excessive daytime sleepiness, dozing while reading and watching TV. "
+                                          f"Epworth Sleepiness Scale score {rng.randint(12, 18)}.", author="Patient portal")]
     elif st["cpap_symptoms"] == NOT_MET:
         when = test_day - days(rng.randint(5, 30))
-        ev["cpap_symptoms"] = [c.note("Sleep medicine consultation", when,
+        ev["cpap_symptoms"] = [c.note("Patient-completed sleep questionnaire", when,
                                       "Denies daytime sleepiness (Epworth 4), no insomnia, no cognitive or mood "
-                                      "complaints. No history of hypertension, coronary disease or stroke.")]
+                                      "complaints. No history of hypertension, coronary disease or stroke.", author="Patient portal")]
     # supplier education
     if st["cpap_education"] == MET:
         ev["cpap_education"] = [c.note("DME supplier delivery note", D - days(rng.randint(0, 3)),
@@ -293,7 +293,7 @@ def oxygen(c: Chart, st: dict, traps: set) -> dict:
     if st["o2_test"] == MET:
         spo2 = (88 if "boundary" in traps else rng.randint(83, 87)) if not group2 else 89
     else:
-        spo2 = 89 if "boundary" in traps else rng.randint(90, 94)
+        spo2 = 90 if "boundary" in traps else rng.randint(91, 95)   # clearly outside both Group I and Group II
     if st["o2_test"] != MISSING:
         text = f"Resting pulse oximetry on room air: SpO2 {spo2}%. Patient seated, stable, at rest for 10 minutes."
         if "note_only" in traps:
@@ -302,17 +302,13 @@ def oxygen(c: Chart, st: dict, traps: set) -> dict:
             ev["o2_test"] = [c.obs("Oxygen saturation at rest, room air (pulse oximetry)", spo2, "%", test_day,
                                    loinc="59408-5", performer=performer, method="room air, at rest")]
         ev["o2_timing"] = list(ev["o2_test"])
-        ev["o2_tester"] = list(ev["o2_test"])
+        ordered = c.note("Pulmonology progress note", test_day + days(1),
+                         f"I ordered resting room-air oximetry and have reviewed the result (SpO2 {spo2}%).")
+        ev["o2_tester"] = list(ev["o2_test"]) + [ordered]
         facts["spo2"] = spo2
     else:
         ev["o2_test"] = [c.note("Pulmonology progress note", D - days(2),
                                 "Dyspnea on exertion. Oximetry ordered; result pending.")]
-    if st["o2_test"] == NOT_MET and facts.get("spo2") == 89:
-        # a Group II value: make it unambiguous that no Group II condition is present
-        st_note = c.note("Cardiology progress note", D - days(rng.randint(5, 25)),
-                         "Echocardiogram: normal right ventricular size and function, estimated pulmonary artery "
-                         "pressure normal. No peripheral edema on exam.")
-        ev["o2_test"] = ev["o2_test"] + [st_note]
     if st["o2_group2"] == MET:
         kind = rng.choice(["ph", "hct", "edema"])
         if kind == "ph":
@@ -445,8 +441,8 @@ def cgm(c: Chart, st: dict, traps: set) -> dict:
         else:
             notes = []
             for k in range(3):
-                notes.append(c.obs("Glucose, capillary", rng.randint(41, 52), "mg/dL", D - days(rng.randint(5, 80)), loinc="2339-0"))
-            notes.append(c.note("Endocrinology progress note", D - days(rng.randint(20, 60)),
+                notes.append(c.obs("Glucose, capillary", rng.randint(41, 52), "mg/dL", D - days(rng.randint(5, 80) if st["cgm_visit"] == MET else rng.randint(200, 320)), loinc="2339-0"))
+            notes.append(c.note("Endocrinology progress note", D - days(rng.randint(20, 60) if st["cgm_visit"] == MET else rng.randint(200, 300)),
                                 "Recurrent hypoglycemia below 54 mg/dL despite two adjustments: glipizide dose reduced in "
                                 "March, then stopped and replaced with sitagliptin in May. Lows persist."))
             ev["cgm_need"] = notes
@@ -455,8 +451,8 @@ def cgm(c: Chart, st: dict, traps: set) -> dict:
     else:
         c.med("metformin 1000 mg twice daily", D - days(rng.randint(300, 1500)))
         lows = [c.obs("Glucose, capillary", rng.randint(55, 62) if "boundary" in traps else rng.randint(85, 140), "mg/dL",
-                      D - days(rng.randint(5, 80)), loinc="2339-0") for _ in range(2)]
-        ev["cgm_need"] = lows + [c.note("Primary care progress note", D - days(rng.randint(20, 60)),
+                      D - days(rng.randint(5, 80) if st["cgm_visit"] == MET else rng.randint(200, 320)), loinc="2339-0") for _ in range(2)]
+        ev["cgm_need"] = lows + [c.note("Primary care progress note", D - days(rng.randint(20, 60) if st["cgm_visit"] == MET else rng.randint(200, 300)),
                                         "Diabetes managed with metformin alone, no insulin. "
                                         + ("Occasional low readings in the mid 50s to low 60s, asymptomatic."
                                            if "boundary" in traps else "No hypoglycemic episodes."))]

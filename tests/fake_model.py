@@ -69,8 +69,9 @@ class FakeModel(BaseChatModel):
         if "utilization review specialist" in system:
             cid = re.search(r"Judge criterion (\S+) only", last).group(1)
             rec = re.findall(r"^\[([a-z]+-\d+)\] (.+?)  \[days", system, re.M)
-            cite = [{"id": rec[-1][0], "quote": rec[-1][1]}] if rec else []
             import os
+            pick = rec[1] if os.environ.get("FAKE_OLD_CITE") == cid and "date check" not in last else rec[-1]
+            cite = [{"id": pick[0], "quote": pick[1]}] if rec else []
             status = "missing" if os.environ.get("FAKE_MISSING") == cid and "investigator points" not in last else "met"
             return json.dumps({"criterion_id": cid, "status": status, "reason": "scripted", "citations": cite})
         if "evidence investigator" in system:

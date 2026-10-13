@@ -13,6 +13,7 @@ Home oxygen is covered when all of the following are met.
   dependent edema suggesting congestive heart failure; pulmonary hypertension or cor pulmonale;
   or erythrocythemia with hematocrit above 56%.
 - **o2_timing.** The qualifying test was performed within 30 days before the order.
+  <!-- check: within_days=30 -->
 - **o2_tester.** The test was ordered and evaluated by the treating practitioner and performed
   by a qualified provider. A DME supplier is not a qualified provider for this test. Judge this
   from who performed the qualifying test, as recorded on the test itself.
