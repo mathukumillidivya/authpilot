@@ -1,0 +1,100 @@
+{
+  "letters": 99,
+  "letters_with_a_code_problem": {
+    "count": 0,
+    "of": 99,
+    "rate": 0.0
+  },
+  "code_problems_by_kind": {},
+  "by_decision": {
+    "APPROVE": {
+      "count": 0,
+      "of": 41,
+      "rate": 0.0
+    },
+    "DENY": {
+      "count": 0,
+      "of": 43,
+      "rate": 0.0
+    },
+    "NEED_INFO": {
+      "count": 0,
+      "of": 15,
+      "rate": 0.0
+    }
+  },
+  "dates_checked": 239,
+  "examples": [],
+  "judge": {
+    "model": "claude-haiku-4-5-20251001",
+    "letters_judged": 99,
+    "clean": {
+      "count": 81,
+      "of": 99,
+      "rate": 0.8182
+    },
+    "minor_issues": {
+      "count": 15,
+      "of": 99,
+      "rate": 0.1515
+    },
+    "must_fix": {
+      "count": 3,
+      "of": 99,
+      "rate": 0.0303
+    },
+    "letters_with_an_unsupported_statement": {
+      "count": 17,
+      "of": 99,
+      "rate": 0.1717
+    },
+    "letters_with_a_contradiction": {
+      "count": 1,
+      "of": 99,
+      "rate": 0.0101
+    },
+    "cost_usd": 0.2383,
+    "examples": [
+      {
+        "case_id": "case-0212",
+        "unsupported": [
+          {
+            "quote": "Heart function and class: Not met.",
+            "why": "The letter does not explain why this rule is not met. The findings show the rule is labeled 'icd_indication' and the reason is that the patient has ischemic cardiomyopathy, not dilated cardiomyopathy, even though NYHA class II and LVEF 20% are met. The letter's generic label 'Heart function and class' obscures the actual basis for denial (cardiomyopathy type) and could mislead the reader into thinking the NYHA class or LVEF values are the problem."
+          },
+          {
+            "quote": "Three months of therapy: Does not apply to this request.",
+            "why": "The findings show the rule is 'icd_gdmt' with status 'not_applicable' because it applies only to non-ischemic cardiomyopathy. The letter's label 'Three months of therapy' is vague and does not convey that this rule is specific to non-ischemic cardiomyopathy or why it does not apply to this ischemic cardiomyopathy patient."
+          }
+        ],
+        "contradictions": []
+      },
+      {
+        "case_id": "case-0218",
+        "unsupported": [
+          {
+            "quote": "Heart function and class: Not met.",
+            "why": "The findings show the rule 'icd_indication' is not met because the patient has ischemic cardiomyopathy rather than the non-ischemic dilated cardiomyopathy specified in the criterion. The letter's label 'Heart function and class' does not accurately describe the actual reason for denial. The patient's heart function (LVEF 35%) and class (NYHA II) actually meet the numeric requirements; the issue is the cardiomyopathy type (ischemic vs. non-ischemic dilated)."
+          },
+          {
+            "quote": "Three months of therapy: Does not apply to this request.",
+            "why": "The findings identify this rule as 'icd_gdmt' with status 'not_applicable' because it applies only to non-ischemic cardiomyopathy. The letter's label 'Three months of therapy' does not match the rule name or reason documented in the findings."
+          }
+        ],
+        "contradictions": []
+      },
+      {
+        "case_id": "case-0045",
+        "unsupported": [
+          {
+            "quote": "Sleep test result: Not met.",
+            "why": "The findings show the cpap_test rule status is 'met'. The home sleep test shows AHI 5.0 events/hour with 11 total respiratory events. The criterion requires AHI 5-14 with \u226510 events for this range, which is satisfied (11 \u2265 10). The findings explicitly state 'This criterion is actually MET' after re-evaluation."
+          }
+        ],
+        "contradictions": [
+          "The letter denies the request stating 'at least one coverage rule is not met' and lists 'Sleep test result: Not met.' However, all four coverage rules are actually met according to the findings: cpap_eval (met), cpap_test (met), cpap_symptoms (met), and cpap_education (met). The denial decision contradicts the rule statuses in the findings."
+        ]
+      }
+    ]
+  }
+}
