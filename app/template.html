@@ -80,7 +80,7 @@ mark { background: none; color: inherit; }
 
 /* stamps */
 .stamp { display: inline-block; font: 800 22px/1 var(--serif); letter-spacing: .08em; text-transform: uppercase; padding: 8px 14px 7px; border: 3.5px solid currentColor; border-radius: 6px; transform: rotate(-6deg); mix-blend-mode: multiply; position: relative; }
-.stamp small { display: block; font: 600 9.5px var(--mono); letter-spacing: .04em; margin-top: 4px; text-transform: none; }
+.stamp small { white-space: nowrap; display: block; font: 600 9.5px var(--mono); letter-spacing: .04em; margin-top: 4px; text-transform: none; }
 .stamp::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 20% 30%, rgba(255,255,255,.55) 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, rgba(255,255,255,.5) 0 1.5px, transparent 2.5px), radial-gradient(circle at 45% 80%, rgba(255,255,255,.5) 0 2px, transparent 3px); background-size: 23px 17px, 31px 21px, 19px 25px; }
 .stamp.DENY { color: var(--deny); } .stamp.APPROVE { color: var(--ok); } .stamp.NEED_INFO { color: #1E5AA8; } .stamp.none { color: var(--rule2); }
 .stamp.slam { animation: slam .5s cubic-bezier(.2, 1.6, .4, 1) both; }
@@ -245,7 +245,7 @@ td .idc { display: block; font: 400 11.5px var(--mono); color: var(--dim); }
 .rl .rt { color: var(--ink2); overflow-wrap: anywhere; }
 .rl.cited { background: #FFFDF0; }
 .rl.cited .rt { color: var(--ink); }
-.rl.flash { animation: flash 1.4s ease-out; }
+.rl.flash, .rule.flash { animation: flash 1.4s ease-out; }
 @keyframes flash { 0%, 30% { background: var(--hl-soft); } }
 .q { background: linear-gradient(90deg, var(--hl) 0 0) no-repeat; background-size: 100% 100%; padding: 1px 1px; border-radius: 1px; }
 .q.anim { background-size: 0% 100%; animation: swipe .8s ease-out forwards; }
@@ -275,9 +275,15 @@ td .idc { display: block; font: 400 11.5px var(--mono); color: var(--dim); }
 .rule .rtext { font-size: 12.5px; color: var(--dim); margin-top: 2px; }
 .rule .why { font: 400 15px/1.45 var(--serif); color: var(--ink); margin-top: 6px; }
 .cites { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-.cite { display: inline-flex; align-items: center; gap: 5px; font: 500 11.5px var(--mono); padding: 3px 7px; border-radius: 3px; background: var(--hl-soft); color: var(--ink); border: 1px solid #F0D64A; }
-.cite b { font-size: 10px; color: var(--ok); }
-.cite.bad { background: var(--deny-soft); border-color: #F2B8C1; } .cite.bad b { color: var(--deny); }
+.cites { flex-direction: column; flex-wrap: nowrap; }
+.cite { display: grid; gap: 3px; width: 100%; text-align: left; padding: 7px 10px; border-radius: 3px; background: #FFFBE0; color: var(--ink); border: 1px solid #F0D64A; border-left: 4px solid var(--hl); transition: background .15s, transform .15s; }
+.cite:hover { background: var(--hl-soft); transform: translateX(2px); }
+.cite .qt { font: 400 14px/1.4 var(--serif); }
+.cite .src { font: 500 11px var(--mono); color: var(--dim); }
+.cite .src b { color: var(--ok); font-weight: 600; } .cite .src i { font-style: normal; color: var(--pen); }
+.cite.bad { background: var(--deny-soft); border-color: #F2B8C1; border-left-color: var(--deny); } .cite.bad .src b { color: var(--deny); }
+.q.sel { outline: 2px solid var(--pen); outline-offset: 1px; }
+.rl .q { cursor: pointer; }
 .codecheck { margin-top: 8px; font: 500 11.5px var(--mono); color: var(--ok); display: flex; gap: 6px; align-items: baseline; }
 .codecheck::before { content: "{ }"; font-weight: 600; background: var(--ok-soft); padding: 0 4px; border-radius: 3px; }
 .codecheck.fix { color: var(--deny); } .codecheck.fix::before { background: var(--deny-soft); }
@@ -449,8 +455,8 @@ const store = { get() { try { return JSON.parse(localStorage.getItem("authpilot.
   put(all) { try { localStorage.setItem("authpilot.actions", JSON.stringify(all)); } catch {} },
   set(n, v) { const a = store.get(); a[n] = v; store.put(a); }, drop(n) { const a = store.get(); delete a[n]; store.put(a); } };
 function queueStatus(r) { const a = store.get()[r.n]; if (a) return a.kind; return r.dec === "DENY" ? "due" : r.dec === "NEED_INFO" ? "sent" : r.dec === "APPROVE" ? "approved" : "error"; }
-const QS = { due: ["Needs sign-off", "due"], sent: ["Records requested", "NEED_INFO"], approved: ["Approved", "APPROVE"], signed: ["Denial signed", "signed"],
-  overturned: ["Overturned to approval", "APPROVE"], confirmed: ["Confirmed", "APPROVE"], flagged: ["Flagged for review", ""], error: ["No decision", ""] };
+const QS = { due: ["Needs sign-off", "due"], sent: ["Records requested", "NEED_INFO"], approved: ["Approved", "APPROVE"], signed: ["Demo sign-off recorded", "signed"],
+  overturned: ["Demo override recorded", "APPROVE"], confirmed: ["Demo sign-off recorded", "APPROVE"], flagged: ["Demo flag recorded", ""], error: ["No decision", ""] };
 const HANDLED = ["signed", "overturned", "confirmed", "flagged"];
 function refreshNav() { const due = Q.filter(r => queueStatus(r) === "due").length; $("#nav-due").textContent = due || ""; $("#nav-due").hidden = !due; }
 
@@ -603,7 +609,7 @@ function viewQueue(v) {
   const st = Q.map(queueStatus), cnt = k => st.filter(s => s === k).length, agree = Q.filter(r => r.dec === r.truth).length;
   v.innerHTML = `<div class="wrap"><div class="vhead"><div><span class="kicker">Worklist</span><h1 class="h1" style="margin-top:8px">Review queue</h1><p>Every request here was reviewed by the agents against its Medicare policy. Approvals and records requests go out on their own. Denials wait for a clinician to sign.</p></div></div>
   <div class="cards">
-    <button class="card due" data-tab="due"><span>Waiting for your signature</span><b>${cnt("due")}</b><span>recommended denials</span></button>
+    <button class="card due" data-tab="due"><span>Waiting for demo sign-off</span><b>${cnt("due")}</b><span>recommended denials</span></button>
     <button class="card" data-tab="sent"><span>Records requested</span><b>${cnt("sent")}</b><span>a rule was undocumented</span></button>
     <button class="card" data-tab="approved"><span>Approved</span><b>${cnt("approved")}</b><span>every rule met, with quotes</span></button>
     <div class="card"><span>Median review</span><b>${median(Q.map(r => r.secs)).toFixed(1)}s</b><span>about $${(Q.reduce((a, r) => a + r.cost, 0) / Q.length).toFixed(3)} each</span></div>
@@ -704,16 +710,26 @@ function drawRecord(animK) {
     const hits = m[e.id] || []; let t = esc(e.text);
     hits.forEach(h => { t = markQuote(t, e.text, h.q.quote, h.k, h.k === animK); if (h.q.verified === false) t = t.replace(`class="q`, `class="q miss`); });
     return `<div class="rl${hits.length ? " cited" : ""}${recFilter === "cited" && !hits.length ? " hidden-row" : ""}" id="rl-${e.id}"><span class="tabs">${[...new Set(hits.map(h => h.i))].map(i => `<b title="${esc(LABEL[Object.keys(crit)[i - 1]])}">${i}</b>`).join("")}</span><span class="rid">${e.id}</span><span class="rd">${e.date || ""}<em>${daysText(e.days)}</em></span><span class="rt">${t}</span></div>`; }).join("");
+  // and back: a highlighted passage opens the rule that quoted it
+  $$(".q[data-k]", el).forEach(m => m.onclick = () => { const r = $("#r-" + m.dataset.k); if (!r) return; r.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" }); r.classList.remove("flash"); void r.offsetWidth; r.classList.add("flash"); });
 }
-function focusEntry(id) { const row = $("#rl-" + id), list = $("#rlist"); if (!row || !list) return; list.scrollTop = row.offsetTop - list.offsetTop - 60; row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash"); }
+function focusEntry(id, k) {
+  if (recFilter === "cited" && !$("#rl-" + id)) { recFilter = "all"; drawRecord(); }
+  const row = $("#rl-" + id), list = $("#rlist"); if (!row || !list) return;
+  const r = list.getBoundingClientRect(); if (r.top < 70 || r.top > innerHeight - 200) list.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  list.scrollTop = row.offsetTop - list.offsetTop - 60; row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
+  $$(".q.sel").forEach(m => m.classList.remove("sel")); if (k) $$(`#rl-${id} .q[data-k="${k}"]`).forEach(m => m.classList.add("sel"));
+}
 function paintRule(k, v, working) {
   const bx = $("#bx-" + k), st = $("#st-" + k); if (!bx) return;
   if (working) { bx.className = "bx work"; bx.textContent = ""; st.className = "work"; st.textContent = "specialist reading…"; return; }
   if (!v || !v.status) { bx.className = "bx"; bx.textContent = ""; st.className = ""; st.textContent = "not reviewed"; $("#why-" + k).textContent = ""; $("#ci-" + k).innerHTML = ""; $("#cc-" + k).innerHTML = ""; return; }
   bx.className = "bx " + v.status; bx.textContent = STATUS[v.status][1]; st.className = v.status; st.textContent = STATUS[v.status][0];
   $("#why-" + k).textContent = v.reason || "";
-  $("#ci-" + k).innerHTML = (v.citations || []).map(q => `<button class="cite${q.verified === false ? " bad" : ""}" data-id="${esc(q.id)}">${esc(q.id)}${q.verified === true ? "<b>✓ found</b>" : q.verified === false ? "<b>✕ not found</b>" : ""}</button>`).join("");
-  $$("#ci-" + k + " .cite").forEach(b => { b.onclick = () => focusEntry(b.dataset.id); const q = (v.citations || []).find(x => x.id === b.dataset.id); hover(b, `<b>${esc(b.dataset.id)}</b><div class="mono">“${esc(q.quote)}”</div>`); });
+  const ent = id => ENTS.find(e => e.id === id);
+  $("#ci-" + k).innerHTML = (v.citations || []).map(q => { const e = ent(q.id);
+    return `<button class="cite${q.verified === false ? " bad" : ""}" data-id="${esc(q.id)}" title="Show ${esc(q.id)} in the record"><span class="qt">“${esc(q.quote.length > 120 ? q.quote.slice(0, 117) + "…" : q.quote)}”</span><span class="src">${esc(q.id)}${e && e.date ? ` · ${esc(e.date)}, ${daysText(e.days)}` : ""}${q.verified === true ? " · <b>✓ found in the record</b>" : q.verified === false ? " · <b>✕ not found</b>" : ""} <i>↗</i></span></button>`; }).join("");
+  $$("#ci-" + k + " .cite").forEach(b => { b.onclick = () => focusEntry(b.dataset.id, k); });
   const w = (DATA.windows[C.policy] || {})[k], notes = [];
   if (w && w.within_days) notes.push(["", `date window counted by code: within ${w.within_days} days of the order`]);
   if (w && w.at_least_days) notes.push(["", `date window counted by code: at least ${w.at_least_days} days`]);
@@ -749,12 +765,12 @@ function drawVerdict(r, fresh, typing) {
   const d = $("#verdict"); if (!d) return;
   if (!r || !r.decision) { d.innerHTML = `<div class="vtop"><div><h3>Determination</h3><div class="how">${running ? "the agents are working" : "not reviewed yet"}</div></div><span class="stamp none">Pending</span></div>`; return; }
   const key = C.answer_key, a = store.get()[lastCase];
-  const opts = { DENY: [["signed", "Sign and send the denial", "red"], ["overturned", "Overturn to approval", ""]], NEED_INFO: [["confirmed", "Send the records request", "ink"], ["overturned", "Approve anyway", ""]], APPROVE: [["confirmed", "Confirm the approval", "green"], ["flagged", "Flag for review", ""]] }[r.decision] || [];
+  const opts = { DENY: [["signed", "Record demo sign-off: deny", "red"], ["overturned", "Record demo override: approve", ""]], NEED_INFO: [["confirmed", "Record demo sign-off: request records", "ink"], ["overturned", "Record demo override: approve", ""]], APPROVE: [["confirmed", "Record demo sign-off: approve", "green"], ["flagged", "Record demo flag for review", ""]] }[r.decision] || [];
   const diffs = key ? Object.entries(key.statuses).filter(([k, v]) => r.criteria && r.criteria[k] && r.criteria[k].status !== v).map(([k, v]) => `<li>Key says “${LABEL[k]}” is ${STATUS[v][0].toLowerCase()}; agents said ${STATUS[r.criteria[k].status][0].toLowerCase()}.</li>`).join("") : "";
   d.innerHTML = `<div class="vtop"><div><h3>Determination</h3><div class="how">decided by code from the rule statuses</div></div><span class="stamp ${r.decision}${fresh && !reduced ? " slam" : ""}">${DEC[r.decision]}<small>${a ? QS[a.kind][0] : r.decision === "DENY" ? "awaiting clinician signature" : "sent automatically"}</small></span></div>
     <div class="letterp${typing ? " typing" : ""}" id="letter">${r.letter && !typing ? md(r.letter) : ""}</div>
-    <div class="sign">${a ? `<div><span class="signed">${a.kind === "signed" ? "Signed, reviewer" : QS[a.kind][0]}</span><div class="note">${new Date(a.at).toLocaleString()}${a.note ? ` · “${esc(a.note)}”` : ""}</div></div><div class="row"><button class="btn sm" id="undo">Undo</button></div>`
-      : `<textarea id="note" placeholder="Note for the record (optional)" aria-label="Note for the record"></textarea><div class="row">${opts.map(([k, t, c]) => `<button class="btn sm ${c}" data-act="${k}">${t}</button>`).join("")}</div><p class="note">Your decision is saved in this browser only.</p>`}</div>
+    <div class="sign">${a ? `<div><span class="signed">${QS[a.kind][0]}</span><div class="note">${new Date(a.at).toLocaleString()}${a.note ? ` · “${esc(a.note)}”` : ""}</div></div><div class="row"><button class="btn sm" id="undo">Undo</button></div>`
+      : `<textarea id="note" placeholder="Note for the record (optional)" aria-label="Note for the record"></textarea><div class="row">${opts.map(([k, t, c]) => `<button class="btn sm ${c}" data-act="${k}">${t}</button>`).join("")}</div><p class="note">Demo only: recorded in this browser. Nothing is signed or sent to anyone.</p>`}</div>
     ${key ? `<div class="key"><button class="btn sm" id="keyb">Compare with the answer key</button><div id="keyv" hidden>${key.decision === r.decision ? `<span class="ok">✓ Agrees:</span> ${DEC[key.decision].toLowerCase()}.` : `<span class="no">✕ Disagrees:</span> the right answer is ${DEC[key.decision].toLowerCase()}.`}${diffs ? `<ul style="margin:6px 0 0 18px">${diffs}</ul>` : ` All ${Object.keys(key.statuses).length} rule statuses match.`}${key.traps && key.traps.length ? `<div class="note" style="margin-top:6px">Traps in this case: ${key.traps.map(t => esc(DATA.traps[t] || t).toLowerCase()).join("; ")}.</div>` : ""}</div></div>` : ""}`;
   $$("[data-act]", d).forEach(b => b.onclick = () => { store.set(lastCase, { kind: b.dataset.act, note: $("#note").value.trim(), at: Date.now() }); refreshNav(); drawVerdict(r); });
   if ($("#undo")) $("#undo").onclick = () => { store.drop(lastCase); refreshNav(); drawVerdict(r); };
