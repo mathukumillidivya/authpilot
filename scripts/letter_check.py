@@ -34,6 +34,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from authpilot import graph as G  # noqa: E402
 from authpilot.letter_rules import code_checks  # noqa: E402
 MODEL = "claude-haiku-4-5-20251001"
 PRICE = {"input": 1.0 / 1e6, "output": 5.0 / 1e6, "cache_read": 0.1 / 1e6, "cache_write": 1.25 / 1e6}
@@ -79,6 +80,7 @@ def main():
     ap.add_argument("run")
     ap.add_argument("--judge", action="store_true")
     ap.add_argument("--budget", type=float, default=0.9)
+    ap.add_argument("--sample", type=int, default=0, help="judge only this many letters, drawn at random (seed 3)")
     ap.add_argument("--letters", default="", help="score these letters instead (e.g. letters_v2.jsonl); output letter_check_v2.*")
     args = ap.parse_args()
     run = Path(args.run)
@@ -97,16 +99,22 @@ def main():
     if (run / f"letter_check{suffix}.jsonl").exists():
         prev = {json.loads(l)["case_id"]: json.loads(l) for l in open(run / f"letter_check{suffix}.jsonl")}
     out, spent = [], 0.0
+    sample = None
+    if args.sample:
+        import random
+        ids = [r["case_id"] for r in rows_in if r.get("decision")]
+        sample = set(random.Random(3).sample(ids, min(args.sample, len(ids))))
     for r in rows_in:
         if not r.get("decision"):
             continue
         case = json.loads((ROOT / "app/site/data/cases" / f"{r['case_id'][5:]}.json").read_text())
         statuses = {k: v.get("status") for k, v in (r["criteria"] or {}).items()}
-        row = {"case_id": r["case_id"], "decision": r["decision"], "truth": r["truth"], **code_checks(r["letter"] or "", r["decision"], statuses, case, r.get("letter_date", ""))}
+        row = {"case_id": r["case_id"], "decision": r["decision"], "truth": r["truth"], **code_checks(r["letter"] or "", r["decision"], statuses, case, r.get("letter_date", ""),
+                                                                                                        tuple(c["text"] for c in G.POLICIES[r["policy"]]["criteria"]) if args.letters else ())}
         old = prev.get(r["case_id"], {})
         if "judge" in old:
             row["judge"], row["usage"] = old["judge"], old.get("usage", {})
-        elif client and spent < args.budget:
+        elif client and spent < args.budget and (sample is None or r["case_id"] in sample):
             findings = json.dumps({"request": {k: case["request"][k] for k in ("service", "code", "order_date", "ordering_provider", "clinical_summary")},
                                    "decision": r["decision"],
                                    "rules": {k: {"status": v.get("status"), "reason": v.get("reason"),

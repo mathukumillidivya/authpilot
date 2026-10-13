@@ -15,6 +15,10 @@ The model writes one or two sentences per rule from the verified quotes, and not
 validated in code before anyone can sign it (validate()): placeholders, dates that are not in the request, the
 record or the letter date, a reason that contradicts its rule's status, and the decision and next steps present.
 A letter that fails is not offered for sign-off; it is marked for a person to edit.
+
+Version 2.1: the second-model check of version 2 (results/runs/test-authpilot/letter_check_v2.json) found that the
+short rule labels the template borrowed from the review screen ("Three months of therapy", "Insulin or severe
+lows") misdescribe some rules. Each rule is now quoted in the policy's own words instead.
 """
 from __future__ import annotations
 
@@ -51,26 +55,42 @@ reason. Rules:
 Submit with the submit_reasons tool."""
 TOOL = {"name": "submit_reasons", "description": "Submit one reason per rule.", "input_schema": {
     "type": "object", "required": ["reasons"], "properties": {"reasons": {"type": "array", "items": {
-        "type": "object", "required": ["rule", "text"], "properties": {"rule": {"type": "string"}, "text": {"type": "string"}}}}}}}
+        "type": "object", "required": ["rule", "text"], "properties": {
+            "rule": {"type": "string", "description": "The rule's id, exactly as given (for example cpap_eval)."},
+            "text": {"type": "string"}}}}}}}
 
 
 def reasons_input(criteria: dict, policy: dict) -> str:
     text = {c["id"]: c["text"] for c in policy["criteria"]}
-    return json.dumps({k: {"rule": text.get(k, k), "status": v.get("status"), "reason": v.get("reason"),
+    return json.dumps({k: {"id": k, "rule": text.get(k, k), "status": v.get("status"), "reason": v.get("reason"),
                            "verified_quotes": [x["quote"] for x in v.get("citations", []) if x.get("verified")]}
                        for k, v in criteria.items()}, indent=1)
 
 
-def parse_reasons(out) -> dict:
+def parse_reasons(out, policy: dict | None = None) -> dict:
+    """Reason lines keyed by rule id. The model sometimes names a rule by its wording instead of its id, so match the
+    wording too (version 2 as first run lost every reason line this way)."""
     if isinstance(out, str):
         out = json.loads(out)
     items = out.get("reasons", out) if isinstance(out, dict) else out
     if isinstance(items, str):
         items = json.loads(items)
-    return {str(x.get("rule")): str(x.get("text", "")).strip() for x in items if isinstance(x, dict)}
+    by_text = {re.sub(r"\W+", " ", c["text"]).strip().lower(): c["id"] for c in (policy or {}).get("criteria", [])}
+    ids = {c["id"] for c in (policy or {}).get("criteria", [])}
+    found = {}
+    for x in items:
+        if not isinstance(x, dict):
+            continue
+        key = str(x.get("rule", "")).strip()
+        norm = re.sub(r"\W+", " ", key).strip().lower()
+        rid = key if not ids or key in ids else by_text.get(norm) or next((i for t, i in by_text.items() if norm and (norm in t or t in norm)), None)
+        if rid:
+            found[rid] = str(x.get("text", "")).strip()
+    return found
 
 
-def assemble(request: dict, decision: str, criteria: dict, policy: dict, labels: dict, reasons: dict, letter_date: str) -> str:
+def assemble(request: dict, decision: str, criteria: dict, policy: dict, labels: dict, reasons: dict, letter_date: str,
+             rule_wording: bool = True) -> str:
     r = request
     who = r.get("patient_name") or ""
     member = f"member {r['patient_id']}" if r.get("patient_id") else ""
@@ -82,16 +102,20 @@ def assemble(request: dict, decision: str, criteria: dict, policy: dict, labels:
     lines = ["**PRIOR AUTHORIZATION DETERMINATION**", "", *[h + "  " for h in head[:-1]], head[-1], "",
              f"**Decision: {dict(APPROVE='APPROVED', DENY='DENIED', NEED_INFO='RECORDS REQUESTED')[decision]}**", "",
              DECISION_LINE[decision], "", f"**Coverage rules ({policy['title']})**", ""]
+    text = {c["id"]: c["text"] for c in policy["criteria"]}
     for k, v in criteria.items():
         reason = PLACEHOLDER.sub("", reasons.get(k, "")).strip()
-        lines.append(f"- **{labels.get(k, k)}: {STATUS_WORDS.get(v.get('status'), 'Not assessed')}.** {reason}".rstrip())
+        if rule_wording:  # version 2.1: the policy's own words, not a short label (see the module docstring)
+            lines.append(f"- **{STATUS_WORDS.get(v.get('status'), 'Not assessed')}.** *Rule:* {text.get(k, k)} {reason}".rstrip())
+        else:
+            lines.append(f"- **{labels.get(k, k)}: {STATUS_WORDS.get(v.get('status'), 'Not assessed')}.** {reason}".rstrip())
     lines.append("")
     if decision == "DENY":
         lines += ["**Your options**", "", APPEAL]
     elif decision == "NEED_INFO":
-        text = {c["id"]: c["text"] for c in policy["criteria"]}
         lines += ["**What to send**", "", NEED_INFO_INTRO]
-        lines += [f"- {labels.get(k, k)}: {text.get(k, '')}" for k, v in criteria.items() if v.get("status") == "missing"]
+        lines += [f"- {text.get(k, '')}" if rule_wording else f"- {labels.get(k, k)}: {text.get(k, '')}"
+                  for k, v in criteria.items() if v.get("status") == "missing"]
         lines += ["", "We will complete the review when the records arrive."]
     else:
         lines.append(APPROVAL_SCOPE.format(order_date=r.get("order_date", "the order date")))
@@ -104,10 +128,11 @@ REASON_CONTRADICTS = {
 }
 
 
-def validate(letter: str, decision: str, criteria: dict, case: dict, letter_date: str) -> list[str]:
+def validate(letter: str, decision: str, criteria: dict, case: dict, letter_date: str, policy: dict | None = None) -> list[str]:
     """Code checks a letter must pass before sign-off. Returns the problems (empty means it may be signed)."""
     statuses = {k: v.get("status") for k, v in criteria.items()}
-    return code_checks(letter, decision, statuses, case, letter_date)["problems"] + contradictions(criteria)
+    quoted = tuple(c["text"] for c in (policy or {}).get("criteria", []))
+    return code_checks(letter, decision, statuses, case, letter_date, quoted)["problems"] + contradictions(criteria)
 
 
 def contradictions(criteria: dict) -> list[str]:

@@ -7,6 +7,9 @@ on:
       run_id: {default: "test-authpilot"}
       budget_letters: {default: "0.4"}
       budget_judge: {default: "0.6"}
+      out: {description: "letters file to write", default: "letters_v21.jsonl"}
+      reuse: {description: "reuse reason lines stored in this earlier letters file", default: "letters_v2.jsonl"}
+      sample: {description: "judge this many letters at random (0 = all)", default: "80"}
 permissions:
   contents: write
 jobs:
@@ -19,13 +22,13 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install -r requirements.txt
-      - run: python scripts/letters_v2.py "results/runs/${{ inputs.run_id }}" --budget "${{ inputs.budget_letters }}"
-      - run: python scripts/letter_check.py "results/runs/${{ inputs.run_id }}" --letters letters_v2.jsonl --judge --budget "${{ inputs.budget_judge }}"
+      - run: python scripts/letters_v2.py "results/runs/${{ inputs.run_id }}" --budget "${{ inputs.budget_letters }}" --out "${{ inputs.out }}" ${{ inputs.reuse && format('--reuse {0}', inputs.reuse) || '' }}
+      - run: python scripts/letter_check.py "results/runs/${{ inputs.run_id }}" --letters "${{ inputs.out }}" --judge --budget "${{ inputs.budget_judge }}" --sample "${{ inputs.sample }}"
       - name: Save
         if: always()
         run: |
           git config user.name "Divya Sri"
           git config user.email "hellosweety789@gmail.com"
-          git add results/runs/${{ inputs.run_id }}/letters_v2.jsonl results/runs/${{ inputs.run_id }}/letter_check_v2.* || true
+          for f in results/runs/${{ inputs.run_id }}/letters_v2*.jsonl results/runs/${{ inputs.run_id }}/letter_check_v2*; do git add "$f"; done
           git commit -m "Letters v2: ${{ inputs.run_id }}" || exit 0
           for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep $((RANDOM % 20 + 5)); done

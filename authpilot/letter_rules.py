@@ -47,7 +47,10 @@ def known_dates(case: dict, extra: str = "") -> set[date]:
     return {d for d in dates_in(text) if d}
 
 
-def code_checks(letter: str, decision: str, statuses: dict, case: dict, letter_date: str = "") -> dict:
+def code_checks(letter: str, decision: str, statuses: dict, case: dict, letter_date: str = "", quoted: tuple = ()) -> dict:
+    """`quoted`: policy wording the letter quotes verbatim (version 2.1); it is not the letter's own claim."""
+    for q in quoted:
+        letter = letter.replace(q, "")
     problems = []
     if not letter.strip():
         return {"problems": ["no letter"], "dates": 0, "dates_unknown": []}

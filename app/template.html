@@ -300,6 +300,9 @@ td .idc { display: block; font: 400 11.5px var(--mono); color: var(--dim); }
 .signed { font: 600 22px/1.2 var(--serif); font-style: italic; color: var(--pen); border-bottom: 1.5px solid var(--ink); padding-bottom: 2px; display: inline-block; }
 .key { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--rule2); font-size: 14px; }
 .key .ok { color: var(--ok); font-weight: 700; } .key .no { color: var(--deny); font-weight: 700; }
+.lver { margin-top: 14px; font: 600 11px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ok); }
+.blocked { margin-top: 12px; padding: 10px 14px; border: 1px solid var(--deny); background: #FDF0F1; color: #6B0F1C; font-size: 14px; border-radius: 4px; }
+details.v1 { margin-top: 14px; border-top: 1px dashed var(--rule2); padding-top: 10px; } details.v1 summary { cursor: pointer; font: 600 13px var(--sans); color: var(--dim); }
 .lcheck { max-height: 240px; overflow-y: auto; margin-top: 12px; border: 1px solid var(--rule); border-left: 3px solid var(--ok); background: #fff; padding: 10px 14px; font-size: 13.5px; }
 .lcheck.warn { border-left-color: #C98A1B; } .lcheck.bad { border-left-color: var(--deny); }
 .lcheck h4 { font: 600 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
@@ -834,17 +837,27 @@ function lcheckHtml(k) {
   return `<div class="lcheck${cls}"><h4>Letter check, separate from the decision${k.verdict ? ` · model check: ${esc(k.verdict.replace("_", " "))}` : ""}</h4>${items.length ? `<ul>${items.join("")}</ul>` : "✓ Dates, placeholders, rule labels and next steps pass, and the model check found nothing the findings do not support."}</div>`;
 }
 const LCK = { decision: "Decision wording", placeholder: "Placeholder left in", dates: "Date", rule_labels: "Rule label", next_steps: "Next steps" };
+function letterV2(r) {
+  if (r.letter_v2) return r.letter_v2;                                   // recorded: regenerated with version 2
+  if (r.letter_check && r.letter_check.gate) return { letter: r.letter, gate: r.letter_check.problems, check: null };  // live
+  return null;
+}
 function drawVerdict(r, fresh, typing) {
   const d = $("#verdict"); if (!d) return;
   if (!r || !r.decision) { d.innerHTML = `<div class="vtop"><div><h3>Determination</h3><div class="how">${running ? "the agents are working" : "not reviewed yet"}</div></div><span class="stamp none">Pending</span></div>`; return; }
   const key = C.answer_key, a = store.get()[lastCase];
   const opts = { DENY: [["signed", "Record demo sign-off: deny", "red"], ["overturned", "Record demo override: approve", ""]], NEED_INFO: [["confirmed", "Record demo sign-off: request records", "ink"], ["overturned", "Record demo override: approve", ""]], APPROVE: [["confirmed", "Record demo sign-off: approve", "green"], ["flagged", "Record demo flag for review", ""]] }[r.decision] || [];
   const diffs = key ? Object.entries(key.statuses).filter(([k, v]) => r.criteria && r.criteria[k] && r.criteria[k].status !== v).map(([k, v]) => `<li>Key says “${LABEL[k]}” is ${STATUS[v][0].toLowerCase()}; agents said ${STATUS[r.criteria[k].status][0].toLowerCase()}.</li>`).join("") : "";
+  const L2 = letterV2(r), text = L2 ? L2.letter : r.letter, gate = L2 && L2.gate && L2.gate.length ? L2.gate : null;
+  const sigOpts = gate ? opts.filter(([k]) => k === "flagged" || k === "overturned") : opts;
   d.innerHTML = `<div class="vtop"><div><h3>Determination</h3><div class="how">decided by code from the rule statuses</div></div><span class="stamp ${r.decision}${fresh && !reduced ? " slam" : ""}">${DEC[r.decision]}<small>${a ? QS[a.kind][0] : r.decision === "DENY" ? "awaiting clinician signature" : "sent automatically"}</small></span></div>
-    <div class="letterp${typing ? " typing" : ""}" id="letter">${r.letter && !typing ? md(r.letter) : ""}</div>
-    ${r.letter_check && !typing ? lcheckHtml(r.letter_check) : ""}
+    ${L2 ? `<div class="lver">Letter version 2: written by code around the model's reasons, then checked before sign-off</div>` : ""}
+    <div class="letterp${typing ? " typing" : ""}" id="letter">${text && !typing ? md(text) : ""}</div>
+    ${!typing ? (L2 ? (L2.check ? lcheckHtml(L2.check) : "") : r.letter_check ? lcheckHtml(r.letter_check) : "") : ""}
+    ${gate ? `<div class="blocked"><b>Sign-off blocked.</b> The letter failed the code check: ${gate.map(esc).join("; ")}. A person has to correct the finding or the letter first.</div>` : ""}
     <div class="sign">${a ? `<div><span class="signed">${QS[a.kind][0]}</span><div class="note">${new Date(a.at).toLocaleString()}${a.note ? ` · “${esc(a.note)}”` : ""}</div></div><div class="row"><button class="btn sm" id="undo">Undo</button></div>`
-      : `<textarea id="note" placeholder="Note for the record (optional)" aria-label="Note for the record"></textarea><div class="row">${opts.map(([k, t, c]) => `<button class="btn sm ${c}" data-act="${k}">${t}</button>`).join("")}</div><p class="note">Demo only: recorded in this browser. Nothing is signed or sent to anyone.</p>`}</div>
+      : `<textarea id="note" placeholder="Note for the record (optional)" aria-label="Note for the record"></textarea><div class="row">${sigOpts.map(([k, t, c]) => `<button class="btn sm ${c}" data-act="${k}">${t}</button>`).join("")}</div><p class="note">Demo only: recorded in this browser. Nothing is signed or sent to anyone.</p>`}</div>
+    ${L2 && r.letter && L2.letter !== r.letter ? `<details class="v1"><summary>Letter as originally tested (version 1)</summary><div class="letterp">${md(r.letter)}</div>${r.letter_check ? lcheckHtml(r.letter_check) : ""}</details>` : ""}
     ${key ? `<div class="key"><button class="btn sm" id="keyb">Compare with the answer key</button><div id="keyv" hidden>${key.decision === r.decision ? `<span class="ok">✓ Agrees:</span> ${DEC[key.decision].toLowerCase()}.` : `<span class="no">✕ Disagrees:</span> the right answer is ${DEC[key.decision].toLowerCase()}.`}${diffs ? `<ul style="margin:6px 0 0 18px">${diffs}</ul>` : ` All ${Object.keys(key.statuses).length} rule statuses match.`}${key.traps && key.traps.length ? `<div class="note" style="margin-top:6px">Traps in this case: ${key.traps.map(t => esc(DATA.traps[t] || t).toLowerCase()).join("; ")}.</div>` : ""}</div></div>` : ""}`;
   $$("[data-act]", d).forEach(b => b.onclick = () => { store.set(lastCase, { kind: b.dataset.act, note: $("#note").value.trim(), at: Date.now() }); refreshNav(); drawVerdict(r); });
   if ($("#undo")) $("#undo").onclick = () => { store.drop(lastCase); refreshNav(); drawVerdict(r); };
@@ -904,7 +917,7 @@ function finishRun(r) {
   for (const [k, v] of Object.entries(r.criteria || {})) { crit[k] = { ...v }; paintRule(k, crit[k]); const sp = $("#sp-" + k); if (sp) sp.className = v.status; }
   if (!(r.trace || []).some(e => e.node === "investigator")) setStep("investigator", "skip");
   STEPS.forEach(([k]) => { if (k !== "investigator" && stepState[k] !== "done") setStep(k, (r.trace || []).some(e => e.node === k) ? "done" : "skip"); });
-  drawRecord(); meters(r); drawFax(true); drawVerdict(r, true, true); typeLetter(r.letter).then(() => { const el = $("#letter"); if (el && r.letter_check && !$(".lcheck")) el.insertAdjacentHTML("afterend", lcheckHtml(r.letter_check)); }); drawTrace(r);
+  drawRecord(); meters(r); drawFax(true); drawVerdict(r, true, true); typeLetter((letterV2(r) || r).letter).then(() => drawVerdict(r)); drawTrace(r);
   nowLine("done", r.decision === "DENY" ? "Denial drafted. It waits for a clinician's signature." : r.decision === "NEED_INFO" ? "Records requested from the provider." : "Approved: every rule met, with quotes.");
 }
 function replay() {
@@ -1008,7 +1021,23 @@ function lettersHtml() {
       J ? [`${J.must_fix.count + J.minor_issues.count} of ${J.letters_judged}`, `letters the model check flagged; 7 of the 10 held up when read by hand`] : null].filter(Boolean).map(([x, y]) => `<div class="callout"><b>${x}</b><span>${y}</span></div>`).join("")}</div>
     <div class="tw"><table class="ltab"><thead><tr><th>Code check</th><th class="r">Letters</th></tr></thead><tbody>${rows.map(([t, x]) => `<tr><td>${t}</td><td class="r num">${f(x)}</td></tr>`).join("")}</tbody></table></div>
     ${J ? `<p class="note" style="font-size:14px">The 3 letters the model check marked “must fix” are all on wrong decisions: one denial whose sleep-test specialist wrote “this criterion is actually MET” but recorded not met (<a href="#/case/0045">case 0045</a>), one approval whose letter admits the test fell outside the 30-day window (<a href="#/case/0119">0119</a>), and one that calls an SpO2 of 89% a Group I result (<a href="#/case/0120">0120</a>). The check reads only the findings, so a letter that faithfully restates a wrong finding passes: it flagged 5 of the 12 wrong decisions. Cost: $${J.cost_usd.toFixed(2)} for 200 letters.</p>` : ""}
+    ${v2LettersHtml(L)}
     <p class="note">Open any held-out case to see its letter check under the letter. Scores: <a href="https://github.com/mathukumillidivya/authpilot/blob/main/results/runs/test-authpilot/letter_check.json" target="_blank" rel="noopener">letter_check.json</a>, hand review: <a href="https://github.com/mathukumillidivya/authpilot/blob/main/results/runs/test-authpilot/letter_spot_check.json" target="_blank" rel="noopener">letter_spot_check.json</a>, code: <a href="https://github.com/mathukumillidivya/authpilot/blob/main/scripts/letter_check.py" target="_blank" rel="noopener">letter_check.py</a>.</p></div>`;
+}
+function v2LettersHtml(L) {
+  const V = DATA.results.letters_v2; if (!V) return "";
+  const J1 = L.judge, J2 = V.judge, K1 = L.code_problems_by_kind, K2 = V.code_problems_by_kind || {}, z = { count: 0, of: V.letters };
+  const f = x => `${x.count} of ${x.of}`, row = (t, a, b) => `<tr><td>${t}</td><td class="r num">${a}</td><td class="r num"><b>${b}</b></td></tr>`;
+  return `<h3 style="font:700 20px/1.2 var(--serif);margin-top:10px">Version 2: the letter is written by code, and checked before sign-off</h3>
+    <p class="note" style="font-size:14.5px">Code now writes the header, every rule's status, the appeal route on a denial, the list of records to send, and the scope of an approval. The model writes only one or two reason lines per rule from the verified quotes. A code gate then blocks sign-off on any letter that fails a check, or whose reviewer reasoning contradicts its own status. The same 200 held-out findings were used, so this compares letter with letter; the decisions did not change.</p>
+    <div class="tw"><table class="ltab"><thead><tr><th>Same 200 held-out cases</th><th class="r">Version 1 (as tested)</th><th class="r">Version 2</th></tr></thead><tbody>
+    ${row("Letters failing at least one code check", f(L.letters_with_a_code_problem), f(V.letters_with_a_code_problem))}
+    ${row("Template placeholder left in", f(K1.placeholder), f(K2.placeholder || z))}
+    ${row("Denial without an appeal route", `${K1.next_steps.count} of ${L.by_decision.DENY.of}`, `${(K2.next_steps || z).count} of ${V.by_decision.DENY.of}`)}
+    ${J1 && J2 ? row("Second model: letters with a statement the findings do not support", f(J1.letters_with_an_unsupported_statement), f(J2.letters_with_an_unsupported_statement)) : ""}
+    ${J1 && J2 ? row("Second model: must fix", f(J1.must_fix), f(J2.must_fix)) : ""}
+    ${row("Sign-off blocked by the gate", "no gate", f(V.gate_blocked))}</tbody></table></div>
+    <p class="note" style="font-size:14px">${esc(DATA.results.letters_v2.note || "")}</p>`;
 }
 function outcome(t, d) { return d === t ? "ok" : d === "DENY" ? "wd" : d === "APPROVE" ? "wa" : "ot"; }
 function drawWaffles(S) {

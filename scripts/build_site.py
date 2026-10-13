@@ -51,6 +51,8 @@ def main():
     for split, run in RUNS.items():
         lc_file = ROOT / run / "letter_check.jsonl"
         checks = {json.loads(l)["case_id"]: json.loads(l) for l in open(lc_file)} if lc_file.exists() else {}
+        load = lambda f: {json.loads(l)["case_id"]: json.loads(l) for l in open(f)} if f.exists() else {}  # noqa: E731
+        v2_letters, v2_checks = load(ROOT / run / "letters_v2.jsonl"), load(ROOT / run / "letter_check_v2.jsonl")
         for line in open(ROOT / run / "results.jsonl"):
             r = json.loads(line)
             c = cases[r["case_id"]]
@@ -65,6 +67,11 @@ def main():
                           calls, toks, round(started, 2) if started else None])
             rec = {"trace": r["trace"], "criteria": r["criteria"], "decision": r["decision"], "letter": r["letter"],
                    "seconds": r["seconds"], "cost": round(cost(usage), 4), "usage": usage}
+            if r["case_id"] in v2_letters:
+                L2, k2 = v2_letters[r["case_id"]], v2_checks.get(r["case_id"], {})
+                rec["letter_v2"] = {"letter": L2["letter"], "gate": L2["gate"],
+                                    "check": {"problems": k2.get("problems", []), **({"verdict": k2["judge"]["verdict"], "unsupported": k2["judge"]["unsupported"],
+                                                                                    "contradictions": k2["judge"]["contradictions"]} if "judge" in k2 else {})}}
             if r["case_id"] in checks:
                 k = checks[r["case_id"]]
                 rec["letter_check"] = {"problems": k["problems"], **({"verdict": k["judge"]["verdict"], "unsupported": k["judge"]["unsupported"],
@@ -81,6 +88,11 @@ def main():
     lc = ROOT / RUNS["test"] / "letter_check.json"
     if lc.exists():
         results["letters"] = json.loads(lc.read_text())
+    lc2 = ROOT / RUNS["test"] / "letter_check_v2.json"
+    if lc2.exists():
+        results["letters_v2"] = json.loads(lc2.read_text())
+        gates = [json.loads(l)["gate"] for l in open(ROOT / RUNS["test"] / "letters_v2.jsonl")]
+        results["letters_v2"]["gate_blocked"] = {"count": sum(bool(g) for g in gates), "of": len(gates)}
     per_case = {}
     for s in ("baseline", "single_plus", "authpilot"):
         f = ROOT / "results/runs" / f"test-{s}" / "results.jsonl"

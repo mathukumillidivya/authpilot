@@ -453,13 +453,13 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True, letter_ve
         out = await model.bind_tools([L.TOOL], tool_choice={"type": "tool", "name": "submit_reasons"}).ainvoke(
             [SystemMessage(L.REASONS_PROMPT), HumanMessage(L.reasons_input(crit, policy))])
         try:
-            reasons = L.parse_reasons(out.tool_calls[0]["args"])
+            reasons = L.parse_reasons(out.tool_calls[0]["args"], policy)
         except Exception:  # noqa: BLE001 - the letter is still complete without reason lines
             reasons = {}
         today = date.today().isoformat()
         text = L.assemble(r, state["decision"], crit, policy, LETTER_LABELS, reasons, today)
         case = {"request": r, "chart": [json.dumps(x) for x in fhir.chart(r["patient_id"]).values()], "form": ""}
-        gate = L.validate(text, state["decision"], crit, case, today)
+        gate = L.validate(text, state["decision"], crit, case, today, policy)
         return {"letter": text, "letter_gate": gate, "usage": tokens("letter", [out]),
                 "trace": ev("letter", "Wrote the letter from the template and checked it" + (f": {len(gate)} problem(s), sign-off blocked" if gate else ": ready to sign"))}
 
