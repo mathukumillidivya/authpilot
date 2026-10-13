@@ -19,3 +19,18 @@ services:
         value: "150"
       - key: RUNS_AT_ONCE
         value: "3"
+
+  - type: web
+    name: authpilot-app
+    runtime: static
+    branch: main
+    buildCommand: echo "page is prebuilt by scripts/build_site.py"
+    staticPublishPath: ./app/site
+    autoDeploy: true
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
