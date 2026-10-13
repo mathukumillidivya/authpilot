@@ -116,7 +116,8 @@ main > * { min-width: 0 }
 .empty { padding: 30px 14px; color: var(--muted); text-align: center }
 
 /* results */
-.panelpad { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 14px }
+.panelpad { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) }
+.scrollx { overflow-x: auto } .scrollx table { min-width: 640px }
 .panelpad h3 { font-size: 18px; font-weight: 700 }
 .panelpad > p { color: var(--muted); max-width: 76ch }
 table { border-collapse: collapse; width: 100%; font-size: 14.5px }
@@ -187,7 +188,7 @@ footer { color: var(--muted); font-size: 13px }
   <section class="lede"><h1 id="r-head"></h1><p id="r-sub"></p></section>
   <section class="panelpad"><h3>Three ways to decide the same requests</h3>
     <p>All three use the same model, the same policies and the same judging rules. The only difference is how the work is organised.</p>
-    <table id="r-table"></table></section>
+    <div class="scrollx"><table id="r-table"></table></div></section>
   <div class="split2">
     <section class="panelpad"><h3>Accuracy by policy</h3><div class="bars" id="r-policy"></div></section>
     <section class="panelpad"><h3>Where the errors went</h3><table id="r-errors"></table></section>
@@ -417,11 +418,15 @@ function drawResults() {
   const S = R.systems, a = S.authpilot, b = S.baseline;
   const pct = x => Math.round(x * 1000) / 10 + "%";
   $("#r-head").textContent = `${pct(a.accuracy)} of ${R.cases} ${R.split === "test" ? "held-out" : "development"} requests decided correctly, against ${pct(b.accuracy)} for a single AI call.`;
-  $("#r-sub").textContent = R.split === "test" ? "Measured once on test cases the system had never seen." : "Development results. The held-out test result will replace these.";
+  const pts = x => (x * 100).toFixed(1), P = R.paired;
+  $("#r-sub").textContent = R.split === "test"
+    ? `Measured once, on ${R.cases} cases never used during development, with the system frozen at commit ${R.frozen_commit}. ` +
+      (P ? `Gain over a single call: +${pts(P.authpilot_vs_baseline.accuracy_gain)} points (95% interval ${pts(P.authpilot_vs_baseline.ci95[0])} to ${pts(P.authpilot_vs_baseline.ci95[1])}); over a single call with the same code checks: +${pts(P.authpilot_vs_single_plus.accuracy_gain)} points (${pts(P.authpilot_vs_single_plus.ci95[0])} to ${pts(P.authpilot_vs_single_plus.ci95[1])}).` : "")
+    : "Development results. The held-out test result will replace these.";
   $("#r-table").innerHTML = `<thead><tr><th></th><th>Correct</th><th>Wrongful denials</th><th>Wrongful approvals</th><th>Denials without verified evidence</th><th>Cost per request</th><th>Typical time</th></tr></thead><tbody>` +
     ["baseline", "single_plus", "authpilot"].map(k => { const s = S[k]; return `<tr class="${k === "authpilot" ? "ours" : ""}"><td>${NAME[k]}</td><td>${s.correct}/${s.cases}</td><td>${s.wrongful_denials}</td><td>${s.wrongful_approvals}</td><td>${s.denials_without_verified_evidence}</td><td>$${s.cost_per_case.toFixed(3)}</td><td>${Math.round(s.median_seconds)}s</td></tr>`; }).join("") + `</tbody>`;
   $("#r-policy").innerHTML = Object.keys(a.by_policy).map(p => {
-    const row = k => { const [x, n] = S[k].by_policy[p].split("/").map(Number); return `<div class="bar${k === "authpilot" ? " ours" : ""}"><i style="width:${Math.max(2, 70 * x / n)}%"></i>${x}/${n} ${k === "authpilot" ? "AuthPilot" : "single call"}</div>`; };
+    const row = k => { const [x, n] = S[k].by_policy[p].split("/").map(Number); return `<div class="bar${k === "authpilot" ? " ours" : ""}"><i style="width:${Math.max(2, 58 * x / n)}%"></i>${x}/${n} ${k === "authpilot" ? "AuthPilot" : "single call"}</div>`; };
     return `<div class="barrow"><span>${POLICY_SHORT[p]}</span><div>${row("baseline")}${row("authpilot")}</div></div>`;
   }).join("");
   const conf = k => S[k].confusion;
