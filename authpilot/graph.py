@@ -36,6 +36,7 @@ from langgraph.types import Send
 from pydantic import BaseModel, Field
 
 from authpilot import fhir
+from authpilot import letter as L
 from authpilot.cases import decide
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -181,6 +182,7 @@ class State(TypedDict, total=False):
     verified: dict
     decision: str
     letter: str
+    letter_gate: list
     retries: int
     focus: list
     feedback: dict
@@ -241,6 +243,14 @@ denial or request for information, exactly what is missing or not met and what t
 invent any clinical fact that is not in the material given. Use the dates, names and ids given; never write a
 placeholder such as [Date] or [Name], leave a line out instead. No more than 220 words."""
 
+
+LETTER_LABELS = {"cpap_eval": "Evaluated before the sleep test", "cpap_test": "Sleep test result", "cpap_symptoms": "Symptoms or heart risk",
+                 "cpap_education": "Supplier taught the patient", "o2_test": "Oxygen test result", "o2_group2": "Group II condition",
+                 "o2_timing": "Test within 30 days", "o2_tester": "Qualified tester", "bar_bmi": "BMI 35 or more",
+                 "bar_comorbid": "Obesity-related condition", "bar_prior": "Tried medical weight loss", "bar_procedure": "Covered procedure",
+                 "icd_indication": "Heart function and class", "icd_gdmt": "Three months of therapy", "icd_sdm": "Shared decision visit",
+                 "icd_exclusions": "No recent heart attack or stent", "cgm_dx": "Diabetes diagnosis", "cgm_need": "Insulin or severe lows",
+                 "cgm_visit": "Visit within 6 months"}
 
 # ------------------------------------------------------------------------------------------ code checks
 
@@ -311,7 +321,7 @@ def window_problem(criterion: dict, cited: list, order_date: str) -> str | None:
 
 # ------------------------------------------------------------------------------------------ graph
 
-def build(model, tools, max_retries: int = 1, use_guards: bool = True):
+def build(model, tools, max_retries: int = 1, use_guards: bool = True, letter_version: int = 2):
     """model: a LangChain chat model. tools: the FHIR MCP tools (LangChain-wrapped)."""
     from langgraph.prebuilt import create_react_agent
 
@@ -423,6 +433,8 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
                             tool_calls=calls, found=valid)}
 
     async def letter(state: State) -> State:
+        if letter_version >= 2:
+            return await letter_v2(state)
         r = state["request"]
         body = json.dumps({"letter_date": date.today().isoformat(), "member_id": r.get("patient_id"),
                            "ordering_provider": r.get("ordering_provider"),
@@ -432,6 +444,24 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
                                         for k, v in state["verified"].items()}}, indent=1)
         out = await model.ainvoke([SystemMessage(LETTER), HumanMessage(body)])
         return {"letter": text_of(out), "usage": tokens("letter", [out]), "trace": ev("letter", "Drafted the determination letter")}
+
+    async def letter_v2(state: State) -> State:
+        """Version 2 (authpilot/letter.py): code writes the letter around the model's reason lines, then checks it."""
+        r, crit = state["request"], state["verified"]
+        policy = POLICIES[state["policy_id"]]
+        reasons = {}
+        out = await model.bind_tools([L.TOOL], tool_choice={"type": "tool", "name": "submit_reasons"}).ainvoke(
+            [SystemMessage(L.REASONS_PROMPT), HumanMessage(L.reasons_input(crit, policy))])
+        try:
+            reasons = L.parse_reasons(out.tool_calls[0]["args"])
+        except Exception:  # noqa: BLE001 - the letter is still complete without reason lines
+            reasons = {}
+        today = date.today().isoformat()
+        text = L.assemble(r, state["decision"], crit, policy, LETTER_LABELS, reasons, today)
+        case = {"request": r, "chart": [json.dumps(x) for x in fhir.chart(r["patient_id"]).values()], "form": ""}
+        gate = L.validate(text, state["decision"], crit, case, today)
+        return {"letter": text, "letter_gate": gate, "usage": tokens("letter", [out]),
+                "trace": ev("letter", "Wrote the letter from the template and checked it" + (f": {len(gate)} problem(s), sign-off blocked" if gate else ": ready to sign"))}
 
     g = StateGraph(State)
     for name, fn in [("intake", intake), ("policy", policy), ("record", record), ("specialist", specialist),

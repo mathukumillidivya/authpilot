@@ -77,7 +77,7 @@ async def main():
                     res, err = {}, f"{type(e).__name__}: {e}"[:500]
                 return {"case_id": case["case_id"], "policy": case["truth"]["policy"], "truth": case["truth"]["decision"],
                         "decision": res.get("decision"), "criteria": res.get("verified"), "policy_id": res.get("policy_id"),
-                        "usage": res.get("usage"), "trace": res.get("trace"), "letter": res.get("letter"),
+                        "usage": res.get("usage"), "trace": res.get("trace"), "letter": res.get("letter"), "letter_gate": res.get("letter_gate"),
                         "seconds": round(time.time() - t0, 1), "error": err}
 
         results, t0 = [], time.time()

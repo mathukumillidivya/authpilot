@@ -1,0 +1,31 @@
+name: letters-v2
+# Regenerate the held-out letters with version 2 (template + model reasons + gate) on the recorded findings,
+# then score them with the same checks as the originals. The original letters and their scores are not touched.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id: {default: "test-authpilot"}
+      budget_letters: {default: "0.4"}
+      budget_judge: {default: "0.6"}
+permissions:
+  contents: write
+jobs:
+  v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env: {ANTHROPIC_API_KEY: "${{ secrets.ANTHROPIC_API_KEY }}"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - run: python scripts/letters_v2.py "results/runs/${{ inputs.run_id }}" --budget "${{ inputs.budget_letters }}"
+      - run: python scripts/letter_check.py "results/runs/${{ inputs.run_id }}" --letters letters_v2.jsonl --judge --budget "${{ inputs.budget_judge }}"
+      - name: Save
+        if: always()
+        run: |
+          git config user.name "Divya Sri"
+          git config user.email "hellosweety789@gmail.com"
+          git add results/runs/${{ inputs.run_id }}/letters_v2.jsonl results/runs/${{ inputs.run_id }}/letter_check_v2.* || true
+          git commit -m "Letters v2: ${{ inputs.run_id }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep $((RANDOM % 20 + 5)); done

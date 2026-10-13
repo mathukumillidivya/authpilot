@@ -187,7 +187,7 @@ async def run(request: Request):
                     for node, update in chunk.items():
                         for e in (update or {}).get("trace") or []:
                             yield f"data: {json.dumps({'type': 'step', 'elapsed': round(time.time() - t0, 1), **e}, default=str)}\n\n"
-                        for k in ("verified", "decision", "letter", "policy_id"):
+                        for k in ("verified", "decision", "letter", "letter_gate", "policy_id"):
                             if update and k in update:
                                 final[k] = update[k]
                         if update and update.get("usage"):  # each update carries only that step's usage
@@ -195,7 +195,7 @@ async def run(request: Request):
                 cost = sum(v.get("input", 0) * 1e-6 + v.get("output", 0) * 5e-6 + v.get("cache_read", 0) * 1e-7
                            + v.get("cache_write", 0) * 1.25e-6 for v in (final.get("usage") or {}).values())
                 done = {"type": "done", "decision": final.get("decision"), "criteria": final.get("verified"),
-                        "letter": final.get("letter"), "seconds": round(time.time() - t0, 1), "cost": round(cost, 4), "usage": final.get("usage"),
+                        "letter": final.get("letter"), "letter_check": {"problems": final.get("letter_gate") or [], "gate": True}, "seconds": round(time.time() - t0, 1), "cost": round(cost, 4), "usage": final.get("usage"),
                         "answer_key": case["truth"]}
                 yield f"data: {json.dumps(done, default=str)}\n\n"
             except Exception as e:  # the page shows the failure rather than hanging
