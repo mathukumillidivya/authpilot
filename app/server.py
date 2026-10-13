@@ -169,8 +169,8 @@ def limited(ip: str) -> str | None:
 async def run(request: Request):
     body = await request.json()
     case = CASES.get(body.get("case_id")) if body.get("case_id") in DEV else CUSTOM.get(body.get("case_id"))
-    if not case:
-        raise HTTPException(404, "unknown case")
+    if not case:  # built cases live in memory, so a restart forgets them
+        raise HTTPException(404, "This case is no longer on the server (it restarts when idle). Please build it again.")
     ip = visitor(request)
     problem = limited(ip)
     if problem:

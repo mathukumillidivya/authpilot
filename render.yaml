@@ -8,6 +8,13 @@ services:
     startCommand: uvicorn app.server:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
     healthCheckPath: /health
     autoDeploy: true
+    buildFilter:          # redeploy (and cut off live runs) only when the service itself changes
+      paths:
+        - authpilot/**
+        - app/server.py
+        - policies/**
+        - data/**
+        - requirements.txt
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
@@ -27,6 +34,9 @@ services:
     buildCommand: echo "page is prebuilt by scripts/build_site.py"
     staticPublishPath: ./app/site
     autoDeploy: true
+    buildFilter:
+      paths:
+        - app/site/**
     headers:
       - path: /*
         name: X-Content-Type-Options
