@@ -1,59 +1,59 @@
 {
-  "letters": 99,
+  "letters": 200,
   "letters_with_a_code_problem": {
     "count": 0,
-    "of": 99,
+    "of": 200,
     "rate": 0.0
   },
   "code_problems_by_kind": {},
   "by_decision": {
     "APPROVE": {
       "count": 0,
-      "of": 41,
+      "of": 78,
       "rate": 0.0
     },
     "DENY": {
       "count": 0,
-      "of": 43,
+      "of": 82,
       "rate": 0.0
     },
     "NEED_INFO": {
       "count": 0,
-      "of": 15,
+      "of": 40,
       "rate": 0.0
     }
   },
-  "dates_checked": 239,
+  "dates_checked": 478,
   "examples": [],
   "judge": {
     "model": "claude-haiku-4-5-20251001",
-    "letters_judged": 99,
+    "letters_judged": 200,
     "clean": {
-      "count": 81,
-      "of": 99,
-      "rate": 0.8182
+      "count": 163,
+      "of": 200,
+      "rate": 0.815
     },
     "minor_issues": {
-      "count": 15,
-      "of": 99,
-      "rate": 0.1515
+      "count": 31,
+      "of": 200,
+      "rate": 0.155
     },
     "must_fix": {
-      "count": 3,
-      "of": 99,
-      "rate": 0.0303
+      "count": 6,
+      "of": 200,
+      "rate": 0.03
     },
     "letters_with_an_unsupported_statement": {
-      "count": 17,
-      "of": 99,
-      "rate": 0.1717
+      "count": 36,
+      "of": 200,
+      "rate": 0.18
     },
     "letters_with_a_contradiction": {
-      "count": 1,
-      "of": 99,
-      "rate": 0.0101
+      "count": 4,
+      "of": 200,
+      "rate": 0.02
     },
-    "cost_usd": 0.2383,
+    "cost_usd": 0.4858,
     "examples": [
       {
         "case_id": "case-0212",
@@ -93,6 +93,46 @@
         ],
         "contradictions": [
           "The letter denies the request stating 'at least one coverage rule is not met' and lists 'Sleep test result: Not met.' However, all four coverage rules are actually met according to the findings: cpap_eval (met), cpap_test (met), cpap_symptoms (met), and cpap_education (met). The denial decision contradicts the rule statuses in the findings."
+        ]
+      },
+      {
+        "case_id": "case-0050",
+        "unsupported": [
+          {
+            "quote": "Sleep test result: Not met.",
+            "why": "The findings state that the cpap_test criterion is actually MET. The home sleep test shows AHI 5.0 events/hour with 11 total events, which satisfies the requirement for the 5-14 AHI range (at least 10 events). The findings explicitly note: 'This criterion is actually MET.' The letter incorrectly marks this rule as 'Not met.'"
+          }
+        ],
+        "contradictions": [
+          "The letter states 'Sleep test result: Not met' but the findings conclude the cpap_test criterion is MET, which contradicts the overall DENY decision. If the sleep test is met, the only unmet rule is cpap_eval (missing), which should be the sole basis for denial."
+        ]
+      },
+      {
+        "case_id": "case-0119",
+        "unsupported": [
+          {
+            "quote": "Test within 30 days: Met.",
+            "why": "The findings show the qualifying oxygen saturation test was performed on 2025-03-11, which is 65 days before the order date of 2025-05-15. This exceeds the 30-day window required by the criterion. The findings explicitly state 'This exceeds the 30-day window required by the criterion.' The letter incorrectly marks this rule as 'Met' when it should not be met based on the timing."
+          }
+        ],
+        "contradictions": [
+          "The letter states 'Test within 30 days: Met' but the findings show the test was performed 65 days before the order date, exceeding the 30-day requirement. This contradicts the rule status documented in the findings."
+        ]
+      },
+      {
+        "case_id": "case-0210",
+        "unsupported": [
+          {
+            "quote": "Heart function and class: Not met.",
+            "why": "The findings show the patient DOES meet the heart function and class requirements: NYHA class II and LVEF 28% (\u226435%). The rule is marked 'not_met' because the cardiomyopathy type is ischemic rather than dilated, not because heart function or class are inadequate. The letter's label is misleading about what criterion failed."
+          },
+          {
+            "quote": "Three months of therapy: Does not apply to this request.",
+            "why": "The findings show this rule is labeled 'icd_gdmt' (guideline-directed medical therapy) and is marked 'not_applicable' because the patient has ischemic cardiomyopathy, not non-ischemic cardiomyopathy. The letter's label 'Three months of therapy' does not accurately describe the actual criterion."
+          }
+        ],
+        "contradictions": [
+          "The letter states 'Heart function and class: Not met' but the findings confirm the patient meets NYHA class II and LVEF \u226435% requirements. The actual reason for denial is that the cardiomyopathy is ischemic, not dilated, which is a separate criterion (icd_indication). Labeling the heart function criterion as 'not met' contradicts the documented findings."
         ]
       }
     ]
