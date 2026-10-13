@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: authpilot-api
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.server:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: RUNS_PER_VISITOR
+        value: "15"
+      - key: RUNS_PER_DAY
+        value: "150"
+      - key: RUNS_AT_ONCE
+        value: "3"

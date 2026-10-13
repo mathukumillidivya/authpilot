@@ -142,6 +142,18 @@ async def build_case(request: Request):
     return public(case)
 
 
+def visitor(request: Request) -> str:
+    """The address the hosting proxy saw. A visitor can put anything at the front of X-Forwarded-For,
+    so take the proxy's own header, or else the last address the proxy appended."""
+    h = request.headers
+    for name in ("cf-connecting-ip", "true-client-ip"):
+        if h.get(name):
+            return h[name].strip()
+    if h.get("x-forwarded-for"):
+        return h["x-forwarded-for"].split(",")[-1].strip()
+    return request.client.host if request.client else "?"
+
+
 def limited(ip: str) -> str | None:
     day = date.today().isoformat()
     if USAGE[day] >= PER_DAY:
@@ -159,7 +171,7 @@ async def run(request: Request):
     case = CASES.get(body.get("case_id")) if body.get("case_id") in DEV else CUSTOM.get(body.get("case_id"))
     if not case:
         raise HTTPException(404, "unknown case")
-    ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "?").split(",")[0].strip()
+    ip = visitor(request)
     problem = limited(ip)
     if problem:
         return JSONResponse({"error": problem}, status_code=429)
