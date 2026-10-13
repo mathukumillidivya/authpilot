@@ -159,3 +159,8 @@ def timeline(patient_id: str, as_of: str) -> str:
     """Whole record in date order, each line marked with days before `as_of` (negative means after it)."""
     rs = sorted(chart(patient_id).values(), key=when)
     return "\n".join(f"{line(r)}  [days before order: {days_before(when(r), as_of)}]" for r in rs)
+
+
+def register(case: dict) -> None:
+    """Add a case's chart to the store at run time (the live demo builds cases on request)."""
+    store()[case["request"]["patient_id"]] = {r["id"]: r for r in case["chart"]}

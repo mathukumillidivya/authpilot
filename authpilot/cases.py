@@ -514,15 +514,17 @@ def statuses_for(policy: str, rng: random.Random, target: str) -> dict:
     return st
 
 
-def make_case(idx: int, policy: str, target: str, rng: random.Random, seed: int = 7, history: str = "standard") -> dict:
-    st = statuses_for(policy, rng, target)
-    traps = set()
-    if rng.random() < 0.3:
-        traps.add("note_only")
-    if rng.random() < 0.25:
-        traps.add("boundary")
-    if decide(st) == "DENY" and rng.random() < 0.35:
-        traps.add("claim")
+def make_case(idx: int, policy: str, target: str, rng: random.Random, seed: int = 7, history: str = "standard",
+              statuses: dict | None = None, traps: set | None = None) -> dict:
+    st = dict(statuses) if statuses else statuses_for(policy, rng, target)
+    if traps is None:
+        traps = set()
+        if rng.random() < 0.3:
+            traps.add("note_only")
+        if rng.random() < 0.25:
+            traps.add("boundary")
+        if decide(st) == "DENY" and rng.random() < 0.35:
+            traps.add("claim")
     order_date = date(2025, 3, 1) + days(rng.randint(0, 120))
     pid = f"pt-{idx:04d}"
     c = Chart(rng=rng, order_date=order_date, patient_id=pid)
@@ -562,6 +564,16 @@ def make_case(idx: int, policy: str, target: str, rng: random.Random, seed: int 
              "evidence": {k: v for k, v in built["evidence"].items() if st.get(k) not in (NA,)},
              "traps": sorted(traps)}
     return {"case_id": f"case-{idx:04d}", "request": request, "chart": [patient] + c.resources, "truth": truth}
+
+
+def custom_case(policy: str, statuses: dict, traps: set, seed: int) -> dict:
+    """A case built to order (used by the live demo): the visitor chooses which criteria hold."""
+    full = {k: MET for k in POLICIES[policy]["criteria"]}
+    full.update(statuses)
+    rng = random.Random(seed)
+    case = make_case(9000 + seed % 1000, policy, "APPROVE", rng, seed, "standard", statuses=full, traps=set(traps))
+    case["case_id"] = f"custom-{seed}"
+    return case
 
 
 def main():

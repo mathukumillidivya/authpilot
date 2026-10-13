@@ -1,0 +1,133 @@
+{
+ "split": "dev",
+ "cases": 100,
+ "systems": {
+  "baseline": {
+   "cases": 100,
+   "errors": 0,
+   "accuracy": 0.71,
+   "correct": 71,
+   "wrongful_denials": 8,
+   "wrongful_approvals": 17,
+   "denials": 34,
+   "denials_without_verified_evidence": 1,
+   "criterion_accuracy": 0.8895,
+   "citations": 521,
+   "citations_verified": 0.9866,
+   "confusion": {
+    "APPROVE->APPROVE": 32,
+    "APPROVE->DENY": 6,
+    "APPROVE->NEED_INFO": 2,
+    "DENY->APPROVE": 9,
+    "DENY->DENY": 26,
+    "DENY->NEED_INFO": 2,
+    "NEED_INFO->APPROVE": 8,
+    "NEED_INFO->DENY": 2,
+    "NEED_INFO->NEED_INFO": 13
+   },
+   "by_policy": {
+    "bariatric": "13/20",
+    "cgm": "13/20",
+    "cpap": "10/20",
+    "icd": "18/20",
+    "oxygen": "17/20"
+   },
+   "by_truth": {
+    "APPROVE": "32/40",
+    "DENY": "26/37",
+    "NEED_INFO": "13/23"
+   },
+   "by_trap": {
+    "note_only": "30/41",
+    "boundary": "23/30",
+    "claim": "11/15"
+   },
+   "cost_per_case": 0.0075,
+   "model_calls_per_case": 1,
+   "median_seconds": 6.6
+  },
+  "single_plus": {
+   "cases": 100,
+   "errors": 0,
+   "accuracy": 0.83,
+   "correct": 83,
+   "wrongful_denials": 10,
+   "wrongful_approvals": 4,
+   "denials": 43,
+   "denials_without_verified_evidence": 0,
+   "criterion_accuracy": 0.9,
+   "citations": 511,
+   "citations_verified": 1.0,
+   "confusion": {
+    "APPROVE->APPROVE": 32,
+    "APPROVE->DENY": 5,
+    "APPROVE->NEED_INFO": 3,
+    "DENY->APPROVE": 4,
+    "DENY->DENY": 33,
+    "NEED_INFO->DENY": 5,
+    "NEED_INFO->NEED_INFO": 18
+   },
+   "by_policy": {
+    "bariatric": "19/20",
+    "cgm": "18/20",
+    "cpap": "14/20",
+    "icd": "16/20",
+    "oxygen": "16/20"
+   },
+   "by_truth": {
+    "APPROVE": "32/40",
+    "DENY": "33/37",
+    "NEED_INFO": "18/23"
+   },
+   "by_trap": {
+    "note_only": "36/41",
+    "boundary": "25/30",
+    "claim": "14/15"
+   },
+   "cost_per_case": 0.0082,
+   "model_calls_per_case": 1,
+   "median_seconds": 6.1
+  },
+  "authpilot": {
+   "cases": 100,
+   "errors": 0,
+   "accuracy": 0.92,
+   "correct": 92,
+   "wrongful_denials": 4,
+   "wrongful_approvals": 4,
+   "denials": 37,
+   "denials_without_verified_evidence": 0,
+   "criterion_accuracy": 0.9421,
+   "citations": 593,
+   "citations_verified": 1.0,
+   "confusion": {
+    "APPROVE->APPROVE": 38,
+    "APPROVE->DENY": 2,
+    "DENY->APPROVE": 4,
+    "DENY->DENY": 33,
+    "NEED_INFO->DENY": 2,
+    "NEED_INFO->NEED_INFO": 21
+   },
+   "by_policy": {
+    "bariatric": "20/20",
+    "cgm": "18/20",
+    "cpap": "18/20",
+    "icd": "17/20",
+    "oxygen": "19/20"
+   },
+   "by_truth": {
+    "APPROVE": "38/40",
+    "DENY": "33/37",
+    "NEED_INFO": "21/23"
+   },
+   "by_trap": {
+    "note_only": "38/41",
+    "boundary": "26/30",
+    "claim": "15/15"
+   },
+   "cost_per_case": 0.0314,
+   "model_calls_per_case": 7.2,
+   "median_seconds": 8.6
+  }
+ }
+}
