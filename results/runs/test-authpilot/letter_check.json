@@ -1,0 +1,196 @@
+{
+  "letters": 200,
+  "letters_with_a_code_problem": {
+    "count": 94,
+    "of": 200,
+    "rate": 0.47
+  },
+  "code_problems_by_kind": {
+    "placeholder": {
+      "count": 60,
+      "of": 200,
+      "rate": 0.3
+    },
+    "next_steps": {
+      "count": 39,
+      "of": 200,
+      "rate": 0.195
+    },
+    "dates": {
+      "count": 15,
+      "of": 200,
+      "rate": 0.075
+    },
+    "rule_labels": {
+      "count": 7,
+      "of": 200,
+      "rate": 0.035
+    }
+  },
+  "by_decision": {
+    "APPROVE": {
+      "count": 26,
+      "of": 78,
+      "rate": 0.3333
+    },
+    "DENY": {
+      "count": 49,
+      "of": 82,
+      "rate": 0.5976
+    },
+    "NEED_INFO": {
+      "count": 19,
+      "of": 40,
+      "rate": 0.475
+    }
+  },
+  "dates_checked": 739,
+  "examples": [
+    {
+      "case_id": "case-0212",
+      "problems": [
+        "next_steps: the denial does not state appeal rights (it offers resubmission only)"
+      ]
+    },
+    {
+      "case_id": "case-0038",
+      "problems": [
+        "next_steps: the denial does not state appeal rights (it offers resubmission only)"
+      ]
+    },
+    {
+      "case_id": "case-0060",
+      "problems": [
+        "placeholder: [Patient Name]",
+        "rule_labels: an undocumented rule is described as 'not met'"
+      ]
+    },
+    {
+      "case_id": "case-0081",
+      "problems": [
+        "next_steps: the denial does not state appeal rights"
+      ]
+    },
+    {
+      "case_id": "case-0147",
+      "problems": [
+        "placeholder: [Patient Name]"
+      ]
+    },
+    {
+      "case_id": "case-0039",
+      "problems": [
+        "next_steps: the denial does not state appeal rights"
+      ]
+    },
+    {
+      "case_id": "case-0213",
+      "problems": [
+        "dates: not found in the request or record (some are computed, such as a resubmission date): 2025-07-14",
+        "next_steps: the denial does not state appeal rights"
+      ]
+    },
+    {
+      "case_id": "case-0171",
+      "problems": [
+        "placeholder: [Patient Name]"
+      ]
+    },
+    {
+      "case_id": "case-0082",
+      "problems": [
+        "next_steps: the denial does not state appeal rights (it offers resubmission only)"
+      ]
+    },
+    {
+      "case_id": "case-0106",
+      "problems": [
+        "placeholder: [Patient Name]"
+      ]
+    },
+    {
+      "case_id": "case-0172",
+      "problems": [
+        "placeholder: [Patient Name]"
+      ]
+    },
+    {
+      "case_id": "case-0149",
+      "problems": [
+        "next_steps: the denial does not state appeal rights (it offers resubmission only)"
+      ]
+    }
+  ],
+  "judge": {
+    "model": "claude-haiku-4-5-20251001",
+    "letters_judged": 200,
+    "clean": {
+      "count": 190,
+      "of": 200,
+      "rate": 0.95
+    },
+    "minor_issues": {
+      "count": 7,
+      "of": 200,
+      "rate": 0.035
+    },
+    "must_fix": {
+      "count": 3,
+      "of": 200,
+      "rate": 0.015
+    },
+    "letters_with_an_unsupported_statement": {
+      "count": 8,
+      "of": 200,
+      "rate": 0.04
+    },
+    "letters_with_a_contradiction": {
+      "count": 3,
+      "of": 200,
+      "rate": 0.015
+    },
+    "cost_usd": 0.4773,
+    "examples": [
+      {
+        "case_id": "case-0045",
+        "unsupported": [
+          {
+            "quote": "An AHI of 5.0 falls below the minimum threshold of 15 events/hour required for CPAP coverage under standard medical necessity guidelines.",
+            "why": "The findings show the cpap_test criterion has two pathways: (1) AHI \u226515 with \u226530 events, OR (2) AHI 5-14 with \u226510 events. The patient's AHI of 5.0 with 11 total events meets the second pathway. The findings explicitly state 'This criterion is actually MET' after re-evaluation. The letter incorrectly states the minimum threshold is 15 events/hour, which misrepresents the actual coverage criteria that allow approval for AHI 5-14 range with sufficient events."
+          },
+          {
+            "quote": "The diagnostic sleep study does not demonstrate sufficient severity of obstructive sleep apnea to support CPAP therapy.",
+            "why": "The findings document that the cpap_test criterion is met (AHI 5.0 with 11 events satisfies the 5-14 range requirement of \u226510 events). This statement contradicts the findings' determination that the diagnostic testing criterion is satisfied."
+          }
+        ],
+        "contradictions": [
+          "The letter denies the request based on the diagnostic sleep testing not meeting criteria, but the findings show that the cpap_test criterion is actually MET. All four criteria (cpap_eval, cpap_test, cpap_symptoms, cpap_education) are documented as met in the findings, yet the letter denies based on the test results not meeting the threshold."
+        ]
+      },
+      {
+        "case_id": "case-0119",
+        "unsupported": [
+          {
+            "quote": "While this exceeds the standard 30-day window, the Group I result (SpO2 84%) provides clear documentation of hypoxemia qualifying the patient for coverage.",
+            "why": "The findings show that o2_timing status is 'met' but the reason states 'This exceeds the 30-day window required by the criterion.' The letter acknowledges the test exceeds the 30-day window but then approves anyway, suggesting the timing criterion was waived or overridden. However, the findings do not explain why a criterion that was exceeded is marked as 'met,' nor do they document any exception or waiver authority for this timing violation."
+          }
+        ],
+        "contradictions": []
+      },
+      {
+        "case_id": "case-0120",
+        "unsupported": [
+          {
+            "quote": "Patient qualifies under Group I criteria (SpO2 89% on room air at rest).",
+            "why": "The findings state the patient meets Group II criteria (SpO2 89%), not Group I. Group II is defined as PaO2 56-59 mm Hg or SpO2 of 89%. The letter incorrectly categorizes the patient's qualification."
+          },
+          {
+            "quote": "Additional Group II conditions (dependent edema, pulmonary hypertension, or erythrocythemia) are not required for approval.",
+            "why": "The findings indicate that o2_group2 is 'not_applicable' because the patient does not meet the additional Group II requirements (no dependent edema, normal pulmonary artery pressure, hematocrit 43.5% not above 56%). The letter states these conditions are 'not required,' which misrepresents the findings. The findings show these conditions were checked but not met, making the patient ineligible under the Group II pathway. The approval appears to rest solely on o2_test being met, but the findings do not clearly explain why approval is granted when o2_group2 is not met."
+          }
+        ],
+        "contradictions": []
+      }
+    ]
+  }
+}
