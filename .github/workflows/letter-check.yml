@@ -1,0 +1,27 @@
+name: letter-check
+on:
+  workflow_dispatch:
+    inputs:
+      run_id: {default: "test-authpilot"}
+      budget: {description: "Stop before spending more than this many dollars", default: "0.9"}
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: Check every letter, with the model check for unsupported statements
+        env: {ANTHROPIC_API_KEY: "${{ secrets.ANTHROPIC_API_KEY }}"}
+        run: python scripts/letter_check.py "results/runs/${{ inputs.run_id }}" --judge --budget "${{ inputs.budget }}"
+      - name: Save
+        run: |
+          git config user.name "Divya Sri"
+          git config user.email "hellosweety789@gmail.com"
+          git add "results/runs/${{ inputs.run_id }}/letter_check.jsonl" "results/runs/${{ inputs.run_id }}/letter_check.json"
+          git commit -m "Letter check: ${{ inputs.run_id }}"
+          for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep $((RANDOM % 20 + 5)); done
