@@ -1,0 +1,20 @@
+{
+  "what": "Every letter the model check flagged (3 must_fix, 7 minor_issues) was read by hand against the case file and the agents' findings.",
+  "flagged": 10,
+  "confirmed": 7,
+  "false_alarms": 2,
+  "flagged_without_a_reason": 1,
+  "cases": [
+    {"case_id": "case-0045", "verdict": "must_fix", "agree": true, "note": "The sleep-test specialist's reason ends 'This criterion is actually MET' but its status says not met, so code denied. The letter repeats the wrong status. Decision wrong (should approve)."},
+    {"case_id": "case-0119", "verdict": "must_fix", "agree": true, "note": "Letter says the test 'exceeds the standard 30-day window' and approves anyway. Decision wrong (should deny)."},
+    {"case_id": "case-0120", "verdict": "must_fix", "agree": true, "note": "Letter calls SpO2 89% a Group I result; it is Group II, whose extra conditions were not met. Decision wrong (should deny)."},
+    {"case_id": "case-0105", "verdict": "minor_issues", "agree": true, "note": "Header names the test-ordering pulmonologist as the ordering provider."},
+    {"case_id": "case-0095", "verdict": "minor_issues", "agree": true, "note": "Same provider mix-up as case-0105."},
+    {"case_id": "case-0112", "verdict": "minor_issues", "agree": true, "note": "A not-applicable rule is written as 'NOT MET'."},
+    {"case_id": "case-0167", "verdict": "minor_issues", "agree": true, "note": "'Valid for 60 days' is not in the policy or the findings."},
+    {"case_id": "case-0168", "verdict": "minor_issues", "agree": false, "note": "The BMI date it questions is correct. (The letter does contain a '[Current Date]' placeholder, which the code check reports.)"},
+    {"case_id": "case-0287", "verdict": "minor_issues", "agree": false, "note": "The medication timeline it questions matches the record. It missed the real problem: the letter lists prediabetes under 'Diabetes Diagnosis'."},
+    {"case_id": "case-0083", "verdict": "minor_issues", "agree": null, "note": "Flagged with no statement listed. The decision is wrong (Group II result approved without the Group II conditions), but the judge did not say so."}
+  ],
+  "limits": "The model check reads only the findings the letter writer was given, so a letter that faithfully restates a wrong finding passes. It flagged the letter in 5 of the 12 cases where the decision itself was wrong."
+}

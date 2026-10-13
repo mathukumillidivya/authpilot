@@ -39,6 +39,22 @@ All three use the same model, the same policies and the same output rules. The o
 - **Citations:** 1,257 quotes, and 99.8% matched the record word for word under code verification.
 - **Development comparison:** on the 100 development cases AuthPilot scored 92%, so the held-out result (94%) does not suggest the design was tuned to the cases it was built on.
 
+### Letters, checked separately from the decisions
+
+A correct decision can still go out with a bad letter, so every one of the 200 held-out letters was also checked on its own ([scripts/letter_check.py](scripts/letter_check.py)). This does not change the 94% above, which scores decisions.
+
+| Code check (no model) | Letters |
+|---|---|
+| At least one problem | 94 of 200 |
+| Template placeholder left in (`[Patient Name]` 35, `[Current Date]` 23) | 60 of 200 |
+| Denial gives no appeal route (20 of these offer resubmission only) | 39 of 82 denials |
+| Date not found in the request or record (several are computed, such as a resubmission date) | 15 of 200 |
+| Rule label wrong (a not-applicable or undocumented rule called "not met") | 7 of 200 |
+
+A second model (Claude Haiku 4.5, temperature 0, $0.48 for all 200) then listed statements the verified findings do not support: 190 clean, 7 minor issues, 3 must fix. I read all 10 flagged letters by hand ([letter_spot_check.json](results/runs/test-authpilot/letter_spot_check.json)): 7 problems were real (a wrong ordering provider in the header, an invented "valid for 60 days", a not-applicable rule written as "NOT MET"), 2 were false alarms and 1 gave no reason. All 3 must-fix letters sit on wrong decisions, including one where the sleep-test specialist's own reason ends "This criterion is actually MET" but its status says not met. Because the check reads only the findings, a letter that faithfully restates a wrong finding passes: it flagged 5 of the 12 wrong decisions.
+
+What to fix next: fill names and dates from the request in code instead of leaving them to the model, and add a fixed appeal paragraph to every denial.
+
 ## How it works
 
 ```

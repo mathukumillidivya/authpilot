@@ -300,6 +300,11 @@ td .idc { display: block; font: 400 11.5px var(--mono); color: var(--dim); }
 .signed { font: 600 22px/1.2 var(--serif); font-style: italic; color: var(--pen); border-bottom: 1.5px solid var(--ink); padding-bottom: 2px; display: inline-block; }
 .key { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--rule2); font-size: 14px; }
 .key .ok { color: var(--ok); font-weight: 700; } .key .no { color: var(--deny); font-weight: 700; }
+.lcheck { max-height: 240px; overflow-y: auto; margin-top: 12px; border: 1px solid var(--rule); border-left: 3px solid var(--ok); background: #fff; padding: 10px 14px; font-size: 13.5px; }
+.lcheck.warn { border-left-color: #C98A1B; } .lcheck.bad { border-left-color: var(--deny); }
+.lcheck h4 { font: 600 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+.lcheck ul { margin: 0 0 0 18px; display: grid; gap: 4px; } .lcheck q { font-style: italic; }
+.ltab td:first-child { max-width: 420px; }
 details.trace { background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; box-shadow: var(--shadow); }
 details.trace summary { padding: 14px 16px; cursor: pointer; font: 700 17px var(--serif); }
 details.trace .ev { padding: 0 16px 16px; display: grid; gap: 6px; font: 400 12px/1.5 var(--mono); }
@@ -821,6 +826,14 @@ function showFinal() {
   drawRecord(); meters(r); drawFax(true); drawVerdict(r); drawTrace(r);
   nowLine(r ? (r === live ? "your live run" : "recorded run") : "not reviewed", r ? `Reviewed in ${(+r.seconds).toFixed(1)}s. Click a quote chip to find it in the record.` : "Nothing has reviewed this patient yet. Run the agents live.");
 }
+function lcheckHtml(k) {
+  const items = [...k.problems.map(x => { const [kind, ...rest] = x.split(": "); return `<li><b>${esc(LCK[kind] || kind)}:</b> ${esc(rest.join(": "))}</li>`; }),
+    ...(k.unsupported || []).map(u => `<li><b>Not in the findings:</b> <q>${esc(u.quote)}</q> ${esc(u.why)}</li>`),
+    ...(k.contradictions || []).map(x => `<li><b>Contradiction:</b> ${esc(x)}</li>`)];
+  const cls = k.verdict === "must_fix" ? " bad" : items.length ? " warn" : "";
+  return `<div class="lcheck${cls}"><h4>Letter check, separate from the decision${k.verdict ? ` · model check: ${esc(k.verdict.replace("_", " "))}` : ""}</h4>${items.length ? `<ul>${items.join("")}</ul>` : "✓ Dates, placeholders, rule labels and next steps pass, and the model check found nothing the findings do not support."}</div>`;
+}
+const LCK = { decision: "Decision wording", placeholder: "Placeholder left in", dates: "Date", rule_labels: "Rule label", next_steps: "Next steps" };
 function drawVerdict(r, fresh, typing) {
   const d = $("#verdict"); if (!d) return;
   if (!r || !r.decision) { d.innerHTML = `<div class="vtop"><div><h3>Determination</h3><div class="how">${running ? "the agents are working" : "not reviewed yet"}</div></div><span class="stamp none">Pending</span></div>`; return; }
@@ -829,6 +842,7 @@ function drawVerdict(r, fresh, typing) {
   const diffs = key ? Object.entries(key.statuses).filter(([k, v]) => r.criteria && r.criteria[k] && r.criteria[k].status !== v).map(([k, v]) => `<li>Key says “${LABEL[k]}” is ${STATUS[v][0].toLowerCase()}; agents said ${STATUS[r.criteria[k].status][0].toLowerCase()}.</li>`).join("") : "";
   d.innerHTML = `<div class="vtop"><div><h3>Determination</h3><div class="how">decided by code from the rule statuses</div></div><span class="stamp ${r.decision}${fresh && !reduced ? " slam" : ""}">${DEC[r.decision]}<small>${a ? QS[a.kind][0] : r.decision === "DENY" ? "awaiting clinician signature" : "sent automatically"}</small></span></div>
     <div class="letterp${typing ? " typing" : ""}" id="letter">${r.letter && !typing ? md(r.letter) : ""}</div>
+    ${r.letter_check && !typing ? lcheckHtml(r.letter_check) : ""}
     <div class="sign">${a ? `<div><span class="signed">${QS[a.kind][0]}</span><div class="note">${new Date(a.at).toLocaleString()}${a.note ? ` · “${esc(a.note)}”` : ""}</div></div><div class="row"><button class="btn sm" id="undo">Undo</button></div>`
       : `<textarea id="note" placeholder="Note for the record (optional)" aria-label="Note for the record"></textarea><div class="row">${opts.map(([k, t, c]) => `<button class="btn sm ${c}" data-act="${k}">${t}</button>`).join("")}</div><p class="note">Demo only: recorded in this browser. Nothing is signed or sent to anyone.</p>`}</div>
     ${key ? `<div class="key"><button class="btn sm" id="keyb">Compare with the answer key</button><div id="keyv" hidden>${key.decision === r.decision ? `<span class="ok">✓ Agrees:</span> ${DEC[key.decision].toLowerCase()}.` : `<span class="no">✕ Disagrees:</span> the right answer is ${DEC[key.decision].toLowerCase()}.`}${diffs ? `<ul style="margin:6px 0 0 18px">${diffs}</ul>` : ` All ${Object.keys(key.statuses).length} rule statuses match.`}${key.traps && key.traps.length ? `<div class="note" style="margin-top:6px">Traps in this case: ${key.traps.map(t => esc(DATA.traps[t] || t).toLowerCase()).join("; ")}.</div>` : ""}</div></div>` : ""}`;
@@ -880,7 +894,7 @@ function onStep(e) {
 }
 async function typeLetter(text) {
   const el = $("#letter"); if (!el || !text) return;
-  if (reduced) { el.innerHTML = md(text); return; }
+  if (reduced) { el.innerHTML = md(text); el.classList.remove("typing"); return; }
   el.classList.add("typing"); const html = md(text), n = text.length, t0 = performance.now(), dur = Math.min(2600, n * 3);
   await new Promise(res => { const step = now => { if (!$("#letter")) return res(); const k = Math.min(1, (now - t0) / dur); el.innerHTML = md(text.slice(0, Math.ceil(n * k))); el.scrollTop = el.scrollHeight; if (k < 1) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); });
   el.classList.remove("typing"); el.innerHTML = html; el.scrollTop = 0;
@@ -890,7 +904,7 @@ function finishRun(r) {
   for (const [k, v] of Object.entries(r.criteria || {})) { crit[k] = { ...v }; paintRule(k, crit[k]); const sp = $("#sp-" + k); if (sp) sp.className = v.status; }
   if (!(r.trace || []).some(e => e.node === "investigator")) setStep("investigator", "skip");
   STEPS.forEach(([k]) => { if (k !== "investigator" && stepState[k] !== "done") setStep(k, (r.trace || []).some(e => e.node === k) ? "done" : "skip"); });
-  drawRecord(); meters(r); drawFax(true); drawVerdict(r, true, true); typeLetter(r.letter); drawTrace(r);
+  drawRecord(); meters(r); drawFax(true); drawVerdict(r, true, true); typeLetter(r.letter).then(() => { const el = $("#letter"); if (el && r.letter_check && !$(".lcheck")) el.insertAdjacentHTML("afterend", lcheckHtml(r.letter_check)); }); drawTrace(r);
   nowLine("done", r.decision === "DENY" ? "Denial drafted. It waits for a clinician's signature." : r.decision === "NEED_INFO" ? "Records requested from the provider." : "Approved: every rule met, with quotes.");
 }
 function replay() {
@@ -974,6 +988,7 @@ function viewEval(v) {
         ["Routing failed.", "The model sometimes picked no policy. Routing became a procedure-code lookup."], ["Procedures got confused.", "Open and keyhole weight-loss surgery were mixed up. Covered codes are now checked by code."]].map(([x, y]) => `<li><b>${x}</b><span>${y}</span></li>`).join("")}</ol></section></div>
   <section class="panel"><header><h2>The numbers</h2></header><div class="tw"><table><thead><tr><th></th><th class="r">Correct</th><th class="r">Covered denied</th><th class="r">Uncovered approved</th><th class="r">Denials w/o evidence</th>${Object.values(POLICY_SHORT).map(p => `<th class="r">${p}</th>`).join("")}<th class="r">Cost</th><th class="r">Median</th></tr></thead><tbody>
     ${SYS.map(s => { const x = S[s]; return `<tr${s === "authpilot" ? ' style="font-weight:600"' : ""}><td>${NAME[s]}</td><td class="r num">${x.correct}/${x.cases}</td><td class="r num">${x.wrongful_denials}</td><td class="r num">${x.wrongful_approvals}</td><td class="r num">${x.denials_without_verified_evidence}</td>${Object.keys(POLICY_SHORT).map(p => `<td class="r num">${x.by_policy[p]}</td>`).join("")}<td class="r num">$${x.cost_per_case.toFixed(3)}</td><td class="r num">${x.median_seconds.toFixed(1)}s</td></tr>`; }).join("")}</tbody></table></div></section>
+  <section class="panel"><header><h2>Letters, checked separately from the decisions</h2></header>${lettersHtml()}</section>
   <section class="panel"><header><h2>What this does not show</h2></header><ul class="limits">
     <li><b>The cases are constructed.</b><span>There is no public benchmark for prior authorization. The 300 cases were generated with known answers from real Medicare rules. Real requests are messier: scanned faxes, missing pages, conflicting notes.</span></li>
     <li><b>The records are short.</b><span>About 70 entries per patient. Real charts can run to thousands of pages. A long-record version exists but costs about four times as much and was not part of the test.</span></li>
@@ -981,6 +996,19 @@ function viewEval(v) {
     <li><b>Five policies, one model.</b><span>Other services and models may behave differently.</span></li>
     <li><b>A clinician signs every denial.</b><span>This is decision support. It never sends a denial on its own.</span></li></ul></section></div></div>`;
   drawWaffles(S); drawRounds();
+}
+function lettersHtml() {
+  const L = DATA.results.letters; if (!L) return `<div class="pad note">Not run yet.</div>`;
+  const J = L.judge, K = L.code_problems_by_kind, D = L.by_decision, f = x => `${x.count} of ${x.of}`;
+  const rows = [["Template placeholder left in (“[Patient Name]”, “[Current Date]”)", K.placeholder], ["Denial gives no appeal route (20 offer resubmission only)", { count: K.next_steps.count, of: D.DENY.of }],
+    ["Date not found in the request or record (several are computed, such as a resubmission date)", K.dates], ["Rule label wrong (a not-applicable or undocumented rule called “not met”)", K.rule_labels]];
+  return `<div class="pad" style="display:grid;gap:14px">
+    <p class="note" style="font-size:14.5px">A correct decision can still go out with a bad letter. Every one of the 200 held-out letters was checked by code for dates, placeholders, rule labels and next steps, and read by a second model (${esc(J ? "Claude Haiku 4.5" : "")}, temperature 0) for statements the verified findings do not support. This does not change the 94% above, which scores decisions.</p>
+    <div class="callouts">${[[`${L.letters_with_a_code_problem.count} of ${L.letters}`, "letters fail at least one code check"], [`${K.placeholder.count}`, "still contain a template placeholder"], [`${K.next_steps.count} of ${D.DENY.of}`, "denials give no appeal route"],
+      J ? [`${J.must_fix.count + J.minor_issues.count} of ${J.letters_judged}`, `letters the model check flagged; 7 of the 10 held up when read by hand`] : null].filter(Boolean).map(([x, y]) => `<div class="callout"><b>${x}</b><span>${y}</span></div>`).join("")}</div>
+    <div class="tw"><table class="ltab"><thead><tr><th>Code check</th><th class="r">Letters</th></tr></thead><tbody>${rows.map(([t, x]) => `<tr><td>${t}</td><td class="r num">${f(x)}</td></tr>`).join("")}</tbody></table></div>
+    ${J ? `<p class="note" style="font-size:14px">The 3 letters the model check marked “must fix” are all on wrong decisions: one denial whose sleep-test specialist wrote “this criterion is actually MET” but recorded not met (<a href="#/case/0045">case 0045</a>), one approval whose letter admits the test fell outside the 30-day window (<a href="#/case/0119">0119</a>), and one that calls an SpO2 of 89% a Group I result (<a href="#/case/0120">0120</a>). The check reads only the findings, so a letter that faithfully restates a wrong finding passes: it flagged 5 of the 12 wrong decisions. Cost: $${J.cost_usd.toFixed(2)} for 200 letters.</p>` : ""}
+    <p class="note">Open any held-out case to see its letter check under the letter. Scores: <a href="https://github.com/mathukumillidivya/authpilot/blob/main/results/runs/test-authpilot/letter_check.json" target="_blank" rel="noopener">letter_check.json</a>, hand review: <a href="https://github.com/mathukumillidivya/authpilot/blob/main/results/runs/test-authpilot/letter_spot_check.json" target="_blank" rel="noopener">letter_spot_check.json</a>, code: <a href="https://github.com/mathukumillidivya/authpilot/blob/main/scripts/letter_check.py" target="_blank" rel="noopener">letter_check.py</a>.</p></div>`;
 }
 function outcome(t, d) { return d === t ? "ok" : d === "DENY" ? "wd" : d === "APPROVE" ? "wa" : "ot"; }
 function drawWaffles(S) {

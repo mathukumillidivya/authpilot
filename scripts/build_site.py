@@ -49,6 +49,8 @@ def main():
 
     queue = []
     for split, run in RUNS.items():
+        lc_file = ROOT / run / "letter_check.jsonl"
+        checks = {json.loads(l)["case_id"]: json.loads(l) for l in open(lc_file)} if lc_file.exists() else {}
         for line in open(ROOT / run / "results.jsonl"):
             r = json.loads(line)
             c = cases[r["case_id"]]
@@ -63,6 +65,10 @@ def main():
                           calls, toks, round(started, 2) if started else None])
             rec = {"trace": r["trace"], "criteria": r["criteria"], "decision": r["decision"], "letter": r["letter"],
                    "seconds": r["seconds"], "cost": round(cost(usage), 4), "usage": usage}
+            if r["case_id"] in checks:
+                k = checks[r["case_id"]]
+                rec["letter_check"] = {"problems": k["problems"], **({"verdict": k["judge"]["verdict"], "unsupported": k["judge"]["unsupported"],
+                                                                     "contradictions": k["judge"]["contradictions"]} if "judge" in k else {})}
             (out_dir / f"{n}.json").write_text(json.dumps({**public(c), "split": split, "recorded": rec, "answer_key": c["truth"]},
                                                           separators=(",", ":")))
     queue.sort(key=lambda q: q[0])
@@ -72,6 +78,9 @@ def main():
         f = ROOT / "results" / name
         if f.exists():
             results[name.split("-")[0]] = json.loads(f.read_text())
+    lc = ROOT / RUNS["test"] / "letter_check.json"
+    if lc.exists():
+        results["letters"] = json.loads(lc.read_text())
     per_case = {}
     for s in ("baseline", "single_plus", "authpilot"):
         f = ROOT / "results/runs" / f"test-{s}" / "results.jsonl"
