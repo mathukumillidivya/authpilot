@@ -10,7 +10,9 @@ from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
-CASES = Path(__file__).resolve().parent.parent / "data" / "cases.jsonl"
+import os
+
+CASES = Path(__file__).resolve().parent.parent / "data" / os.environ.get("AUTHPILOT_CASES", "cases.jsonl")
 
 
 @lru_cache(maxsize=1)
@@ -116,18 +118,38 @@ def normalise(s: str) -> str:
     return re.sub(r"\s+", " ", s.lower()).strip()
 
 
-def quote_found(resource: dict, quote: str) -> bool:
-    """True if every number and most words in the quote appear in the resource's text."""
-    hay = normalise(text_of(resource)) + " " + when(resource)
+def quote_found(resource: dict, quote: str, order_date: str | None = None) -> bool:
+    """Does the quote say what the record says?
+
+    Numbers decide: every number in the quote must be a value written in the record (not a fragment of a
+    code or a date), or the true number of days between the record and the order. Any full date quoted must
+    be the record's own date. Quotes with no numbers pass when most of their words are in the record."""
     q = normalise(quote)
     if not q:
         return False
-    if q in hay:
+    full = normalise(text_of(resource) + " " + line(resource))
+    if q in full:
         return True
-    nums = re.findall(r"\d+(?:\.\d+)?", q)
-    if any(n not in re.findall(r"\d+(?:\.\d+)?", hay) for n in nums):
+    rdate = when(resource)[:10]
+    for d in re.findall(r"\d{4}-\d{2}-\d{2}", q):
+        if d != rdate:
+            return False
+    q_rest = re.sub(r"\d{4}-\d{2}-\d{2}", " ", q)
+    q_rest = re.sub(r"\b[a-z]+-\d+\b", " ", q_rest)          # record ids such as obs-004
+    body = text_of(resource)
+    for c in resource.get("code", {}).get("coding", []):
+        code = c.get("code", "")
+        body = body.replace(code, " ")
+        q_rest = q_rest.replace(code.lower(), " ")      # a code quoted whole is fine; its digits alone are not values
+    allowed = set(re.findall(r"\d+(?:\.\d+)?", body))
+    if order_date:
+        allowed.add(str(days_before(rdate, order_date)))
+    nums = re.findall(r"\d+(?:\.\d+)?", q_rest)
+    canon = lambda n: n.rstrip("0").rstrip(".") if "." in n else n
+    allowed = {canon(a) for a in allowed}
+    if any(canon(n) not in allowed for n in nums):
         return False
-    if nums:
-        return True          # every number quoted is in the record; wording may be paraphrased
-    words = [w for w in re.findall(r"[a-z]{4,}", q)]
-    return bool(words) and sum(w in hay for w in words) / len(words) >= 0.7
+    if nums or re.search(r"\d{4}-\d{2}-\d{2}", q):
+        return True
+    words = re.findall(r"[a-z]{4,}", q_rest)
+    return bool(words) and sum(w in full for w in words) / len(words) >= 0.7

@@ -27,6 +27,7 @@ from typing import Any, TypedDict
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
+from pydantic import BaseModel, Field
 
 from authpilot import fhir
 from authpilot.cases import decide
@@ -115,17 +116,57 @@ def event(state: State, node: str, summary: str, **detail) -> list:
     return list(state.get("trace") or []) + [{"node": node, "summary": summary, "t": round(time.time(), 2), **detail}]
 
 
+# ------------------------------------------------------------------------------------------ output schemas
+
+class IntakeOut(BaseModel):
+    patient_id: str
+    service: str
+    code: str
+    diagnosis_code: str
+    diagnosis: str
+    order_date: str = Field(description="YYYY-MM-DD")
+    ordering_provider: str
+    provider_claims: list[str] = Field(default_factory=list, description="claims the provider makes, as stated")
+
+
+class PolicyOut(BaseModel):
+    policy_id: str
+    reason: str
+
+
+class Citation(BaseModel):
+    id: str = Field(description="record id, e.g. obs-004")
+    quote: str = Field(description="text copied from that record that decides the criterion")
+
+
+class CriterionOut(BaseModel):
+    criterion_id: str
+    status: str = Field(description="met | not_met | missing | not_applicable")
+    reason: str
+    citations: list[Citation] = Field(default_factory=list)
+
+
+class ReviewOut(BaseModel):
+    criteria: list[CriterionOut]
+
+
+async def structured(model, schema, messages):
+    """Ask for output in a fixed shape (via tool calling) and keep the raw message for token counts."""
+    out = await model.with_structured_output(schema, include_raw=True).ainvoke(messages)
+    if out.get("parsed") is None:
+        raise ValueError(f"unreadable {schema.__name__}: {out.get('parsing_error')}")
+    return out["parsed"], out["raw"]
+
+
 # ------------------------------------------------------------------------------------------ prompts
 
 INTAKE = """You read prior authorization request forms and extract the fields exactly as written.
-Reply with JSON only: {"patient_id": ..., "service": ..., "code": ..., "diagnosis_code": ..., "diagnosis": ...,
-"order_date": "YYYY-MM-DD", "ordering_provider": ..., "provider_claims": [short claims the provider makes about
-the patient, as stated]}"""
+Return the fields with the IntakeOut tool."""
 
 POLICY = """You route prior authorization requests to the coverage policy that governs them.
 Policies available:
 {catalog}
-Reply with JSON only: {{"policy_id": one of the ids above, or "none", "reason": one sentence}}"""
+Return the policy id (one of the ids above, or "none") and a one-sentence reason."""
 
 CHART = """You are a clinical evidence researcher for prior authorization review. You search a patient's medical
 record through tools and collect the records that bear on each coverage criterion.
@@ -166,9 +207,7 @@ Rules:
 - Every "met" or "not_met" must cite at least one record id with a short quote copied from that record
   (include the number or words that decide it).
 
-Reply with JSON only:
-{{"criteria": {{"<criterion id>": {{"status": "...", "reason": "one sentence",
-  "citations": [{{"id": "<record id>", "quote": "<copied text>"}}]}}, ...}}}}"""
+Return one entry per criterion id in the policy."""
 
 LETTER = """You write prior authorization determination letters to the ordering provider. Plain, professional,
 short. State the decision, then each criterion with the evidence relied on (record dates and values), and for a
@@ -178,7 +217,7 @@ invent any clinical fact that is not in the material given. No more than 220 wor
 
 # ------------------------------------------------------------------------------------------ code checks
 
-def check_review(policy_id: str, patient_id: str, review: dict, use_guards: bool = True):
+def check_review(policy_id: str, patient_id: str, review: dict, use_guards: bool = True, order_date: str | None = None):
     """Verify the reviewer's citations against the record and compute the decision.
 
     Returns (criteria, notes, decision). With guards on, a criterion judged met or not met without a
@@ -193,7 +232,7 @@ def check_review(policy_id: str, patient_id: str, review: dict, use_guards: bool
         cites = []
         for ct in v.get("citations") or []:
             rid, q = str(ct.get("id", "")), str(ct.get("quote", ""))
-            cites.append({"id": rid, "quote": q, "verified": rid in records and fhir.quote_found(records[rid], q)})
+            cites.append({"id": rid, "quote": q, "verified": rid in records and fhir.quote_found(records[rid], q, order_date)})
         if use_guards:
             if status == "not_applicable" and not c["conditional"]:
                 notes.append(f"{c['id']}: marked not applicable but the criterion always applies; treated as missing")
@@ -215,8 +254,8 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
 
     async def intake(state: State) -> State:
         msgs = [SystemMessage(INTAKE), HumanMessage(state["request_text"])]
-        out = await model.ainvoke(msgs)
-        req = parse_json(text_of(out))
+        parsed, out = await structured(model, IntakeOut, msgs)
+        req = parsed.model_dump()
         errors = []
         if req.get("patient_id") not in fhir.store():
             errors.append(f"unknown member id {req.get('patient_id')}")
@@ -230,8 +269,8 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
         r = state["request"]
         msgs = [SystemMessage(POLICY.format(catalog=catalog)),
                 HumanMessage(f"Service: {r.get('service')}\nCode: {r.get('code')}\nDiagnosis: {r.get('diagnosis')}")]
-        out = await model.ainvoke(msgs)
-        pid = parse_json(text_of(out)).get("policy_id")
+        parsed, out = await structured(model, PolicyOut, msgs)
+        pid = parsed.policy_id
         if pid not in POLICIES:
             raise ValueError(f"no policy matched ({pid})")
         p = POLICIES[pid]
@@ -247,8 +286,9 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
         final = text_of(res["messages"][-1])
         try:
             found = parse_json(final)
-        except ValueError:
-            found = {}
+        except (ValueError, json.JSONDecodeError):
+            seen_ids = sorted(set(re.findall(r"\[([a-z]+-\d+)\]", " ".join(text_of(m) for m in res["messages"] if getattr(m, "type", "") == "tool"))))
+            found = {c: seen_ids for c in focus}          # could not read the reply: pass on everything it looked at
         ids = dict(state.get("evidence_ids") or {})
         for k, v in found.items():
             if isinstance(v, list):
@@ -269,11 +309,12 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
                     db = fhir.days_before(fhir.when(res), r["order_date"])
                     lines.append((rid, f"{fhir.line(res)}  [days before order: {db}]"))
         seen, pack = set(), []
-        for rid, l in lines:
+        for rid, l in sorted(lines, key=lambda x: fhir.when(records[x[0]])):
             if rid not in seen:
                 seen.add(rid)
                 pack.append(l)
-        return {"pack": "\n".join(pack) or "(no records found)",
+        header = f"Order date: {r['order_date']}. Records in date order, oldest first:\n"
+        return {"pack": header + ("\n".join(pack) or "(no records found)"),
                 "trace": event(state, "assemble", f"Attached {len(pack)} records with dates relative to the order")}
 
     async def review(state: State) -> State:
@@ -281,14 +322,15 @@ def build(model, tools, max_retries: int = 1, use_guards: bool = True):
         msgs = [SystemMessage(REVIEW.format(order_date=r["order_date"], policy=p["text"])),
                 HumanMessage(f"Provider's clinical summary (a claim, not evidence): {r.get('provider_claims')}\n\n"
                              f"Evidence records:\n{state['pack']}")]
-        out = await model.ainvoke(msgs)
-        rev = parse_json(text_of(out)).get("criteria", {})
+        parsed, out = await structured(model, ReviewOut, msgs)
+        rev = {c.criterion_id: c.model_dump() for c in parsed.criteria}
         return {"review": rev, "usage": Usage.add(state, "review", [out]),
                 "trace": event(state, "review", "Judged each criterion",
                                statuses={k: v.get("status") for k, v in rev.items()})}
 
     def verify(state: State) -> State:
-        out, notes, decision = check_review(state["policy_id"], state["request"]["patient_id"], state.get("review") or {}, use_guards)
+        out, notes, decision = check_review(state["policy_id"], state["request"]["patient_id"], state.get("review") or {},
+                                            use_guards, state["request"].get("order_date"))
         gaps = [k for k, v in out.items() if v["status"] == "missing"]
         retry = use_guards and gaps and (state.get("retries") or 0) < max_retries
         bad = sum(1 for v in out.values() for x in v["citations"] if not x["verified"])
@@ -357,7 +399,7 @@ async def baseline(model, case: dict) -> dict:
     for c in policy["criteria"]:
         v = (parsed.get("criteria") or {}).get(c["id"]) or {}
         cites = [{"id": str(x.get("id")), "quote": str(x.get("quote", "")),
-                  "verified": str(x.get("id")) in records and fhir.quote_found(records[str(x.get("id"))], str(x.get("quote", "")))}
+                  "verified": str(x.get("id")) in records and fhir.quote_found(records[str(x.get("id"))], str(x.get("quote", "")), req["order_date"])}
                  for x in v.get("citations") or []]
         crit[c["id"]] = {"status": v.get("status", "missing"), "citations": cites, "reason": v.get("reason", "")}
     return {"decision": parsed.get("decision", "NEED_INFO"), "verified": crit,

@@ -69,3 +69,18 @@ def test_not_applicable_only_for_conditional_criteria():
     review = {"icd_sdm": {"status": "not_applicable", "citations": []}}
     out, notes, _ = check_review("icd", c["request"]["patient_id"], review)
     assert out["icd_sdm"]["status"] == "missing"
+
+
+def test_quote_check_on_every_record_line():
+    """A record's own description (with the true day count) passes; the same with a wrong day count fails."""
+    tot = 0
+    for c in CASES[:30]:
+        od, records = c["request"]["order_date"], fhir.chart(c["request"]["patient_id"])
+        for r in records.values():
+            if r["resourceType"] == "Patient":
+                continue
+            db = fhir.days_before(fhir.when(r), od)
+            assert fhir.quote_found(r, f"{fhir.line(r)} [days before order: {db}]", od), r["id"]
+            assert not fhir.quote_found(r, f"{fhir.line(r)} [days before order: {db + 3}]", od), r["id"]
+            tot += 1
+    assert tot > 1000

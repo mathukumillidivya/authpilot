@@ -14,4 +14,5 @@ ventricular tachycardia or ventricular fibrillation arrest when all of the follo
   took place before the order.
 - **icd_exclusions.** None of: myocardial infarction within the past 40 days; coronary artery
   bypass graft or percutaneous coronary intervention within the past 3 months (90 days);
-  NYHA class IV heart failure; cardiogenic shock.
+  NYHA class IV heart failure; cardiogenic shock. Met when the record documents the current heart
+  failure class and contains none of these events in those windows; not met when it contains one.

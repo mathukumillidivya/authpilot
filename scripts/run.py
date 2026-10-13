@@ -9,12 +9,15 @@ Writes results/runs/<run-id>/results.jsonl and config.json.
 import argparse
 import asyncio
 import json
+import os
 import sys
 import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+if "--history" in sys.argv and sys.argv[sys.argv.index("--history") + 1] == "long":
+    os.environ["AUTHPILOT_CASES"] = "cases_long.jsonl"     # read by the chart store and the MCP server
 
 from authpilot import graph as G  # noqa: E402
 
@@ -36,10 +39,11 @@ async def main():
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--model", default="claude-haiku-4-5-20251001")
     ap.add_argument("--run-id", required=True)
+    ap.add_argument("--history", choices=["standard", "long"], default="standard")
     args = ap.parse_args()
 
     split = json.loads((ROOT / "data/split.json").read_text())[args.split]
-    cases = {json.loads(l)["case_id"]: json.loads(l) for l in open(ROOT / "data/cases.jsonl")}
+    cases = {json.loads(l)["case_id"]: json.loads(l) for l in open(ROOT / "data" / os.environ.get("AUTHPILOT_CASES", "cases.jsonl"))}
     todo = [cases[c] for c in split][: args.limit or None]
     out = ROOT / "results/runs" / args.run_id
     out.mkdir(parents=True, exist_ok=True)
@@ -50,7 +54,8 @@ async def main():
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
-    server = StdioServerParameters(command=sys.executable, args=["-m", "authpilot.mcp_server"], cwd=str(ROOT))
+    server = StdioServerParameters(command=sys.executable, args=["-m", "authpilot.mcp_server"], cwd=str(ROOT),
+                                   env={**os.environ})
     async with stdio_client(server) as (read, write), ClientSession(read, write) as session:
         await session.initialize()
         tools = await load_mcp_tools(session)

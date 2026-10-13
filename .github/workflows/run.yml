@@ -8,6 +8,7 @@ on:
       limit: {default: "0"}
       model: {default: "claude-haiku-4-5-20251001"}
       concurrency: {default: "4"}
+      history: {description: "standard or long patient records", default: "standard"}
 permissions:
   contents: write
 jobs:
@@ -26,7 +27,7 @@ jobs:
         env: {ANTHROPIC_API_KEY: "${{ secrets.ANTHROPIC_API_KEY }}"}
         run: |
           python scripts/run.py --system "${{ inputs.system }}" --split "${{ inputs.split }}" --limit "${{ inputs.limit }}" \
-            --model "${{ inputs.model }}" --concurrency "${{ inputs.concurrency }}" --run-id "${{ inputs.run_id }}"
+            --model "${{ inputs.model }}" --concurrency "${{ inputs.concurrency }}" --run-id "${{ inputs.run_id }}" --history "${{ inputs.history }}"
       - name: Score and save
         if: always()
         run: |

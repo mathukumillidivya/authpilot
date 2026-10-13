@@ -182,7 +182,7 @@ def days(n: int) -> timedelta:
 
 
 def background(c: Chart, exclude_tags: set, bmi_range=(22.0, 32.0), hct_range=(36.0, 47.0), with_bmi=True,
-               min_visit_ago=45):
+               min_visit_ago=45, n_visits=(5, 11), years=3):
     """Unrelated but realistic history: conditions, medicines, vitals, labs, routine visits."""
     rng, D = c.rng, c.order_date
     pool = [k for k, (_, tags) in BACKGROUND.items() if not (tags & exclude_tags)]
@@ -199,7 +199,7 @@ def background(c: Chart, exclude_tags: set, bmi_range=(22.0, 32.0), hct_range=(3
             c.obs("Body mass index", round(bmi + rng.uniform(-0.8, 0.8), 1), "kg/m2", when, loinc="39156-5")
     c.obs("Hematocrit", round(rng.uniform(*hct_range), 1), "%", D - days(rng.randint(30, 300)), loinc="4544-3")
     c.obs("Creatinine", round(rng.uniform(0.7, 1.2), 2), "mg/dL", D - days(rng.randint(30, 300)), loinc="2160-0")
-    visits = sorted(rng.sample(range(min_visit_ago, 1100), rng.randint(5, 11)))
+    visits = sorted(rng.sample(range(min_visit_ago, 365 * years), rng.randint(*n_visits)))
     for k, ago in enumerate(visits):
         when = D - days(ago)
         kind, text = rng.choice(ROUTINE_VISITS)
@@ -518,7 +518,7 @@ def statuses_for(policy: str, rng: random.Random, target: str) -> dict:
     return st
 
 
-def make_case(idx: int, policy: str, target: str, rng: random.Random) -> dict:
+def make_case(idx: int, policy: str, target: str, rng: random.Random, seed: int = 7, history: str = "standard") -> dict:
     st = statuses_for(policy, rng, target)
     traps = set()
     if rng.random() < 0.3:
@@ -531,16 +531,21 @@ def make_case(idx: int, policy: str, target: str, rng: random.Random) -> dict:
     pid = f"pt-{idx:04d}"
     c = Chart(rng=rng, order_date=order_date, patient_id=pid)
     built = BUILDERS[policy](c, st, traps)
-    background(c, built.get("exclude_tags", set()), bmi_range=built.get("bmi_range", (22.0, 32.0)),
-               hct_range=built.get("hct_range", (36.0, 47.0)), with_bmi=policy != "bariatric",
-               min_visit_ago=200 if policy == "cgm" and st.get("cgm_visit") != MET else 45)
     requester = rng.choice(CLINICIANS)
     service = built.get("service", POLICIES[policy]["service"])
     code = built.get("code") or POLICIES[policy]["code"]
     order_id = c.order(service, code, order_date, requester)
     if policy == "bariatric":
         built["evidence"]["bar_procedure"] = [order_id]
-    rng.shuffle(c.resources)
+    # The background has its own random stream, so the standard and long versions of a case share the same
+    # request, the same evidence and the same correct answer, and differ only in how much else is in the chart.
+    case_rng, c.rng = c.rng, random.Random(f"{seed}-{idx}-background")
+    background(c, built.get("exclude_tags", set()), bmi_range=built.get("bmi_range", (22.0, 32.0)),
+               n_visits=(5, 11) if history == "standard" else (70, 110), years=3 if history == "standard" else 8,
+               hct_range=built.get("hct_range", (36.0, 47.0)), with_bmi=policy != "bariatric",
+               min_visit_ago=200 if policy == "cgm" and st.get("cgm_visit") != MET else 45)
+    c.rng.shuffle(c.resources)
+    c.rng = case_rng
     name = f"{rng.choice(FIRST)} {rng.choice(LAST)}"
     birth = date(rng.randint(1938, 1959), rng.randint(1, 12), rng.randint(1, 28))
     patient = {"resourceType": "Patient", "id": pid, "name": [{"text": name}], "birthDate": birth.isoformat(),
@@ -568,6 +573,7 @@ def main():
     ap.add_argument("--n-per-policy", type=int, default=60)
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--dev-per-policy", type=int, default=20)
+    ap.add_argument("--history", choices=["standard", "long"], default="standard")
     args = ap.parse_args()
     rng = random.Random(args.seed)
     cases, split = [], {"dev": [], "test": []}
@@ -576,12 +582,12 @@ def main():
         targets = (["APPROVE"] * 40 + ["DENY"] * 35 + ["NEED_INFO"] * 25)
         for k in range(args.n_per_policy):
             idx += 1
-            case = make_case(idx, policy, rng.choice(targets), rng)
+            case = make_case(idx, policy, rng.choice(targets), rng, args.seed, args.history)
             cases.append(case)
             split["dev" if k < args.dev_per_policy else "test"].append(case["case_id"])
     out = Path("data")
     out.mkdir(exist_ok=True)
-    with open(out / "cases.jsonl", "w") as f:
+    with open(out / ("cases.jsonl" if args.history == "standard" else "cases_long.jsonl"), "w") as f:
         for case in cases:
             f.write(json.dumps(case) + "\n")
     (out / "split.json").write_text(json.dumps(split, indent=1))

@@ -54,7 +54,7 @@ def summarise(rows: list[dict]) -> dict:
         "denials": len(denials), "denials_without_verified_evidence": sum(not supported(r) for r in denials),
         "criterion_accuracy": round(crit_right / crit_total, 4) if crit_total else None,
         "citations": len(cites), "citations_verified": round(sum(c["verified"] for c in cites) / len(cites), 4) if cites else None,
-        "confusion": {f"{t}->{p}": c for (t, p), c in sorted(Counter((r["truth"], r["decision"]) for r in rows).items())},
+        "confusion": {f"{t}->{p}": c for (t, p), c in sorted(Counter((r["truth"], str(r["decision"])) for r in rows).items())},
         "by_policy": by(lambda r: r["policy"]),
         "by_truth": by(lambda r: r["truth"]),
         "by_trap": {t: f"{sum(r['decision'] == r['truth'] for r in rows if t in TRUTH[r['case_id']]['traps'])}/"
