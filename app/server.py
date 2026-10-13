@@ -187,9 +187,11 @@ async def run(request: Request):
                     for node, update in chunk.items():
                         for e in (update or {}).get("trace") or []:
                             yield f"data: {json.dumps({'type': 'step', 'elapsed': round(time.time() - t0, 1), **e}, default=str)}\n\n"
-                        for k in ("verified", "decision", "letter", "usage", "policy_id"):
+                        for k in ("verified", "decision", "letter", "policy_id"):
                             if update and k in update:
                                 final[k] = update[k]
+                        if update and update.get("usage"):  # each update carries only that step's usage
+                            final["usage"] = G.add_usage(final.get("usage"), update["usage"])
                 cost = sum(v.get("input", 0) * 1e-6 + v.get("output", 0) * 5e-6 + v.get("cache_read", 0) * 1e-7
                            + v.get("cache_write", 0) * 1.25e-6 for v in (final.get("usage") or {}).values())
                 done = {"type": "done", "decision": final.get("decision"), "criteria": final.get("verified"),
