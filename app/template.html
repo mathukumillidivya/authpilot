@@ -398,6 +398,28 @@ footer { background: var(--night); color: #8E9BB2; font-size: 13.5px; padding: 2
   .meters { gap: 12px; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+:root { --rp-mono: var(--mono); --rp-accent: var(--deny); --rp-dim: var(--ink2); --rp-line: var(--rule); --rp-link: var(--pen); --rp-codebg: var(--night); --rp-codefg: #FFF3A8; --rp-radius: 4px;
+  --rp-hfont: 700 clamp(36px, 4.4vw, 60px)/1.02 var(--serif); --rp-h2font: 700 28px/1.1 var(--serif); }
+/* reproduce page: colours come from --rp-* set per site */
+.rp { padding: 48px 0 72px; }
+.rp-k { font: 600 12px var(--rp-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--rp-accent); }
+.rp-h { font: var(--rp-hfont); letter-spacing: -.02em; margin: 10px 0 12px; line-height: 1.04; }
+.rp-lede { color: var(--rp-dim); font-size: 17px; max-width: 46em; }
+.rp-cmd { position: relative; margin: 24px 0 26px; background: var(--rp-codebg); color: var(--rp-codefg); border-radius: var(--rp-radius); max-width: 760px; }
+.rp-cmd pre { margin: 0; padding: 18px 20px; overflow-x: auto; font: 500 14px/1.7 var(--rp-mono); }
+.rp-copy { position: absolute; top: 10px; right: 10px; font: 600 12px var(--rp-mono); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,.35); background: transparent; color: var(--rp-codefg); cursor: pointer; }
+.rp-list { display: grid; gap: 0; border-top: 1px solid var(--rp-line); margin: 0; }
+.rp-list div { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--rp-line); }
+.rp-list dt { font-weight: 700; }
+.rp-list dd { margin: 0; color: var(--rp-dim); overflow-wrap: anywhere; }
+.rp-list a { color: var(--rp-link); }
+.rp-list code { font: 500 13px var(--rp-mono); }
+.rp-video { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 28px; align-items: start; margin-top: 44px; }
+.rp-video h2 { font: var(--rp-h2font); margin: 8px 0; }
+.rp-video p { color: var(--rp-dim); }
+.rp-video video { width: 100%; height: auto; border-radius: var(--rp-radius); background: #000; box-shadow: 0 20px 40px -24px rgba(0,0,0,.6); }
+.rp-foot a { color: inherit; }
+@media (max-width: 760px) { .rp-list div, .rp-video { grid-template-columns: minmax(0, 1fr); gap: 4px; } .rp-video { gap: 14px; } .rp-cmd pre { padding-top: 46px; } }
 </style>
 </head>
 <body>
@@ -411,11 +433,12 @@ footer { background: var(--night); color: #8E9BB2; font-size: 13.5px; padding: 2
     <a href="#/policies" data-nav="policies">Policies</a>
     <a href="#/simulator" data-nav="simulator">New patient</a>
     <a href="#/system" data-nav="system">How it works</a>
+    <a href="#/reproduce" data-nav="reproduce">Reproduce</a>
   </nav>
   <span class="svc" id="svc" title="The live agent service"><i></i><span>Checking agents</span></span>
 </div></header>
 <main id="view" tabindex="-1"></main>
-<footer><div class="wrap">Synthetic patients only. Policies: Medicare national and local coverage determinations. Agents: Claude Haiku 4.5 on LangGraph, record over MCP. Sign-offs stay in this browser. Built by Divya Sri.</div></footer>
+<footer><div class="wrap">Synthetic patients only. Policies: Medicare national and local coverage determinations. Agents: Claude Haiku 4.5 on LangGraph, record over MCP. Sign-offs stay in this browser. Built by Divya Sri. <span class="rp-foot"><a href="#/reproduce">Reproduce these results</a> · <a href="https://github.com/mathukumillidivya/authpilot" target="_blank" rel="noopener">Source code</a> · <a href="#/reproduce" onclick="setTimeout(() => document.getElementById('tour')?.scrollIntoView(), 50)">Demo video</a></span></div></footer>
 <div class="tip" id="tip" role="tooltip"></div>
 
 <script>
@@ -502,6 +525,43 @@ function markQuote(html, text, quote, k, anim) {
   return `<mark class="${cls}">${html}</mark>`;
 }
 
+const REPRO = {
+  repo: "https://github.com/mathukumillidivya/authpilot", commit: "ba8fc5b", time: "a few seconds", install: "pip install -r requirements.txt",
+  frozen: "The graph, prompts, code checks and policies were fixed here, from the 100 development cases only, before the 200 held-out cases were run once.",
+  dataset: "300 synthetic patients generated truth-first from five Medicare coverage policies by <code>authpilot/cases.py</code>, in <code>data/cases.jsonl</code> with the split in <code>data/split.json</code>. No real patient data, and nothing to download.",
+  raw: [["results/runs/test-authpilot/", "decision, rule statuses, quotes, letter, trace and tokens for every held-out request"], ["results/runs/test-baseline/", "the single AI call"], ["results/runs/test-single_plus/", "the single call with the same code checks"]],
+  scoring: [["scripts/evaluate.py", "accuracy, wrongful denials and approvals, quote verification, paired bootstrap"], ["reproduce.py", "re-scores the saved runs and compares"]],
+  rerun: "Run the three systems on the test split and score them (about $9 of API use).",
+  videoTitle: "A 40-second tour", videoNote: "The review desk on the home page, then the agents replaying a defibrillator request: highlighted chart quotes, the checklist and the stamped letter. Recorded from this site.",
+};
+/* ---------- reproduce these results */
+function reproHtml(R) {
+  const gh = p => `${R.repo}/${p.endsWith("/") ? "tree" : "blob"}/main/${p.replace(/\/$/, "")}`;
+  const link = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
+  const cmd = `git clone ${R.repo}\ncd ${R.repo.split("/").pop()}\n${R.install ? R.install + "\n" : ""}python reproduce.py`;
+  const rows = [
+    ["Repository", link(R.repo, R.repo.replace("https://", ""))],
+    ["Frozen evaluation commit", `${link(`${R.repo}/tree/${R.commit}`, `<code>${R.commit}</code>`)}. ${R.frozen}`],
+    ["Dataset", R.dataset],
+    ["Raw results", R.raw.map(([p, t]) => `${link(gh(p), `<code>${p}</code>`)} ${t}`).join("<br>")],
+    ["Scoring code", R.scoring.map(([p, t]) => `${link(gh(p), `<code>${p}</code>`)} ${t}`).join("<br>")],
+    ["Re-run from scratch", `${R.rerun} Steps in ${link(gh("REPRODUCE.md"), "REPRODUCE.md")}.`],
+  ];
+  return `<section class="rp"><div class="wrap">
+    <span class="rp-k">Reproduce these results</span>
+    <h1 class="rp-h">Every number here can be checked.</h1>
+    <p class="rp-lede">The figures on this site come from saved runs in the repository. One command re-scores them with the same scoring code and checks each figure against what is published. No API key, ${R.time}.</p>
+    <div class="rp-cmd"><pre><code>${cmd}</code></pre><button class="rp-copy" type="button">Copy</button></div>
+    <dl class="rp-list">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>
+    <div class="rp-video" id="tour"><div><span class="rp-k">Demo video</span><h2>${R.videoTitle}</h2><p>${R.videoNote}</p></div>
+      <video controls preload="none" playsinline poster="demo-poster.jpg" width="1280" height="720"><source src="demo.mp4" type="video/mp4">Your browser cannot play this video. <a href="demo.mp4">Download it</a>.</video></div>
+  </div></section>`;
+}
+function wireRepro(root) {
+  const b = root.querySelector(".rp-copy"); if (!b) return;
+  b.onclick = async () => { try { await navigator.clipboard.writeText(root.querySelector(".rp-cmd code").textContent); b.textContent = "Copied"; } catch { b.textContent = "Select and copy"; } setTimeout(() => b.textContent = "Copy", 1600); };
+}
+
 /* ---------- router */
 let lastCase = null, heroRun = 0;
 function route() {
@@ -509,7 +569,7 @@ function route() {
   const [view, arg] = (location.hash.replace(/^#\/?/, "") || "home").split("/");
   $$(".nav a").forEach(a => a.dataset.nav === view ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
   if (view !== "case") stopRun();
-  const fn = { home: viewHome, queue: viewQueue, case: viewCase, runs: viewRuns, evaluation: viewEval, policies: viewPolicies, simulator: viewSim, system: viewSystem }[view] || viewHome;
+  const fn = { home: viewHome, queue: viewQueue, case: viewCase, runs: viewRuns, evaluation: viewEval, policies: viewPolicies, simulator: viewSim, system: viewSystem, reproduce: v => { v.innerHTML = reproHtml(REPRO); wireRepro(v); } }[view] || viewHome;
   fn($("#view"), arg);
   scrollTo(0, 0);
 }
@@ -524,7 +584,7 @@ function viewHome(v) {
       <span class="kicker">Prior authorization · AI agents · Medicare policy</span>
       <h1>Every denial comes with <mark>the receipts.</mark></h1>
       <p>Before an insurer pays for a defibrillator or a CPAP machine, someone checks the request against policy and the patient's chart. AuthPilot gives each coverage rule to its own AI specialist, which must quote the chart. Code checks every quote and every date before anything is decided, and a clinician signs every denial.</p>
-      <div class="acts"><a class="btn hl" href="#/case/0181">Review a case with the agents</a><a class="btn" href="#/queue">Open the queue</a></div>
+      <div class="acts"><a class="btn hl" href="#/case/0181">Review a case with the agents</a><a class="btn" href="#/queue">Open the queue</a><a class="btn" href="#/reproduce" onclick="setTimeout(() => document.getElementById('tour')?.scrollIntoView(), 50)">▶ 40-second tour</a></div>
     </div>
     <div class="table" id="table" aria-hidden="true"></div>
   </div></section>

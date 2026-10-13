@@ -4,6 +4,8 @@
 
 **Live demo:** https://authpilot-app.onrender.com, a utilization review workspace over all 300 recorded agent runs. It has five parts:
 
+**Reproduce:** `python reproduce.py` re-scores every saved run and checks each published number (no API key). Full steps, the frozen commit and the data are in [REPRODUCE.md](REPRODUCE.md). A 40-second demo video is on the site's Reproduce page.
+
 - **Review queue**, with sign-off for denials.
 - **Case view**, laid out like a reviewer's desk: the faxed request, the patient record with every quoted passage highlighted, the policy checklist the specialists fill in, and the determination letter with its stamp. Replays the recorded run step by step, with the agent trace and token use.
 - **Run monitoring**, covering latency, cost and model calls.
