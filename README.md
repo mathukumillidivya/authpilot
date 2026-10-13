@@ -5,7 +5,7 @@
 **Live demo:** https://authpilot-app.onrender.com, a utilization review workspace over all 300 recorded agent runs. It has five parts:
 
 - **Review queue**, with sign-off for denials.
-- **Case view**, with an evidence map linking each finding to the record entries it quotes, plus a per-node agent trace, the letter and an audit trail.
+- **Case view**, laid out like a reviewer's desk: the faxed request, the patient record with every quoted passage highlighted, the policy checklist the specialists fill in, and the determination letter with its stamp. Replays the recorded run step by step, with the agent trace and token use.
 - **Run monitoring**, covering latency, cost and model calls.
 - **Evaluation and policy library.**
 - **Patient simulator**, which builds a new case for the real agents to review live.
