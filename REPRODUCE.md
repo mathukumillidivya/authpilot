@@ -36,3 +36,15 @@ python scripts/evaluate.py results/runs/my-baseline results/runs/my-single_plus 
 
 A fresh run lands close to, not exactly on, the published figures. The GitHub workflow `run.yml` does the
 same in Actions.
+
+## Checks added after the test
+
+The determination letters, checked separately from the decisions. This does not change the decision numbers.
+
+```bash
+python scripts/letter_check.py results/runs/test-authpilot            # code checks, free
+python scripts/letter_check.py results/runs/test-authpilot --judge    # adds the second-model check; needs ANTHROPIC_API_KEY
+```
+
+Outputs: `results/runs/test-authpilot/letter_check.json(l)` and the hand review `letter_spot_check.json`.
+In GitHub: Actions > letter-check.
