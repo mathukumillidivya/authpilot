@@ -1,0 +1,78 @@
+{
+  "letters": 200,
+  "letters_with_a_code_problem": {
+    "count": 2,
+    "of": 200,
+    "rate": 0.01
+  },
+  "code_problems_by_kind": {
+    "dates": {
+      "count": 2,
+      "of": 200,
+      "rate": 0.01
+    }
+  },
+  "by_decision": {
+    "APPROVE": {
+      "count": 0,
+      "of": 78,
+      "rate": 0.0
+    },
+    "DENY": {
+      "count": 0,
+      "of": 82,
+      "rate": 0.0
+    },
+    "NEED_INFO": {
+      "count": 2,
+      "of": 40,
+      "rate": 0.05
+    }
+  },
+  "dates_checked": 987,
+  "examples": [
+    {
+      "case_id": "case-0176",
+      "problems": [
+        "dates: not found in the request or record (some are computed, such as a resubmission date): 2025-12-15"
+      ]
+    },
+    {
+      "case_id": "case-0165",
+      "problems": [
+        "dates: not found in the request or record (some are computed, such as a resubmission date): 2025-03-23"
+      ]
+    }
+  ],
+  "judge": {
+    "model": "claude-haiku-4-5-20251001",
+    "letters_judged": 80,
+    "clean": {
+      "count": 77,
+      "of": 80,
+      "rate": 0.9625
+    },
+    "minor_issues": {
+      "count": 3,
+      "of": 80,
+      "rate": 0.0375
+    },
+    "must_fix": {
+      "count": 0,
+      "of": 80,
+      "rate": 0.0
+    },
+    "letters_with_an_unsupported_statement": {
+      "count": 2,
+      "of": 80,
+      "rate": 0.025
+    },
+    "letters_with_a_contradiction": {
+      "count": 0,
+      "of": 80,
+      "rate": 0.0
+    },
+    "cost_usd": 0.2128,
+    "examples": []
+  }
+}

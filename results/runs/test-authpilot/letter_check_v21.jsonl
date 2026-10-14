@@ -1,0 +1,200 @@
+{"case_id": "case-0278", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0146", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0212", "decision": "DENY", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0038", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2622, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0060", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0170", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0081", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0104", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 2, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2450, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0236", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2430, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0147", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 2, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2173, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0279", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2107, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0105", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2217, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0039", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0213", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0171", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 2, "dates_unknown": []}
+{"case_id": "case-0237", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0082", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2386, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0214", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 8, "dates_unknown": []}
+{"case_id": "case-0280", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0106", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0148", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0172", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0238", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0083", "decision": "APPROVE", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0040", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2469, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0149", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0107", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2239, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0281", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0215", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 8, "dates_unknown": []}
+{"case_id": "case-0173", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0084", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0239", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 8, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2555, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0041", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0150", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2066, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0216", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2397, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0282", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0042", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0108", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0085", "decision": "APPROVE", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2478, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0240", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0151", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2013, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0217", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2475, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0283", "decision": "APPROVE", "truth": "DENY", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0174", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 2, "dates_unknown": []}
+{"case_id": "case-0043", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2386, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0175", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0261", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0109", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0086", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0152", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 2, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2182, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0037", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0218", "decision": "DENY", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0284", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0110", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0262", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2150, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0021", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2534, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0176", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": ["dates: not found in the request or record (some are computed, such as a resubmission date): 2025-12-15"], "dates": 4, "dates_unknown": ["2025-12-15"]}
+{"case_id": "case-0044", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0153", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0285", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 8, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2065, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0169", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2025, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0087", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2386, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0219", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0045", "decision": "DENY", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0111", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0177", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0263", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2044, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0022", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0088", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2325, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0154", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 2, "dates_unknown": []}
+{"case_id": "case-0220", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0286", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 1978, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0178", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2103, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0112", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0235", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0264", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 8, "dates_unknown": []}
+{"case_id": "case-0046", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0023", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 2, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2547, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0155", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0221", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0287", "decision": "APPROVE", "truth": "DENY", "problems": [], "dates": 11, "dates_unknown": []}
+{"case_id": "case-0047", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2405, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0179", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0089", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2541, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0265", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0024", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0113", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2531, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0090", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0156", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0222", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2400, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0048", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 8, "dates_unknown": []}
+{"case_id": "case-0288", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0114", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0180", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 1940, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0266", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2062, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0025", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0157", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0091", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0289", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2089, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0049", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2361, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0115", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0026", "decision": "DENY", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2573, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0201", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 8, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2576, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0267", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0223", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 9, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2603, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0158", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0290", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0116", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2189, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0092", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0202", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 8, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2559, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0224", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0268", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2104, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0050", "decision": "DENY", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0027", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2433, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0093", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0159", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0117", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0291", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0203", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0225", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0269", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2231, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0051", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2483, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0028", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0160", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2076, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0052", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0292", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0094", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [{"quote": "Oximetry was ordered by Dr. A. Rivera on 2025-04-16", "why": "The findings state the oximetry was ordered by Dr. A. Rivera, but the findings do not identify who ordered the test. The findings only quote the pulmonology note stating 'Oximetry ordered; result pending' without attribution to a specific provider."}], "contradictions": [], "verdict": "minor_issues"}, "usage": {"input": 2489, "output": 168, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0226", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 9, "dates_unknown": []}
+{"case_id": "case-0118", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0204", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 8, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2376, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0270", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0095", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0161", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0227", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2313, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0293", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0029", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0053", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2472, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0119", "decision": "APPROVE", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0271", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 1942, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0030", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2426, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0096", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2268, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0205", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 3, "dates_unknown": [], "judge": {"verdict": "minor_issues", "unsupported": [], "contradictions": []}, "usage": {"input": 2342, "output": 72, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0294", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0228", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0162", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 2, "dates_unknown": []}
+{"case_id": "case-0120", "decision": "APPROVE", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0272", "decision": "APPROVE", "truth": "DENY", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0206", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 10, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2596, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0054", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2482, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0097", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0031", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0295", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 1993, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0229", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 9, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2613, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0055", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0163", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2201, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0141", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 3, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2008, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0273", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0164", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0207", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0032", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 3, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2639, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0098", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2499, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0296", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0056", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2491, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0142", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2081, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0208", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2351, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0033", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2365, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0230", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0274", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0231", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0297", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 1904, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0057", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0165", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": ["dates: not found in the request or record (some are computed, such as a resubmission date): 2025-03-23"], "dates": 3, "dates_unknown": ["2025-03-23"], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2034, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0099", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0275", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0209", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 10, "dates_unknown": []}
+{"case_id": "case-0034", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2405, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0143", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 6, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2176, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0100", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2278, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0166", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 3, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2179, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0298", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 1802, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0232", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0058", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0210", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0276", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0144", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2091, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0167", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": []}
+{"case_id": "case-0299", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 1887, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0035", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 3, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 2687, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0101", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2514, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0145", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 2, "dates_unknown": [], "judge": {"verdict": "clean", "unsupported": [], "contradictions": []}, "usage": {"input": 1993, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0059", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2393, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0233", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 2, "dates_unknown": []}
+{"case_id": "case-0211", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0277", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 8, "dates_unknown": [], "judge": {"unsupported": [], "contradictions": [], "verdict": "clean"}, "usage": {"input": 2111, "output": 70, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0102", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 4, "dates_unknown": []}
+{"case_id": "case-0300", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 6, "dates_unknown": []}
+{"case_id": "case-0234", "decision": "DENY", "truth": "DENY", "problems": [], "dates": 7, "dates_unknown": []}
+{"case_id": "case-0036", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 3, "dates_unknown": []}
+{"case_id": "case-0103", "decision": "APPROVE", "truth": "APPROVE", "problems": [], "dates": 5, "dates_unknown": [], "judge": {"unsupported": [{"quote": "The test was ordered and evaluated by the treating practitioner, Dr. R. Castillo, pulmonologist", "why": "The findings identify the ordering provider as Dr. P. Adeyemi (from the request), not Dr. R. Castillo. The verified quotes show 'I ordered resting room-air oximetry' but do not identify the speaker as Dr. Castillo. The letter names a different provider than the one documented in the request."}], "contradictions": [], "verdict": "minor_issues"}, "usage": {"input": 2304, "output": 189, "cache_read": 0, "cache_write": 0}}
+{"case_id": "case-0168", "decision": "NEED_INFO", "truth": "NEED_INFO", "problems": [], "dates": 4, "dates_unknown": []}
