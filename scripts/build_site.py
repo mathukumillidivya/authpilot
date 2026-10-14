@@ -98,6 +98,11 @@ def main():
         results["letters_v2"] = json.loads(lc2.read_text())
         gates = [x["gate"] for x in rows21]
         results["letters_v2"]["gate_blocked"] = {"count": sum(bool(g) for g in gates), "of": len(gates)}
+        results["letters_v2"]["note"] = ("The gate blocked 4 letters, all real problems: two denials whose sleep-test reviewer wrote \u201cthis criterion is "
+            "actually MET\u201d but recorded not met (cases 0045 and 0050, both wrong decisions), and two letters where the model rewrote a "
+            "year (2019 as 2025, 2021 as 2025). The second model read a random 80 of the 200 version 2 letters (all 200 of version 1); its "
+            "3 remaining flags are a provider name and two wordings. The first version 2 run lost every reason line to a parsing bug and "
+            "is not reported; version 2.1 fixed it.")
     per_case = {}
     for s in ("baseline", "single_plus", "authpilot"):
         f = ROOT / "results/runs" / f"test-{s}" / "results.jsonl"

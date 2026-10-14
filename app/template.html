@@ -834,7 +834,7 @@ function lcheckHtml(k) {
     ...(k.unsupported || []).map(u => `<li><b>Not in the findings:</b> <q>${esc(u.quote)}</q> ${esc(u.why)}</li>`),
     ...(k.contradictions || []).map(x => `<li><b>Contradiction:</b> ${esc(x)}</li>`)];
   const cls = k.verdict === "must_fix" ? " bad" : items.length ? " warn" : "";
-  return `<div class="lcheck${cls}"><h4>Letter check, separate from the decision${k.verdict ? ` · model check: ${esc(k.verdict.replace("_", " "))}` : ""}</h4>${items.length ? `<ul>${items.join("")}</ul>` : "✓ Dates, placeholders, rule labels and next steps pass, and the model check found nothing the findings do not support."}</div>`;
+  return `<div class="lcheck${cls}"><h4>Letter check, separate from the decision${k.verdict ? ` · model check: ${esc(k.verdict.replace("_", " "))}` : ""}</h4>${items.length ? `<ul>${items.join("")}</ul>` : k.verdict ? "✓ Dates, placeholders, rule labels and next steps pass, and the model check found nothing the findings do not support." : "✓ Dates, placeholders, rule labels and next steps pass. (This letter was not in the model-check sample.)"}</div>`;
 }
 const LCK = { decision: "Decision wording", placeholder: "Placeholder left in", dates: "Date", rule_labels: "Rule label", next_steps: "Next steps" };
 function letterV2(r) {
@@ -853,7 +853,7 @@ function drawVerdict(r, fresh, typing) {
   d.innerHTML = `<div class="vtop"><div><h3>Determination</h3><div class="how">decided by code from the rule statuses</div></div><span class="stamp ${r.decision}${fresh && !reduced ? " slam" : ""}">${DEC[r.decision]}<small>${a ? QS[a.kind][0] : r.decision === "DENY" ? "awaiting clinician signature" : "sent automatically"}</small></span></div>
     ${L2 ? `<div class="lver">Letter version 2: written by code around the model's reasons, then checked before sign-off</div>` : ""}
     <div class="letterp${typing ? " typing" : ""}" id="letter">${text && !typing ? md(text) : ""}</div>
-    ${!typing ? (L2 ? (L2.check ? lcheckHtml(L2.check) : "") : r.letter_check ? lcheckHtml(r.letter_check) : "") : ""}
+    ${!typing && !gate ? (L2 ? (L2.check ? lcheckHtml(L2.check) : "") : r.letter_check ? lcheckHtml(r.letter_check) : "") : ""}
     ${gate ? `<div class="blocked"><b>Sign-off blocked.</b> The letter failed the code check: ${gate.map(esc).join("; ")}. A person has to correct the finding or the letter first.</div>` : ""}
     <div class="sign">${a ? `<div><span class="signed">${QS[a.kind][0]}</span><div class="note">${new Date(a.at).toLocaleString()}${a.note ? ` · “${esc(a.note)}”` : ""}</div></div><div class="row"><button class="btn sm" id="undo">Undo</button></div>`
       : `<textarea id="note" placeholder="Note for the record (optional)" aria-label="Note for the record"></textarea><div class="row">${sigOpts.map(([k, t, c]) => `<button class="btn sm ${c}" data-act="${k}">${t}</button>`).join("")}</div><p class="note">Demo only: recorded in this browser. Nothing is signed or sent to anyone.</p>`}</div>

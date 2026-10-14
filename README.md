@@ -55,6 +55,32 @@ A second model (Claude Haiku 4.5, temperature 0, $0.48 for all 200) then listed 
 
 What to fix next: fill names and dates from the request in code instead of leaving them to the model, and add a fixed appeal paragraph to every denial.
 
+### Letters, version 2: written by code, checked before sign-off
+
+Added after the letter check above and run on the same 200 held-out findings, so it compares letter with letter
+(the decisions are unchanged). The original letters and their scores stay in the repository.
+
+- **Code writes the letter** ([authpilot/letter.py](authpilot/letter.py)): header, decision sentence, each rule in the
+  policy's own words with its status, the appeal route on every denial, the list of records to send, and the scope of
+  an approval. The model writes only one or two reason lines per rule from the verified quotes.
+- **A code gate blocks sign-off** when a letter fails any check, or when a reviewer's reasoning contradicts its own
+  status. In the app the "Record demo sign-off" button is withheld for a blocked letter.
+
+| Same 200 held-out cases | Version 1 | Version 2 |
+|---|---|---|
+| Letters failing at least one code check | 94 of 200 | 2 of 200 |
+| Template placeholder left in | 60 | 0 |
+| Denial without an appeal route | 39 of 82 | 0 of 82 |
+| Second model: letters with an unsupported statement | 8 of 200 | 2 of 80 (random sample) |
+| Second model: must fix | 3 of 200 | 0 of 80 |
+| Sign-off blocked by the gate | no gate | 4 of 200 |
+
+The gate blocked 4 letters, all real problems: the two denials whose sleep-test reviewer wrote "this criterion is
+actually MET" but recorded not met (cases 0045 and 0050, both wrong decisions), and two letters where the model
+rewrote a year in a reason line (2019 as 2025, 2021 as 2025); those two are the "2 of 200" code failures above. The
+first version 2 run lost every reason line to a parsing bug of mine and is not reported; version 2.1 fixed it.
+Cost: $0.34 to regenerate, $0.21 for the second model on 80 letters.
+
 ## How it works
 
 ```
